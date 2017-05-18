@@ -1,4 +1,5 @@
 /node_modules
-/dist
+/dist/**/*
+!/dist/ChromeExt_BankRoller.crx
 yarn.lock
 yarn-error.log
