@@ -1,0 +1,47 @@
+
+.pulse {
+    animation: pulsate 0.7s ease-out;
+    animation-iteration-count: infinite;
+    opacity: 0.0;
+
+	@keyframes pulsate {
+	    0%   { opacity: 0.0;}
+	    50%  { opacity: 1.0;}
+	    100% { opacity: 0.0;}
+	}
+}
+
+#content {
+	text-align:center;
+	padding: 40px  0px  40px  0px;
+
+	&.loading * { display:none; }
+	&.loading:after {
+		content:'Loading...';
+		margin:50px;
+		display:block;
+		letter-spacing:1px;
+		text-transform:uppercase;
+		.pulse();
+	}
+
+	#loading_status {
+		display:inline-block;
+		color:#fff;
+		text-align: center;
+		margin:20px auto 0 auto;
+		border:3px solid #555;
+		padding:20px 30px;
+		// .pulse();
+		&:empty { display:none; }
+	}
+}
+
+
+#waddr {
+	position: fixed;
+	bottom: 0px; left:0px;
+	padding:7px 10px 10px 10px;
+	width:100%;
+	background:#333;
+}
