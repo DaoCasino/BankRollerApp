@@ -1,21 +1,13 @@
+<h1>Chrome extension for bankroller</h1>
+Download 
+https://github.com/DaoCasino/BankRollerApp/blob/master/dist/ChromeExt_BankRoller.crx
 
-
-
-#Develop
-You need nodejs 6.9+
-
-#Run
-npm install
-or
-yarn install
-
-#Start
-npm start
-
-#Build for production
-npm run build
-
-
-Go to
+and install chrome extension:
 chrome://extensions/
 
+deploy game contract, send BETs and get play!
+
+
+<h2>Develop</h2>
+You need nodejs 6.9+
+<pre>npm install && npm start</pre>
