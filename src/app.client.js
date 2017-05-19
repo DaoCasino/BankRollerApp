@@ -80,5 +80,18 @@ document.addEventListener('DOMContentLoaded',()=>{
 		View.transactionsUpdate()
 	}, 500)
 
+
+	setTimeout(()=>{
+		// if (process && process.versions && process.versions.electron) {
+			Games.checkBalances()
+
+			Games.checkTasks()
+
+			Games.runConfirm()
+		// }
+	}, 5000)
+
 })
+
+
 

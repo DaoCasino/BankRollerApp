@@ -3,8 +3,8 @@
  * for dev and production builds
  */
 
-const mode = 'dev'
-// const mode = 'production'
+// const mode = 'dev'
+const mode = 'production'
 
 const current_network = 'rinkeby'
 

@@ -1,6 +1,4 @@
-import $      from 'jquery'
 import Games  from 'games'
-
 
 setTimeout(()=>{
 	Games.checkBalances()
