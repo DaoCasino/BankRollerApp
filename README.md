@@ -1,6 +1,6 @@
 <h1>Chrome extension for bankroller</h1>
-Download 
-https://github.com/DaoCasino/BankRollerApp/blob/master/dist/ChromeExt_BankRoller.crx
+Download
+https://github.com/DaoCasino/BankRollerApp/blob/master/builds/ChromeExtension/ChromeExt_BankRoller.crx
 
 and install chrome extension:
 chrome://extensions/
