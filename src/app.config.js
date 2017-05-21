@@ -6,7 +6,8 @@
 // const mode = 'dev'
 const mode = 'production'
 
-const current_network = 'rinkeby'
+// const current_network = 'rinkeby'
+const current_network = 'ropsten'
 
 const config = {
 	'rinkeby': {

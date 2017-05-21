@@ -25,10 +25,10 @@ class Eth {
 		this.getCurBlock()
 	}
 
-	deployContract(contract_bytecode, callback){
+	deployContract(contract_bytecode, gasprice=151000000000, callback_deployed, callback_proccess){
 
 		let checkContractDeployed = (transaction_hash, callback)=>{ setTimeout(()=>{
-			console.log('checkContractDeployed', 'https://rinkeby.etherscan.io/tx/'+transaction_hash)
+			console.log('checkContractDeployed', 'https://'+_config.network+'.etherscan.io/tx/'+transaction_hash)
 
 			this.RPC.request('getTransactionReceipt', [transaction_hash]).then( response => {
 
@@ -39,7 +39,7 @@ class Eth {
 					return
 				}
 
-				console.log('[OK] checkContractDeployed - address:', 'https://rinkeby.etherscan.io/address/'+response.result.contractAddress)
+				console.log('[OK] checkContractDeployed - address:', 'https://'+_config.network+'.etherscan.io/address/'+response.result.contractAddress)
 
 				callback(response.result.contractAddress)
 			}).catch( err => {
@@ -50,13 +50,19 @@ class Eth {
 
 		this.Wallet.signTx({
 			data:     contract_bytecode,
-			gasLimit: 0x4630C0,
-			gasPrice: '0x737be7600',
+			gasLimit: '0x4630C0',
+			gasPrice: '0x' + Utils.numToHex(gasprice),
 			value:    0
 		}, signedTx => {
 			this.RPC.request('sendRawTransaction', ['0x' + signedTx], 0).then( response => {
-				if (!response.result) { return }
-				checkContractDeployed(response.result, callback)
+				if (!response.result) {
+					console.log(response.message)
+					if (!response.message || response.message.indexOf('known transaction')==-1) {
+						return
+					}
+				}
+				checkContractDeployed(response.result, callback_deployed)
+				callback_proccess()
 			})
 		})
 	}
@@ -95,10 +101,9 @@ class Eth {
 
 
 	getCurBlock(){
-		if (this.cur_block_upd < new Date().getTime()) {
+		if (!this.cur_block_upd || this.cur_block_upd < new Date().getTime()) {
 			this.RPC.request('blockNumber').then( response => {
 				if (!response || !response.result) { return }
-
 				this.setCurBlock(response.result)
 
 			}).catch( err => {
@@ -110,7 +115,7 @@ class Eth {
 	}
 
 	setCurBlock(block){
-		this.curBlock      = block
+		this.cur_block      = block
 		this.cur_block_upd = new Date().getTime() + 60
 	}
 }

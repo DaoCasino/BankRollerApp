@@ -131,37 +131,6 @@ export default class Wallet {
 			})
 		})
 	}
-
-	getSignedTx(seed, address, abi, callback){
-		this.getConfirmNumber(seed, address, abi, (confirm, PwDerivedKey, v,r,s)=>{
-			this.getNonce( nonce => {
-				console.log('nonce', nonce)
-				let options = {
-					to:       address,
-					nonce:    nonce,
-					gasPrice: '0x737be7600',
-					gasLimit: '0x927c0',
-					value:    0,
-				}
-
-				let registerTx = ethWallet.txutils.functionTx(
-									abi,
-									'confirm',
-									[seed, v, r, s],
-									options
-								)
-
-				let signedTx = ethWallet.signing.signTx(
-									this.getKs(),
-									PwDerivedKey,
-									registerTx,
-									_wallet.openkey.substr(2)
-								)
-
-				callback(signedTx, confirm)
-			})
-		})
-	}
 }
 
 

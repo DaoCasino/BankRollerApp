@@ -101,44 +101,50 @@ class Games {
 	}
 
 	checkTasks(){
-		console.log('checkTasks')
 		localDB.getItem('deploy_tasks',(err, tasks)=>{
 			if (!tasks || tasks.length==0) {
 				setTimeout(()=>{ this.checkTasks() }, 5000)
-				console.log('no tasks')
 				return
 			}
 
-			console.log('Tasks in queue: '+tasks.length)
 			let game_name = tasks[0].name
 			let task_id = tasks[0].task_id
 			console.log('Start deploying: '+game_name+', task_id:'+task_id)
 
-			Eth.deployContract(_config.contracts[game_name].bytecode, (address)=>{
-				console.log(task_id+' - deployed')
-				for(let k in _games){
-					if (_games[k].task_id==task_id) {
-						delete(_games[k])
-						break
+			Eth.deployContract(
+				_config.contracts[game_name].bytecode,
+				_config.contracts[game_name].gasprice,
+
+				// Deployed!
+				(address)=>{
+					console.log(task_id+' - deployed')
+					for(let k in _games){
+						if (_games[k].task_id==task_id) {
+							delete(_games[k])
+							break
+						}
 					}
+					this.add(address)
+
+					// add bets to contract
+					Api.addBets(address).then( result => {
+						console.groupCollapsed('Add bets to '+address+' result:')
+						console.log(result)
+						console.groupEnd()
+					})
+
+
+					setTimeout(()=>{
+						this.checkTasks()
+					}, 1000)
+				},
+
+				// Pending
+				()=>{
+					tasks.shift()
+					localDB.setItem('deploy_tasks', tasks)
 				}
-				this.add(address)
-
-				// add bets to contract
-				Api.addBets(address).then( result => {
-					console.groupCollapsed('Add bets to '+address+' result:')
-					console.log(result)
-					console.groupEnd()
-				})
-
-				tasks.shift()
-
-				localDB.setItem('deploy_tasks', tasks)
-
-				setTimeout(()=>{
-					this.checkTasks()
-				}, 1000)
-			})
+			)
 		})
 	}
 
@@ -241,17 +247,17 @@ class Games {
 		// Blockchain
 		Eth.RPC.request('getLogs',[{
 			'address':   address,
-			'fromBlock': Eth.getCurBlock,
+			'fromBlock': Eth.getCurBlock(),
 			'toBlock':   'latest',
-		}]).then( response => {
+		}], 74).then( response => {
 			if(!response.result){ callback(null); return }
 
 			response.result.forEach(item => {
 
 				Eth.setCurBlock(item.blockNumber)
 
+				// let seed = item.data.substr(2)
 				let seed = item.data
-
 				if (!_seeds_list[seed]) {
 					_seeds_list[seed] = { contract:address }
 				}
@@ -318,12 +324,12 @@ class Games {
 			return
 		}
 
-
 		Eth.RPC.request('call', [{
 			'to':   address,
 			'data': '0x' + Eth.hashName('listGames','bytes32') + seed.substr(2)
-		}, 'pending'],0).then( response => {
+		}, 'pending'], 0).then( response => {
 
+			console.log(seed)
 			console.log('>> Pending response:', response)
 
 			if (!response.result || response.result.split('0').join('').length < 5) {
@@ -358,13 +364,18 @@ class Games {
 	}
 
 	sendRandom(address, seed, callback){
-		if (_seeds_list[seed] && _seeds_list[seed].confirm_sended_blockchain) {
+		if (_seeds_list[seed] && _seeds_list[seed].proccess_sended_blockchain ) {
 			return
 		}
 
-		Eth.Wallet.getSignedTx(seed, address, _config.contracts.dice.abi, (signedTx, confirm)=>{
+		console.log('sendRandom', address, seed)
 
-			console.log('getSignedTx result:', seed, confirm)
+		_seeds_list[seed].proccess_sended_blockchain = true
+
+		console.log('Eth.Wallet.getSignedTx')
+		this.signTx(seed, address, _config.contracts.dice.abi, (signedTx, confirm)=>{
+
+			console.log('getSignedTx result:', signedTx, confirm)
 
 			Eth.RPC.request('sendRawTransaction', ['0x'+signedTx], 0).then( response => {
 				_seeds_list[seed].confirm_blockchain_time   = new Date().getTime()
@@ -379,6 +390,37 @@ class Games {
 				console.error('sendRawTransaction error:', err)
 			})
 
+		})
+	}
+
+	signTx(seed, address, abi, callback){
+		this.getConfirmNumber(seed, address, abi, (confirm, PwDerivedKey, v,r,s)=>{
+			Eth.Wallet.getNonce( nonce => {
+				console.log('nonce', nonce)
+				let options = {
+					to:       address,
+					nonce:    nonce,
+					gasPrice: '0x737be7600',
+					gasLimit: '0x927c0',
+					value:    0,
+				}
+
+				let registerTx = Eth.Wallet.lib.txutils.functionTx(
+									abi,
+									'confirm',
+									[seed, v, r, s],
+									options
+								)
+
+				let signedTx = Eth.Wallet.lib.signing.signTx(
+									Eth.Wallet.getKs(),
+									PwDerivedKey,
+									registerTx,
+									Eth.Wallet.get().openkey.substr(2)
+								)
+
+				callback(signedTx, confirm)
+			})
 		})
 	}
 

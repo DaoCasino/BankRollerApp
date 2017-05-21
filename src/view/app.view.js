@@ -60,7 +60,9 @@ class View {
 			let game     = games[contract_id]
 			let bankroll = game.start_balance
 			let profit   = (+game.balance - +game.start_balance).toFixed(4)
-
+			if (isNaN(profit)) {
+				profit = ''
+			}
 			// TODO: delta +30-205
 			if (profit>0) {
 				profit = '<span style="color:green">'+profit+' bet</span>'
@@ -69,11 +71,20 @@ class View {
 			}
 
 
+			let contract_link = `
+					<a  class="address"
+						target="_blank" rel="noopener"
+						title="${contract_id}"
+						href="https://${_config.network}.etherscan.io/address/${contract_id}">
+							${contract_id}
+					</a>`
+
 			let game_url = _config.games.dice.url+'?address='+contract_id
 
 			if (game.deploying) {
-				game_url = '#'
-				contract_id = '#deploying...'
+				game_url      = '#'
+				contract_id   = 'deploying...'
+				contract_link = 'deploying'
 			}
 
 			games_html += `<tr>
@@ -86,12 +97,7 @@ class View {
 					</a>
 				</td>
 				<td>
-					<a  class="address"
-						target="_blank" rel="noopener"
-						title="${contract_id}"
-						href="https://${_config.network}.etherscan.io/address/${contract_id}">
-							${contract_id}
-					</a>
+					${contract_link}
 				</td>
 				<td>${bankroll}</td>
 				<td class="profit">${profit}</td>
