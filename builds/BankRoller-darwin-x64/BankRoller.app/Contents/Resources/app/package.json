@@ -1,0 +1,47 @@
+{
+  "name": "BankRollerApp",
+  "version": "1.0.0",
+  "description": "Dao.Casino app for bankroller",
+  "main": "./dist/electron.js",
+  "repository": "https://github.com/DaoCasino/",
+  "author": "alexstep",
+  "scripts": {
+    "start": "gulp",
+    "app": "electron .",
+    "build_l": "electron-packager ./ BankRoller --overwrite --app-version=1.0.0 --out=builds --ignore=node_modules --ignore=src --ignore=tests --ignore=dist/_locales --prune",
+    "build": "electron-packager ./ BankRoller --overwrite --all --app-version=1.0.0 --out=builds --ignore=node_modules --ignore=src --ignore=tests --ignore=dist/_locales --prune"
+  },
+
+  "devDependencies": {
+    "babel-core": "^6.24.1",
+    "babel-loader": "^7.0.0",
+    "babel-preset-env": "^1.4.0",
+    "browser-sync": "^2.18.8",
+    "connect-history-api-fallback": "^1.3.0",
+    "electron": "^1.6.7",
+    "electron-packager": "^8.7.0",
+    "eslint": "^3.19.0",
+    "gulp": "^3.9.1",
+    "gulp-autoprefixer": "^4.0.0",
+    "gulp-clean-css": "^3.2.0",
+    "gulp-less": "^3.3.0",
+    "gulp-minify-html": "^1.0.6",
+    "gulp-replace": "^0.5.4",
+    "gulp-rimraf": "^0.2.1",
+    "gulp-sourcemaps": "^2.6.0",
+    "gulp-uglify": "^2.1.2",
+    "run-sequence": "^1.2.2",
+    "webpack": "^2.5.1",
+    "webpack-stream": "^3.2.0"
+  },
+  "dependencies": {
+    "async-priority-queue": "^0.1.2",
+    "big-integer": "^1.6.22",
+    "eth-lightwallet": "^2.5.4",
+    "ethereumjs-abi": "^0.6.4",
+    "jquery": "^3.2.1",
+    "localforage": "^1.5.0",
+    "solidity-sha3": "^0.4.1",
+    "web3": "^0.19.0"
+  }
+}

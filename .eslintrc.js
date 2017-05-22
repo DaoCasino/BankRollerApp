@@ -21,7 +21,7 @@ module.exports = {
         "$": true,
     },
 
-    "plugins": [],
+    "plugins": ["riot"],
     "rules": {
         "indent": [
             "warn",

@@ -1,7 +1,7 @@
 import _config  from 'app.config'
 import {Wallet} from 'Eth/Eth'
 import Games    from 'games'
-import View     from 'view/app.view'
+import View     from './view/app.view'
 
 document.addEventListener('DOMContentLoaded',()=>{
 	// for debug
@@ -13,7 +13,6 @@ document.addEventListener('DOMContentLoaded',()=>{
 			View:    View
 		}
 	}
-
 	// Get games contracts
 	console.group('Get games')
 
@@ -79,7 +78,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 	}, 500)
 
 
-	/*setTimeout(()=>{
+	setTimeout(()=>{
 		// if (process && process.versions && process.versions.electron) {
 			Games.checkBalances()
 
@@ -87,7 +86,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 
 			Games.runConfirm()
 		// }
-	}, 5000)*/
+	}, 5000)
 
 })
 
