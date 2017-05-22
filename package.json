@@ -2,16 +2,18 @@
   "name": "BankRollerApp",
   "version": "1.0.0",
   "description": "Dao.Casino app for bankroller",
-  "main": "./dist/electron.js",
+  "main": "./dist/index.electron.js",
   "repository": "https://github.com/DaoCasino/",
   "author": "alexstep",
   "scripts": {
-    "start": "gulp",
-    "app": "electron .",
-    "build_l": "electron-packager ./ BankRoller --overwrite --app-version=1.0.0 --out=builds --ignore=node_modules --ignore=src --ignore=tests --ignore=dist/_locales --prune",
-    "build": "electron-packager ./ BankRoller --overwrite --all --app-version=1.0.0 --out=builds --ignore=node_modules --ignore=src --ignore=tests --ignore=dist/_locales --prune"
+    "start": "npm run serve:web",
+    "serve:web": "export dev=true; gulp ",
+    "serve:electron": "export dev=true; gulp electron",
+    "start:electron": "electron .",
+    "build:web": "gulp build",
+    "build:electron:linux": "electron-packager ./ BankRoller --overwrite --app-version=1.0.0 --out=builds --ignore=node_modules --ignore=src --ignore=tests --ignore=dist/_locales --prune",
+    "build:electron": "electron-packager ./ BankRoller --overwrite --all --app-version=1.0.0 --out=builds --ignore=node_modules --ignore=src --ignore=tests --ignore=dist/_locales --prune"
   },
-
   "devDependencies": {
     "babel-core": "^6.24.1",
     "babel-loader": "^7.0.0",
@@ -19,6 +21,8 @@
     "browser-sync": "^2.18.8",
     "connect-history-api-fallback": "^1.3.0",
     "electron": "^1.6.7",
+    "electron-connect": "^0.6.1",
+    "electron-css-reload": "^1.0.8",
     "electron-packager": "^8.7.0",
     "eslint": "^3.19.0",
     "gulp": "^3.9.1",
@@ -36,12 +40,12 @@
   },
   "dependencies": {
     "async-priority-queue": "^0.1.2",
-    "big-integer": "^1.6.22",
-    "eth-lightwallet": "^2.5.4",
-    "ethereumjs-abi": "^0.6.4",
-    "jquery": "^3.2.1",
-    "localforage": "^1.5.0",
     "solidity-sha3": "^0.4.1",
+    "big-integer": "^1.6.22",
+    "jquery": "^3.2.1",
+    "ethereumjs-abi": "^0.6.4",
+    "eth-lightwallet": "^2.5.4",
+    "localforage": "^1.5.0",
     "web3": "^0.19.0"
   }
 }

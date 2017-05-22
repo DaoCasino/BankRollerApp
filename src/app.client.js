@@ -1,9 +1,7 @@
-import $        from 'jquery'
 import _config  from 'app.config'
 import {Wallet} from 'Eth/Eth'
 import Games    from 'games'
 import View     from 'view/app.view'
-
 
 document.addEventListener('DOMContentLoaded',()=>{
 	// for debug
