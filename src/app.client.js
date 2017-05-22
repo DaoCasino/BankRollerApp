@@ -81,7 +81,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 	}, 500)
 
 
-	setTimeout(()=>{
+	/*setTimeout(()=>{
 		// if (process && process.versions && process.versions.electron) {
 			Games.checkBalances()
 
@@ -89,7 +89,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 
 			Games.runConfirm()
 		// }
-	}, 5000)
+	}, 5000)*/
 
 })
 
