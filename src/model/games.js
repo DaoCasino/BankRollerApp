@@ -349,17 +349,17 @@ class Games {
 		}
 
 		// this.checkPending(address, seed, ()=>{
-			this.getConfirmNumber(seed, address, _config.contracts.dice.abi, (confirm, PwDerivedKey)=>{
+		this.getConfirmNumber(seed, address, _config.contracts.dice.abi, (confirm, PwDerivedKey)=>{
 
-				Api.sendConfirm(seed, confirm).then(()=>{
-					_seeds_list[seed].confirm_server_time   = new Date().getTime()
-					_seeds_list[seed].confirm               = confirm
-					_seeds_list[seed].confirm_server        = confirm
-					_seeds_list[seed].confirm_sended_server = true
+			Api.sendConfirm(seed, confirm).then(()=>{
+				_seeds_list[seed].confirm_server_time   = new Date().getTime()
+				_seeds_list[seed].confirm               = confirm
+				_seeds_list[seed].confirm_server        = confirm
+				_seeds_list[seed].confirm_sended_server = true
 
-					localDB.setItem('seeds_list', _seeds_list)
-				})
+				localDB.setItem('seeds_list', _seeds_list)
 			})
+		})
 		// })
 	}
 

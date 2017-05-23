@@ -21,22 +21,22 @@ module.exports = {
         "$": true,
     },
 
-    "plugins": [],
+    "plugins": ["riot"],
     "rules": {
         "indent": [
-            "error",
+            "warn",
             "tab"
         ],
         "linebreak-style": [
-            "error",
+            "warn",
             "unix"
         ],
         "quotes": [
-            "error",
+            "warn",
             "single"
         ],
         "semi": [
-            "error",
+            "warn",
             "never"
         ]
     }

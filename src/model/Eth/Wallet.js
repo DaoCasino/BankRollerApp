@@ -1,8 +1,9 @@
 import _config   from 'app.config'
 import localDB   from 'localforage'
-import ethWallet from 'eth-lightwallet'
-
 import * as Utils from 'utils'
+
+// import ethWallet from 'eth-lightwallet'
+const ethWallet = window.ligthwallet
 
 import RPC     from './RPC'
 const rpc    = new RPC( _config.HttpProviders.infura.url )

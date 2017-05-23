@@ -1,9 +1,17 @@
-/cache
-/builds
+# See http://help.github.com/ignore-files/ for more about ignoring files.
+
+# dependencies
 /node_modules
-/dist/**/*
-!/dist/ChromeExt_BankRoller.crx
-yarn.lock
-yarn-error.log
-/builds/ChromeExtension/ChromeExt_BankRoller.pem
-/builds/ChromeExtension/*.pem
+
+# testing
+/coverage
+
+# production
+/dist
+/build
+/builds
+
+# misc
+.DS_Store
+.env
+npm-debug.log
