@@ -1,0 +1,52 @@
+body {
+	min-width: 650px !important;
+}
+
+
+.logo {
+	display: inline-block;
+	width: 30px; height: 30px;
+	img {
+		width:100%; height:auto;
+	margin: -5px 0 0 0;
+	}
+	transition:transform 0.2s ease;
+	transform:scale(0.8);
+	&:hover {
+		transform:scale(0.9);
+	}
+}
+
+
+header {
+	padding: 5px 10px 0px 20px;
+	background: #222;
+}
+
+
+.mainmenu {
+	&, li, a { display:inline-block; }
+
+	margin: 5px 0 0 20px;
+	// position:relative; top:10px;
+
+	a {
+		color: #fff;
+		border-bottom: 2px solid #222;
+		padding:10px 20px;
+		text-transform: uppercase; letter-spacing: 1px; font-size: 12px;
+
+		transition:opacity 0.2s ease, border 0.2s ease;
+		opacity: 0.5;
+		&:hover {
+			opacity: 0.6;
+			border-color: #aaa;
+		}
+
+		&.active {
+			opacity:0.8;
+			border-color: #fff;
+		}
+	}
+}
+

@@ -21,56 +21,13 @@
 
 		<meta name="application-name"           content="SecurityTest">
 		<meta name="apple-mobile-web-app-title" content="SecurityTest">
-
 		<meta name="apple-mobile-web-app-capable"          content="yes"/>
 		<meta name="apple-mobile-web-app-status-bar-style" content="black">
 		<meta name="msapplication-TileColor" content="#1c2026">
 	</head>
 	<body>
+		<app></app>
 
-	<figure id="logo">
-	  <img src="assets/img/logo.png"/>
-	  <a href="https://dao.casino/">DAO.<span>Casino</span></a>
-	  <p>Bankroller confirm panel</p>
-	</figure>
-
-	<div id="content" class="loading"> <div id="loading_status"></div>
-
-		<div class="game-stat">
-			  <table id="games" style="display: none">
-				<thead><tr>
-				  <th>Game URL</th>
-				  <th>contract</th>
-				  <th>bankroll</th>
-				  <th>profit</th>
-				  <th>actions</th>
-				</tr></thead>
-				<tbody>
-				</tbody>
-			  </table>
-		</div>
-
- 		<div class="game-add-forms">
-		  <form id="add_game_form">
-			<fieldset>
-				<legend>Create new game</legend>
-				<select required>
-					<option selected="selected" value="">Select game</option>
-					<option value="dice">Dice</option>
-				</select>
-				<button class="button" id="create_new_game">Create</button>
-			</fieldset>
-		  </form>
-		  <form id="add_contract_form">
-			<fieldset>
-				<legend>or add existing game contract</legend>
-				<input placeholder="Contract ID" type="text" name="contract_id" id="contract_id" required autocomplete="off">
-				<button class="button" id="add_game_contract_id">Add</button>
-			</fieldset>
-		  </form>
-		</div>
-
-	</div>
-
+		<script type="text/javascript" src="/libs/lightwallet.min.js"></script>
 	</body>
 </html>

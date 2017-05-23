@@ -2,123 +2,29 @@ import $ from 'jquery'
 import _config from '../app.config.js'
 import localDB from 'localforage'
 
+import riot from 'riot'
+import route from 'riot-route'
 
-function reverseForIn(obj, f) {
-	let arr = []
-	for (let key in obj) {
-		arr.push(key)
-	}
-	for (let i=arr.length-1; i>=0; i--) {
-		f.call(obj, arr[i])
-	}
-}
+// import {reverseForIn} from 'model/Utils'
+import {reverseForIn} from 'utils'
 
-class View {
+export default class View {
 	constructor() {
-		this.$content = $('#content')
+		this.importTags()
+
+		riot.mount('*')
+
+		this.routing()
 	}
 
-	loading(load, status=''){
-		this.$content.removeClass('loading')
-		this.$content.removeClass('loading')
-		if (load) {
-			this.$content.addClass('loading')
-		}
-		$('#loading_status').text(status)
+	importTags() {
+		let tc = require.context('./components/', true, /\.tag$/)
+		tc.keys().forEach(function(path){ tc(path) })
 	}
 
-	onContractAdd(callback){
-		let $input = $('#contract_id')
-
-		$('#add_contract_form').on('submit', (e)=>{
-			e.preventDefault()
-
-			let contract_id = $input.val()
-
-			$input.val('')
-
-			callback(contract_id)
-		})
-	}
-	onGameAdd(callback){
-		$('#add_game_form').on('submit', (e)=>{
-			e.preventDefault()
-
-			callback( $('#add_game_form select').val() )
-		})
-	}
-
-	renderGamesList(games){
-		if (!games || !Object.keys(games).length) {
-			$('table#games').hide()
-			$('table#games tbody').html('')
-			return
-		}
-
-		let games_html = ''
-		for(let contract_id in games){
-			let game     = games[contract_id]
-			let bankroll = game.start_balance
-			let profit   = (+game.balance - +game.start_balance).toFixed(4)
-			if (isNaN(profit)) {
-				profit = ''
-			}
-			// TODO: delta +30-205
-			if (profit>0) {
-				profit = '<span style="color:green">'+profit+' bet</span>'
-			} else {
-				profit = '<span style="color:red">'+profit+' bet</span>'
-			}
-
-
-			let contract_link = `
-					<a  class="address"
-						target="_blank" rel="noopener"
-						title="${contract_id}"
-						href="https://${_config.network}.etherscan.io/address/${contract_id}">
-							${contract_id}
-					</a>`
-
-			let game_url = _config.games.dice.url+'?address='+contract_id
-
-			if (game.deploying) {
-				game_url      = '#'
-				contract_id   = 'deploying...'
-				contract_link = 'deploying'
-			}
-
-			games_html += `<tr>
-				<td>
-					<a  class="address"
-						target="_blank" rel="noopener"
-						title="${game_url}"
-						href="${game_url}">
-							${game_url}
-					</a>
-				</td>
-				<td>
-					${contract_link}
-				</td>
-				<td>${bankroll}</td>
-				<td class="profit">${profit}</td>
-				<td>
-					<a data-id="${contract_id}" href="#delete">remove</a>
-				</td>
-			</tr> `
-			// <span>stop</span> <a href="#get_money">refund</a>
-		}
-
-		if (games_html) {
-			$('table#games').show()
-			$('table#games tbody').html(games_html)
-
-			$('table#games tbody a[href="#delete"]').on('click',function(){
-				if (confirm('Shure?')) {
-					App.Games.remove( $(this).attr('data-id') )
-					$(this).parent().parent().remove()
-				}
-			})
-		}
+	routing() {
+		route.base('/')
+		route.start(true)
 	}
 
 	transactionsUpdate(){
@@ -195,9 +101,4 @@ class View {
 		$('#content table.seeds').remove()
 		$('table#games').after(html)
 	}
-
-
 }
-
-
-export default new View()

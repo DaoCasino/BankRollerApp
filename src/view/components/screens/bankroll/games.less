@@ -1,0 +1,108 @@
+.pulse {
+	animation: pulsate 0.7s ease-out;
+	animation-iteration-count: infinite;
+	opacity: 0.0;
+
+	@keyframes pulsate {
+		0%   { opacity: 0.0;}
+		50%  { opacity: 1.0;}
+		100% { opacity: 0.0;}
+	}
+}
+
+#bankroll {
+	text-align:center;
+	padding: 40px  0px  40px  0px;
+
+	&.loading * { display:none; }
+	&.loading:after {
+		content:'Loading...';
+		margin:50px;
+		display:block;
+		letter-spacing:1px;
+		text-transform:uppercase;
+		.pulse();
+	}
+
+	#loading_status {
+		display:inline-block;
+		color:#fff;
+		text-align: center;
+		margin:20px auto 0 auto;
+		border:3px solid #555;
+		padding:20px 30px;
+		// .pulse();
+		&:empty { display:none; }
+	}
+}
+
+
+.game-stat {
+	padding-bottom: 20px;
+	margin-bottom:  10px;
+	border-bottom:  1px solid #333;
+
+	table {
+		width:100%;
+		margin:0 0 20px 0;
+
+		th, td { padding:7px 5px 7px 15px; font-size:13px;
+			white-space:nowrap;
+			a {
+				white-space:nowrap;
+				display:inline-block;
+				max-width:100px;
+			}
+		}
+
+		th {
+			background:rgba(100,100,100,0.1);
+			font-weight:normal; text-transform:uppercase; letter-spacing:1px;
+			font-size:10px;
+		}
+
+		td.profit {
+			white-space: nowrap;
+		}
+
+		a {
+			display: block;
+			overflow: hidden; max-width: 90%;
+			text-overflow:ellipsis;
+		}
+	}
+
+
+	table.seeds {
+		.seed { max-width:100px; }
+		.status { white-space:nowrap; }
+	}
+}
+
+.game-add-forms {
+	form {
+		margin-left: 30px;
+		padding:20px;
+		text-align: left;
+
+		select, input {
+			margin-right: 10px;
+			width:220px;
+
+			&:invalid+.button {
+				pointer-events:none;
+				background:#aaa;
+			}
+		}
+
+		fieldset {
+			legend {
+				font-size:9px; text-transform:uppercase; letter-spacing:1px;
+				color:#fff;
+			}
+		}
+		.button {
+			width:120px;
+		}
+	}
+}

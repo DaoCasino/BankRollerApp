@@ -11,20 +11,17 @@
     "start": "npm run serve:web",
     "serve:web": "node scripts/start.js",
     "build:web": "node scripts/build.js",
-    "build": "npm run cp:electron & npm run build:web",
-    "cp:electron": "cp ./src/index.electron.js ./public/index.electron.js & cp ./src/index.electron.js ./build/index.electron.js",
-    "serve:electron": "npm run cp:electron & npm run serve & sleep 5; export dev=true; electron .",
-    "run:electron": "npm run cp:electron; electron .",
-
-   	"build:electron": "build -mwl --x64 --ia32",
-   	"build:electron:windows": "build -w --x64",
-
-    "pack:electron:linux": "npm run cp:electron & electron-packager ./ BankRoller --overwrite --app-version=1.0.0 --out=dist --ignore=node_modules --ignore=src --ignore=config --ignore=scripts --ignore=public --prune",
-    "pack:electron:windows": "npm run cp:electron & electron-packager ./ BankRoller --overwrite --platform=win32 --app-version=1.0.0 --out=dist --ignore=node_modules --ignore=src --ignore=config --ignore=scripts --ignore=public --prune",
-    "pack:electron": "npm run cp:electron & electron-packager ./ BankRoller --overwrite --all --app-version=1.0.0 --out=dist --ignore=node_modules --ignore=src --ignore=config --ignore=scripts --ignore=public --prune",
+    "build": "npm run cp_electron & npm run build:web",
+    "cp_electron": "cp ./src/index.electron.js ./public/index.electron.js & cp ./src/index.electron.js ./build/index.electron.js",
+    "serve:electron": "npm run cp_electron & npm run serve:web & sleep 5; export dev=true; electron .",
+    "run:electron": "npm run cp_electron; electron .",
+    "build:electron": "build -mwl --x64 --ia32",
+    "build:electron:windows": "build -w --x64",
+    "pack:electron:linux": "npm run cp_electron & electron-packager ./ BankRoller --overwrite --app-version=1.0.0 --out=dist --ignore=node_modules --ignore=src --ignore=config --ignore=scripts --ignore=public --prune",
+    "pack:electron:windows": "npm run cp_electron & electron-packager ./ BankRoller --overwrite --platform=win32 --app-version=1.0.0 --out=dist --ignore=node_modules --ignore=src --ignore=config --ignore=scripts --ignore=public --prune",
+    "pack:electron": "npm run cp_electron & electron-packager ./ BankRoller --overwrite --all --app-version=1.0.0 --out=dist --ignore=node_modules --ignore=src --ignore=config --ignore=scripts --ignore=public --prune",
     "test": "node scripts/test.js --env=jsdom"
   },
-
   "build": {
     "appId": "com.daocasino.bankroller",
     "files": [
@@ -37,9 +34,9 @@
       "package.json"
     ],
     "publish": null,
-	"win": {
-		"icon": "public/windows-icon.ico"
-	}
+    "win": {
+      "icon": "public/windows-icon.ico"
+    }
   },
   "jest": {
     "collectCoverageFrom": [
@@ -73,6 +70,7 @@
     "ethereumjs-abi": "^0.6.4",
     "jquery": "^3.2.1",
     "localforage": "^1.5.0",
+    "qrcode-svg": "^0.9.0",
     "riot": "^3.5.1",
     "riot-route": "^3.1.1",
     "solidity-sha3": "^0.4.1",
