@@ -4,19 +4,42 @@
   "description": "Dao.Casino app for bankroller",
   "main": "./build/index.electron.js",
   "homepage": "./",
-
   "repository": "https://github.com/DaoCasino/",
   "author": "Alex Step <to@alexstep.com>",
-
   "private": true,
   "scripts": {
-    "start": "node scripts/start.js",
-    "build": "node scripts/build.js",
-	"serve:electron": "export dev=true; gulp electron",
-    "start:electron": "electron .",
-     "build:electron:linux": "electron-packager ./ BankRoller --overwrite --app-version=1.0.0 --out=builds --ignore=node_modules --ignore=src --ignore=tests --ignore=dist/_locales --prune",
-    "build:electron": "electron-packager ./ BankRoller --overwrite --all --app-version=1.0.0 --out=builds --ignore=node_modules --ignore=src --ignore=tests --ignore=dist/_locales --prune",
+    "start": "npm run serve:web",
+    "serve:web": "node scripts/start.js",
+    "build:web": "node scripts/build.js",
+    "build": "npm run cp:electron & npm run build:web",
+    "cp:electron": "cp ./src/index.electron.js ./public/index.electron.js & cp ./src/index.electron.js ./build/index.electron.js",
+    "serve:electron": "npm run cp:electron & npm run serve & sleep 5; export dev=true; electron .",
+    "run:electron": "npm run cp:electron; electron .",
+
+   	"build:electron": "build -mwl --x64 --ia32",
+   	"build:electron:windows": "build -w --x64",
+
+    "pack:electron:linux": "npm run cp:electron & electron-packager ./ BankRoller --overwrite --app-version=1.0.0 --out=dist --ignore=node_modules --ignore=src --ignore=config --ignore=scripts --ignore=public --prune",
+    "pack:electron:windows": "npm run cp:electron & electron-packager ./ BankRoller --overwrite --platform=win32 --app-version=1.0.0 --out=dist --ignore=node_modules --ignore=src --ignore=config --ignore=scripts --ignore=public --prune",
+    "pack:electron": "npm run cp:electron & electron-packager ./ BankRoller --overwrite --all --app-version=1.0.0 --out=dist --ignore=node_modules --ignore=src --ignore=config --ignore=scripts --ignore=public --prune",
     "test": "node scripts/test.js --env=jsdom"
+  },
+
+  "build": {
+    "appId": "com.daocasino.bankroller",
+    "files": [
+      "build/**/*",
+      "node_modules/**/*",
+      "!config/**/*",
+      "!scripts/**/*",
+      "!src/**/*",
+      "!builds/**/*",
+      "package.json"
+    ],
+    "publish": null,
+	"win": {
+		"icon": "public/windows-icon.ico"
+	}
   },
   "jest": {
     "collectCoverageFrom": [
@@ -44,20 +67,18 @@
   },
   "eslintConfig": {},
   "dependencies": {
+    "async-priority-queue": "^0.1.2",
+    "big-integer": "^1.6.22",
+    "eth-lightwallet": "^2.5.4",
+    "ethereumjs-abi": "^0.6.4",
+    "jquery": "^3.2.1",
+    "localforage": "^1.5.0",
     "riot": "^3.5.1",
     "riot-route": "^3.1.1",
-	"async-priority-queue": "^0.1.2",
     "solidity-sha3": "^0.4.1",
-    "big-integer": "^1.6.22",
-    "jquery": "^3.2.1",
-    "ethereumjs-abi": "^0.6.4",
-    "eth-lightwallet": "^2.5.4",
-    "localforage": "^1.5.0",
     "web3": "^0.19.0"
   },
   "devDependencies": {
-	"electron": "^1.6.7",
-	"electron-packager": "^8.7.0",
     "autoprefixer": "6.5.1",
     "babel-core": "6.17.0",
     "babel-eslint": "7.1.1",
@@ -75,6 +96,9 @@
     "css-loader": "0.26.0",
     "detect-port": "1.0.1",
     "dotenv": "2.0.0",
+    "electron": "^1.6.7",
+    "electron-builder": "^17.10.0",
+    "electron-packager": "^8.7.0",
     "eslint": "3.8.1",
     "eslint-loader": "1.6.0",
     "eslint-plugin-flowtype": "2.21.0",

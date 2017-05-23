@@ -80,11 +80,11 @@ document.addEventListener('DOMContentLoaded',()=>{
 
 	setTimeout(()=>{
 		// if (process && process.versions && process.versions.electron) {
-			Games.checkBalances()
+		Games.checkBalances()
 
-			Games.checkTasks()
+		Games.checkTasks()
 
-			Games.runConfirm()
+		Games.runConfirm()
 		// }
 	}, 5000)
 
