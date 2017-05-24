@@ -23,7 +23,11 @@ export default class View {
 	}
 
 	routing() {
-		route.base('/')
+		let link_prefix = '/'
+		if (window.location.protocol=='file:') {
+			link_prefix = '#'
+		}
+		route.base(link_prefix)
 		route.start(true)
 	}
 

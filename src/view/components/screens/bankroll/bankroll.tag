@@ -8,7 +8,7 @@ import './games_list'
 <bankroll>
 	<script>
 		this.loading = true
-		this.games = []
+		this.games = _config.games
 		this.on('mount', ()=>{
 			this.loading = false
 			this.update()
@@ -37,16 +37,14 @@ import './games_list'
 			this.loading_status = 'Add contract...'
 			this.update()
 
-			Games.add(this.refs.contract_id.value, (info)=>{
+			Games.add('unknow', this.refs.contract_id.value, (info)=>{
 				this.loading = true
 				this.loading_status = 'Game added!'
 
 				setTimeout(()=>{
-					Games.get((games)=>{
-						this.loading = false
-						this.loading_status = ''
-						this.update()
-					})
+					this.loading = false
+					this.loading_status = ''
+					this.update()
 				},2000)
 			})
 		}
@@ -60,10 +58,10 @@ import './games_list'
  		<div class="game-add-forms">
 		  <form id="add_game_form" onsubmit={deployGame}>
 			<fieldset>
-				<legend>Create new game</legend>
+				<legend>Deploy new game contract</legend>
 				<select ref="game_name" required>
 					<option selected="selected" value="">Select game</option>
-					<option value="dice">Dice</option>
+					<option each={game in games} value="{game.name}">{game.name}</option>
 				</select>
 				<button class="button" id="create_new_game">Create</button>
 			</fieldset>

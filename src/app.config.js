@@ -31,8 +31,13 @@ const games = {
 	dice:{
 		name:'dice',
 		url:'http://dev.dao.casino/games/dice/',
+	},
+	blackjack:{
+		name:'blackjack',
+		url:'http://blackjackgame.dao.casino/games/bj/',
 	}
 }
+
 
 const configs = {
 	'mainnet': {
