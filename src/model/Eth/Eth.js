@@ -28,7 +28,7 @@ class Eth {
 	deployContract(contract_bytecode, gasprice=151000000000, callback_deployed, callback_proccess){
 
 		let checkContractDeployed = (transaction_hash, callback)=>{ setTimeout(()=>{
-			console.log('checkContractDeployed', 'https://'+_config.network+'.etherscan.io/tx/'+transaction_hash)
+			console.log('checkContractDeployed', _config.etherscan_url+'/tx/'+transaction_hash)
 
 			this.RPC.request('getTransactionReceipt', [transaction_hash]).then( response => {
 
@@ -39,7 +39,7 @@ class Eth {
 					return
 				}
 
-				console.log('[OK] checkContractDeployed - address:', 'https://'+_config.network+'.etherscan.io/address/'+response.result.contractAddress)
+				console.log('[OK] checkContractDeployed - address:', _config.etherscan_url+'/address/'+response.result.contractAddress)
 
 				callback(response.result.contractAddress)
 			}).catch( err => {

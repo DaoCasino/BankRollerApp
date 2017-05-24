@@ -21,11 +21,7 @@ import route from 'riot-route'
 		</a>
 
 		<mainmenu></mainmenu>
-
-		<!-- <ul class="network">
-			<li><a href="">ropsten</a></li>
-			<li><a href="">rinkeby</a></li>
-		</ul> -->
+		<network_switcher></network_switcher>
 	</header>
 
 	<section id="content" ref="mount_point">

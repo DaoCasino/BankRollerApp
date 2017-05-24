@@ -63,7 +63,7 @@ export default class View {
 				<a  class="address"
 					target="_blank" rel="noopener"
 					title="${seed}"
-					href="https://${_config.network}.etherscan.io/tx/${seed}">
+					href="${_config.etherscan_url}/tx/${seed}">
 						${seed}
 				</a>
 				</td>
@@ -71,7 +71,7 @@ export default class View {
 				<a  class="address"
 					target="_blank" rel="noopener"
 					title="${info.contract}"
-					href="https://${_config.network}.etherscan.io/${info.contract}">
+					href="${_config.etherscan_url}/${info.contract}">
 						${info.contract}
 				</a>
 				</td>

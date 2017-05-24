@@ -1,5 +1,17 @@
 <stat>
+	<script>
+		this.on('mount',()=>{
+
+
+		})
+	</script>
 	<div>
-		stat
+		<section id="auth-button"></section>
+		<section id="view-selector"></section>
+		<section id="timeline"></section>
 	</div>
+
+	<style type="less">
+
+	</style>
 </stat>

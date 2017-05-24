@@ -33,7 +33,7 @@ import Games    from 'games'
 					}
 
 
-					let contract_link = `https://${_config.network}.etherscan.io/address/${contract_id}`
+					let contract_link = `${_config.etherscan_url}/address/${contract_id}`
 
 					let game_url = _config.games.dice.url+'?address='+contract_id
 
@@ -56,8 +56,12 @@ import Games    from 'games'
 			})
 		}
 	</script>
+
 	<div class="game-stat">
-		<table id="games">
+
+		<span if={!games.length}>No games...</span>
+
+		<table if={games.length} id="games">
 		<thead><tr>
 			<th>Game URL</th>
 			<th>contract</th>
