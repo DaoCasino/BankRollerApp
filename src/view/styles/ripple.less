@@ -1,0 +1,37 @@
+/*
+ * Pure CSS ripple effect (no JavaScript)
+ * CSS-only implementation of Android Material design "ripple" animation on click event
+ *
+ * https://github.com/mladenplavsic/css-ripple-effect/
+ */
+
+.ripple {
+  position: relative;
+  overflow: hidden;
+
+  &:after {
+    content: "";
+    display: block;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    background-image: radial-gradient(circle, #000 10%, transparent 10.01%);
+    background-repeat: no-repeat;
+    background-position: 50%;
+    // transform: scale3d(10,10,10);
+    opacity: 0;
+    transition: all .4s, opacity 1s;
+    background-size: 1000%;
+  }
+
+  &:active:after {
+
+    background-size: 0;
+    // transform: scale3d(0,0,0);
+    opacity: .2;
+    transition: 0s;
+  }
+}

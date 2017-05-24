@@ -1,12 +1,13 @@
-import _config   from 'app.config'
-import localDB   from 'localforage'
+import _config    from 'app.config'
+import localDB    from 'localforage'
 import * as Utils from 'utils'
 
-// import ethWallet from 'eth-lightwallet'
-const ethWallet = window.ligthwallet
+import RPC from './RPC'
+const rpc = new RPC( _config.HttpProviders.infura.url )
 
-import RPC     from './RPC'
-const rpc    = new RPC( _config.HttpProviders.infura.url )
+// connected as external lib
+const ethWallet = window.lightwallet
+// import ethWallet from 'eth-lightwallet'
 
 let _wallet = {}
 

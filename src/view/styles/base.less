@@ -1,4 +1,8 @@
 
+html, body {
+	background:#202020;
+}
+
 html {
 	color:#fff;
 
@@ -29,6 +33,92 @@ body, body * {
 body {
   background: #202020;
   color:#999;
+  user-select:none;
 }
 a { color:#fff; }
 a:hover { color:#ccc; }
+
+::selection {
+	color:#fff; background:#000;
+}
+
+
+
+@keyframes pulsate {
+	0%   { opacity: 0.0;}
+	50%  { opacity: 1.0;}
+	100% { opacity: 0.0;}
+}
+
+select {
+	pointer-events:all; cursor: pointer;
+	background:transparent; color:#aaa;
+	padding:8px;  border-radius:2px;
+
+	border-radius: 3px;
+
+	padding:8px 8px 8px 8px;
+
+	text-transform:uppercase;
+	font-size:12px;
+	letter-spacing:1px;
+
+	height:40px;
+
+	& * {
+		color:#fff;
+		background-color: rgb(25, 47, 61);
+	}
+
+	option {
+		font-size:14px; line-height: 30px;
+		// padding:10px 15px 10px 10px;
+		// border:none;
+		&:checked {
+			color:#ed9726;
+		}
+	}
+
+	&:-moz-focusring {
+		color: transparent;
+		text-shadow: 0 0 0 #fff;
+	}
+
+	&:active,&:focus {
+		outline:none;
+		-moz-outline:none;
+	}
+}
+
+
+input {
+  background:transparent; border: 0;
+  border-bottom: 2px solid #777;
+  padding:10px 20px 8px 10px;
+  color:#fff;
+  font-size:16px; letter-spacing:1px;
+}
+input:focus {
+  border-bottom-color:#aaa; outline: none;
+}
+input::-webkit-input-placeholder {
+  font-size:12px;
+  opacity: 1;
+  text-transform:uppercase; letter-spacing:1px;
+}
+input:focus:empty::-webkit-input-placeholder {
+  color:rgba(0,0,0,0);
+}
+
+
+.button {
+  background: #ed9726;
+  border:0; color:#202020;
+  padding:10px 20px;
+  letter-spacing:1px;
+  text-transform:uppercase;
+  font-weight:600;
+  border-radius:2px;
+
+  margin:10px auto;
+}

@@ -20,3 +20,14 @@ export const pad = (num, size) => {
 }
 
 
+export const reverseForIn = (obj, f) => {
+	let arr = []
+	for (let key in obj) {
+		arr.push(key)
+	}
+	for (let i=arr.length-1; i>=0; i--) {
+		f.call(obj, arr[i])
+	}
+}
+
+

@@ -75,6 +75,11 @@ class Games {
 		// }
 		this.load(callback)
 	}
+	getSeeds(callback){
+		localDB.getItem('seeds_list', (err, seeds_list)=>{
+			callback(seeds_list)
+		})
+	}
 
 
 	create(name, callback){
@@ -190,18 +195,7 @@ class Games {
 	}
 
 	checkBalances(){
-		console.log('checkBalances')
-		Eth.getEthBalance(Eth.Wallet.get().openkey, (balance)=>{
-			if (balance < 1) {
-				Api.addBets(Eth.Wallet.get().openkey)
-			}
-		})
-		// Eth.getBetsBalance(Eth.Wallet.get().openkey, (balance)=>{
-		// })
 
-		setTimeout(()=>{
-			this.checkBalances()
-		}, 30000)
 	}
 
 	runConfirm(){
