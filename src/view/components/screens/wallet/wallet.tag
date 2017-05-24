@@ -19,6 +19,10 @@ import './wallet.less'
 			this.updateWallet()
 		})
 
+
+		/*
+		 * Init wallet and get balance
+		 */
 		this.updateWallet = ()=>{
 			if (!Eth.Wallet.get().openkey) {
 				setTimeout(()=>{
@@ -57,35 +61,28 @@ import './wallet.less'
 			})
 		}
 
-		this.showPrivateKey = ()=>{
 
-			Eth.Wallet.exportPrivateKey(private_key=>{
+		/*
+		 * Copy address to clippboard
+		 */
+		this.copyToClipboard = (text)=>{
+			const input          = document.createElement('input')
+			input.style.position = 'fixed'
+			input.style.opacity  = 0
+			input.value          = text
 
-			})
+			document.body.appendChild(input)
 
-		}
-
-		this.copy = (e)=>{
-			function copyToClipboard(text) {
-				const input = document.createElement('input');
-				input.style.position = 'fixed';
-				input.style.opacity = 0;
-				input.value = text;
-				document.body.appendChild(input);
-				input.select();
-				document.execCommand('Copy');
-				document.body.removeChild(input);
-			};
-
-			copyToClipboard( e.target.value )
+			input.select()
+			document.execCommand('Copy')
+			document.body.removeChild(input)
 
 			toastr.options.showDuration = 100
 			toastr.options.hideDuration = 100
 			toastr.options.timeOut = 1000
 			toastr.options.extendedTimeOut = 100
-
 			if (!this.toastshowed) {
-				toastr.success('Address copied to clipboard', 'Copied')
+				toastr.success('Copied to clipboard', 'Copied')
 				this.toastshowed = true
 			}
 			this.toast_t = setTimeout(()=>{
@@ -93,9 +90,21 @@ import './wallet.less'
 			}, 2000)
 		}
 
+		this.copy = (e)=>{
+			e.preventDefault()
+			if (!e.target.value) {
+				return
+			}
+
+			this.copyToClipboard( e.target.value )
+		}
+
+
+		/*
+		 * Get test BETs
+		 */
 		this.getTestBets_proccess = false
 		this.bets_requested = localStorage.getItem('bets_requested_'+_config.network)
-
 		this.getTestBets = (e)=>{
 			e.preventDefault()
 			this.getTestBets_proccess = true
@@ -105,8 +114,25 @@ import './wallet.less'
 				localStorage.setItem('bets_requested_'+_config.network, true)
 				toastr.info('Request sended', 'Please waiting')
 			})
-
 		}
+
+
+		/*
+		 * Export
+		 */
+		this.private_key = ''
+		this.exportPrivateKey = ()=>{
+			Eth.Wallet.exportPrivateKey(private_key=>{
+				this.copyToClipboard( private_key )
+				this.private_key = private_key
+				this.update()
+				setTimeout(()=>{
+					this.private_key = ''
+					this.update()
+				}, 5000)
+			})
+		}
+
 	</script>
 	<div class="wallet-wrap">
 		<div class="address" if={address}>
@@ -116,7 +142,9 @@ import './wallet.less'
 
 			<label>Account Address:</label>
 
-			<input onclick={copy} type="text" value="{address}" size="42">
+			<div onclick={copy}>
+			<input disabled="disabled" type="text" value="{address}" size="42">
+			</div>
 		</div>
 
 		<div class={balance:true}>
@@ -132,7 +160,17 @@ import './wallet.less'
 				<b if={!balance.bet} class="loading">.:</b>
 				<b if={balance.bet}>{balance.bet}</b> BET
 			</span>
+		</div>
 
+
+		<div class="export">
+			<label>Export private key:</label>
+			<input onclick={copy} value="{private_key}" disabled="disabled" type="text" placeholder="****************************************************************************************************************************************">
+			<button onclick={exportPrivateKey}>Export</button>
+			<p>
+				You can access to your wallet by Private Key in services like
+				<a target="_blank" rel="noopener" href="https://www.myetherwallet.com/#view-wallet-info">myetherwallet</a>
+			</p>
 		</div>
 	</div>
 </wallet>

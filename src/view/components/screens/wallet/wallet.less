@@ -82,11 +82,39 @@
 		}
 
 		.bets-requested {
+			pointer-events:none;
 			border: 0;
 			color:#c22;
 			left:480px;
 		}
+	}
 
+
+	.export {
+		clear:both;
+		margin:40px 0 0 10px;
+		label { padding-left:0; padding-right:0; }
+		input {
+			width:490px; padding-left:0;
+			font-size:12px;
+		}
+		button {
+			text-transform:uppercase;
+			border:1px solid #fff;
+			color:#fff;
+			background:transparent;
+			font-size:11px; letter-spacing:2px;
+			padding:9px 17px 9px 17px;
+			opacity:0.6;
+			margin:0 0 0 3px; position:relative; top:1px;
+			&:hover {
+				opacity:0.8;
+			}
+		}
+		p {
+			font-size:14px;
+			margin:10px 10px 10px 0px;
+		}
 	}
 }
 
