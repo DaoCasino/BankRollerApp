@@ -37,7 +37,7 @@ import './games_list'
 			this.loading_status = 'Add contract...'
 			this.update()
 
-			Games.add('unknow', this.refs.contract_id.value, (info)=>{
+			Games.add('unknow', this.refs.contract_id.value.split(' ').join(''), (info)=>{
 				this.loading = true
 				this.loading_status = 'Game added!'
 

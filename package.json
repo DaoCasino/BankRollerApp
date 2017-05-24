@@ -18,6 +18,7 @@
     "build:electron": "build -mwl --x64 --ia32",
     "build:electron:windows": "build -w --x64",
     "build:electron:linux": "build -l --x64",
+    "build:electron:mac": "build -m --x64",
     "pack:electron:linux": "npm run cp_electron & electron-packager ./ BankRoller --overwrite --app-version=1.0.0 --out=dist --ignore=node_modules --ignore=src --ignore=config --ignore=scripts --ignore=public --prune",
     "pack:electron:windows": "npm run cp_electron & electron-packager ./ BankRoller --overwrite --platform=win32 --app-version=1.0.0 --out=dist --ignore=node_modules --ignore=src --ignore=config --ignore=scripts --ignore=public --prune",
     "pack:electron": "npm run cp_electron & electron-packager ./ BankRoller --overwrite --all --app-version=1.0.0 --out=dist --ignore=node_modules --ignore=src --ignore=config --ignore=scripts --ignore=public --prune",

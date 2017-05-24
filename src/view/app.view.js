@@ -15,6 +15,10 @@ export default class View {
 		riot.mount('*')
 
 		this.routing()
+
+		if (!this.isFontAvaible('Roboto')) {
+			$('body').append('<link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900&amp;subset=cyrillic" rel="stylesheet">')
+		}
 	}
 
 	importTags() {
@@ -31,78 +35,39 @@ export default class View {
 		route.start(true)
 	}
 
-	transactionsUpdate(){
-		setInterval(()=>{
-			localDB.getItem('seeds_list', (err, seeds_list)=>{
-				if (seeds_list) {
-					this.renderTXs(seeds_list)
-				}
-			})
-		}, 5000)
-	}
 
-	renderTXs(seeds){
-		let html = ''
-		let max_cnt = 10
-		reverseForIn(seeds, (seed)=>{
-			max_cnt--
-			if (max_cnt < 0) {
-				return
-			}
+	isFontAvaible(font){
+		let width
+		let body = document.body
 
-			let info = seeds[seed]
-			let status = 'wait'
-			if (info.confirm_sended_server) {
-				status = 'on server'
-			}
-			if (info.confirm_sended_blockchain) {
-				status = 'on blockchain'
-			}
-			if (!info.contract) {
-				info.contract = ''
-			}
+		let container = document.createElement('span')
+		container.innerHTML = Array(100).join('wi')
+		container.style.cssText = [
+			'position:absolute',
+			'width:auto',
+			'font-size:128px',
+			'left:-99999px'
+		].join(' !important;')
 
-			html += `<tr>
-				<td class="seed">
-				<a  class="address"
-					target="_blank" rel="noopener"
-					title="${seed}"
-					href="${_config.etherscan_url}/tx/${seed}">
-						${seed}
-				</a>
-				</td>
-				<td class="seed">
-				<a  class="address"
-					target="_blank" rel="noopener"
-					title="${info.contract}"
-					href="${_config.etherscan_url}/${info.contract}">
-						${info.contract}
-				</a>
-				</td>
-				<td class="status">
-					${status}
-				</td>
-				<td class="confirm">
-					<span title="Server:${info.confirm_server} blockchain:${info.confirm_blockchain}">${info.confirm}</span>
-				</td>
-			</tr>`
-		})
+		let getWidth = function (fontFamily) {
+			container.style.fontFamily = fontFamily
 
-		html = `<table class="seeds">
-			<thead>
-				<tr>
-					<th>TX</th>
-					<th>Contract</th>
-					<th>status</th>
-					<th>random</th>
-				</tr>
-			</thead>
-			<tbody>
-				${html}
-			</tbody>
-		</table>`
+			body.appendChild(container)
+			width = container.clientWidth
+			body.removeChild(container)
 
-		$('#content table.seeds').remove()
-		$('table#games').after(html)
+			return width
+		}
+
+		// Pre compute the widths of monospace, serif & sans-serif
+		// to improve performance.
+		let monoWidth  = getWidth('monospace')
+		let serifWidth = getWidth('serif')
+		let sansWidth  = getWidth('sans-serif')
+
+
+		return monoWidth !== getWidth(font + ',monospace') ||
+		  sansWidth !== getWidth(font + ',sans-serif') ||
+		  serifWidth !== getWidth(font + ',serif')
 	}
 }

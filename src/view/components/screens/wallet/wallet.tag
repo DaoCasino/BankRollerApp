@@ -143,7 +143,7 @@ import './wallet.less'
 	</script>
 	<div id="wallet">
 	<div if={!address} class="wallet-wrap">
-		Loading your wallet, please wait one moment...
+		<spinner text="Loading your wallet, please wait one moment..."></spinner>
 	</div>
 	<div if={address} class="wallet-wrap">
 		<div class="address">

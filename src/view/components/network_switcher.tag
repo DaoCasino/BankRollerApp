@@ -38,6 +38,9 @@ import _config from 'app.config'
 			<i class="{current_network.code}"></i>
 			<b>{current_network.name}</b>
 		</span>
+
+		<svg class="arrow" xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:svgjs="http://svgjs.com/svgjs" width="11" height="8" viewBox="0 0 11 8"><defs id="SvgjsDefs1012"></defs><path id="SvgjsPath1013" d="M1427.37 73.276L1422.1899999999998 66.9576L1432.61 67.0027Z " fill="#ffffff" fill-opacity="1" transform="matrix(1,0,0,1,-1422,-66)"></path></svg>
+
 		<ul if={networks}>
 			<li each={network in networks} onclick={selectNetwork} class="ripple">
 				<i class="{network.code}"></i>
@@ -52,6 +55,14 @@ import _config from 'app.config'
 
 			height: 45px;
 			box-sizing: border-box;
+
+			.arrow {  display:block;
+				width:8px; height:10px;
+				position:absolute; right:10px; top:15px;
+
+				transition:transform 0.2s linear;
+				opacity: 0.5;
+			}
 
 			.current {
 				cursor:pointer;
