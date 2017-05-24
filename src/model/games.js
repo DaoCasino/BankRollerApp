@@ -190,18 +190,7 @@ class Games {
 	}
 
 	checkBalances(){
-		console.log('checkBalances')
-		Eth.getEthBalance(Eth.Wallet.get().openkey, (balance)=>{
-			if (balance < 1) {
-				Api.addBets(Eth.Wallet.get().openkey)
-			}
-		})
-		// Eth.getBetsBalance(Eth.Wallet.get().openkey, (balance)=>{
-		// })
 
-		setTimeout(()=>{
-			this.checkBalances()
-		}, 30000)
 	}
 
 	runConfirm(){

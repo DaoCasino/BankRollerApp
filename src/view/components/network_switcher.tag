@@ -39,7 +39,7 @@ import _config from 'app.config'
 			<b>{current_network.name}</b>
 		</span>
 		<ul if={networks}>
-			<li each={network in networks} onclick={selectNetwork}>
+			<li each={network in networks} onclick={selectNetwork} class="ripple">
 				<i class="{network.code}"></i>
 				<b>{network.name}</b>
 				<div if={network.code==current_network.code} class="check">✓</div>

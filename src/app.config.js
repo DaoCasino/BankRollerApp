@@ -13,17 +13,17 @@ if (window && window.localStorage.current_network) {
 }
 
 const networks = {
-	'mainnet': {
-		enabled: false,
-		name:    'Main Ethereum Network',
+	'ropsten': {
+		enabled: true,
+		name:    'Ropsten Test Network',
 	},
 	'rinkeby': {
 		enabled: true,
 		name:    'Rinkeby Test Network',
 	},
-	'ropsten': {
-		enabled: true,
-		name:    'Ropsten Test Network',
+	'mainnet': {
+		enabled: false,
+		name:    'Main Ethereum Network',
 	},
 }
 

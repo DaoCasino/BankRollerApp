@@ -20,18 +20,12 @@ import Games    from 'games'
 				this.games = []
 				for(let contract_id in games){
 					let game     = games[contract_id]
-					let bankroll = game.start_balance
-					let profit   = (+game.balance - +game.start_balance).toFixed(4)
-					if (isNaN(profit)) {
-						profit = ''
-					}
-					// TODO: delta +30-205
-					if (profit>0) {
-						profit = '<span style="color:green">'+profit+' bet</span>'
-					} else {
-						profit = '<span style="color:red">'+profit+' bet</span>'
-					}
+					let bankroll = game.start_balance.toFixed(4)
 
+					let profit = (+game.balance - +game.start_balance).toFixed(4)
+					if (isNaN(profit)) {
+						profit = 0
+					}
 
 					let contract_link = `${_config.etherscan_url}/address/${contract_id}`
 
@@ -83,8 +77,12 @@ import Games    from 'games'
 						{game.contract_id}
 					</a>
 				</td>
-				<td>{bankroll}</td>
-				<td>{profit}</td>
+				<td>{game.bankroll}</td>
+				<td>
+					<span if={game.profit > 0} style="color:green">{game.profit} bet</span>
+					<span if={game.profit < 0} style="color:red">{game.profit} bet</span>
+					<span if={game.profit == 0} >{game.profit} bet</span>
+				</td>
 				<td></td>
 			</tr>
 		</tbody>

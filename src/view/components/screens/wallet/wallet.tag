@@ -1,8 +1,11 @@
 import _config  from 'app.config'
+
 import Api from 'Api'
 import Eth from 'Eth/Eth'
+
 import QR from 'qrcode-svg'
 import toastr from 'toastr'
+
 import './wallet.less'
 
 <wallet>
@@ -17,6 +20,10 @@ import './wallet.less'
 		this.on('mount', ()=>{
 			this.testnet = _config.network!=='mainnet'
 			this.updateWallet()
+
+			setInterval(()=>{
+				this.updateWallet()
+			}, 30*1000)
 		})
 
 
@@ -166,7 +173,7 @@ import './wallet.less'
 		<div class="export">
 			<label>Export private key:</label>
 			<input onclick={copy} value="{private_key}" disabled="disabled" type="text" placeholder="****************************************************************************************************************************************">
-			<button onclick={exportPrivateKey}>Export</button>
+			<button onclick={exportPrivateKey} class="ripple">Export</button>
 			<p>
 				You can access to your wallet by Private Key in services like
 				<a target="_blank" rel="noopener" href="https://www.myetherwallet.com/#view-wallet-info">myetherwallet</a>

@@ -13,11 +13,11 @@ import route from 'riot-route'
 				name:'Bankroll',
 				active:false,
 			},
-			stat:{
-				link:'/stat',
-				name:'Stat',
-				active:false,
-			},
+			// stat:{
+			// 	link:'/stat',
+			// 	name:'Stat',
+			// 	active:false,
+			// },
 		}
 
 		this.on('mount', ()=>{
@@ -39,8 +39,16 @@ import route from 'riot-route'
 
 	<ul class="mainmenu" >
 		<li each={item, k in menuitems}>
-			<a href="{item.link}" class={active:item.active} draggable="false" >{item.name}</a>
+			<a href="{item.link}" class={active:item.active, ripple:true} draggable="false" >
+				{item.name}
+			</a>
 		</li>
 	</ul>
+
+	<style type="less">
+		.mainmenu li a {
+
+		}
+	</style>
 
 </mainmenu>
