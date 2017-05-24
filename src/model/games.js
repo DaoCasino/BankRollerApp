@@ -75,6 +75,11 @@ class Games {
 		// }
 		this.load(callback)
 	}
+	getSeeds(callback){
+		localDB.getItem('seeds_list', (err, seeds_list)=>{
+			callback(seeds_list)
+		})
+	}
 
 
 	create(name, callback){

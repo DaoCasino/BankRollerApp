@@ -48,6 +48,18 @@ import Games    from 'games'
 
 				this.update()
 			})
+
+			Games.getSeeds(seeds=>{
+				this.seeds = []
+				for(let k in seeds){
+					seeds[k].seed = k
+					seeds[k].tx_link = `${_config.etherscan_url}/tx/${seeds[k].seed}`
+					seeds[k].contract_link = `${_config.etherscan_url}/address/${seeds[k].contract}`
+					this.seeds.push(seeds[k])
+				}
+				this.seeds = this.seeds.reverse().slice(0,10)
+				this.update()
+			})
 		}
 	</script>
 
@@ -56,6 +68,7 @@ import Games    from 'games'
 		<span if={!games.length}>No games...</span>
 
 		<table if={games.length} id="games">
+		<caption>Games, contracts</caption>
 		<thead><tr>
 			<th>Game URL</th>
 			<th>contract</th>
@@ -86,6 +99,38 @@ import Games    from 'games'
 				<td></td>
 			</tr>
 		</tbody>
+		</table>
+
+		<table class="seeds">
+			<caption>Transactions</caption>
+			<thead>
+				<tr>
+					<th>TX</th>
+					<th>Contract</th>
+					<th>status</th>
+					<th>random</th>
+					<th>actions</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr each={s in seeds}>
+					<td><a href="{s.tx_link}" title="{s.seed}" class="address" target="_blank" rel="noopener">{s.seed}</a></td>
+					<td>
+						<a  if={s.contract}
+							href="{s.contract_link}"
+							title="{s.contract}"
+							class="address" target="_blank" rel="noopener">
+							{s.contract}
+						</a>
+					</td>
+					<td>
+						<span if={s.confirm_sended_blockchain}>in blockhain</span>
+						<span if={s.confirm_sended_server}>sended to player</span>
+					</td>
+					<td>{s.confirm}</td>
+					<td></td>
+				</tr>
+			</tbody>
 		</table>
 	</div>
 </games_list>
