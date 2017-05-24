@@ -141,8 +141,12 @@ import './wallet.less'
 		}
 
 	</script>
-	<div class="wallet-wrap">
-		<div class="address" if={address}>
+	<div id="wallet">
+	<div if={!address} class="wallet-wrap">
+		Loading your wallet, please wait one moment...
+	</div>
+	<div if={address} class="wallet-wrap">
+		<div class="address">
 			<svg ref="wallet_qr_code"></svg>
 
 			<a class="etherscan" href="{_config.etherscan_url}/address/{address}" target="_blank" rel="noopener">blockchain</a>
@@ -176,8 +180,9 @@ import './wallet.less'
 			<button onclick={exportPrivateKey} class="ripple">Export</button>
 			<p>
 				You can access to your wallet by Private Key in services like
-				<a target="_blank" rel="noopener" href="https://www.myetherwallet.com/#view-wallet-info">myetherwallet</a>
+				<a target="_blank" rel="noopener" href="https://www.myetherwallet.com/#view-wallet-info">myetherwallet</a> or <a target="_blank" rel="noopener" href="https://metamask.io/">metamask</a>
 			</p>
 		</div>
+	</div>
 	</div>
 </wallet>

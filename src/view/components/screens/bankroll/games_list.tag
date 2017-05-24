@@ -30,6 +30,9 @@ import Games    from 'games'
 					let contract_link = `${_config.etherscan_url}/address/${contract_id}`
 
 					let game_url = _config.games.dice.url+'?address='+contract_id
+					if (_config.games[game.game]) {
+						game_url = _config.games[game.game].url+'?address='+contract_id
+					}
 
 					if (game.deploying) {
 						game_url      = false
@@ -61,6 +64,13 @@ import Games    from 'games'
 				this.update()
 			})
 		}
+
+
+		this.remove = (e)=>{
+			e.preventDefault()
+			Games.remove(e.item.game.contract_id)
+			setTimeout(()=>{ this.getGames() },100)
+		}
 	</script>
 
 	<div class="game-stat">
@@ -79,7 +89,7 @@ import Games    from 'games'
 		<tbody>
 			<tr each={game in games}>
 				<td>
-					<a if={game.url} href="{game.url}">{game.url}</a>
+					<a if={game.url} href="{game.url}" target="_blank" rel="noopener">{game.url}</a>
 				</td>
 				<td>
 					<span if={!game.contract_id}>Deploying...</span>
@@ -96,7 +106,9 @@ import Games    from 'games'
 					<span if={game.profit < 0} style="color:red">{game.profit} bet</span>
 					<span if={game.profit == 0} >{game.profit} bet</span>
 				</td>
-				<td></td>
+				<td>
+					<a href="#remove" onclick={remove} class="remove">remove</a>
+				</td>
 			</tr>
 		</tbody>
 		</table>

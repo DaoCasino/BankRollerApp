@@ -129,7 +129,7 @@ class Games {
 							break
 						}
 					}
-					this.add(address)
+					this.add(game_name, address)
 
 					// add bets to contract
 					Api.addBets(address).then( result => {
@@ -153,10 +153,10 @@ class Games {
 		})
 	}
 
-	add(contract_id, callback){
+	add(name, contract_id, callback){
 		console.groupCollapsed('[Games] add ' + contract_id)
 
-		_games[contract_id] = {}
+		_games[contract_id] = { game:name }
 
 		localDB.setItem('Games', _games)
 
