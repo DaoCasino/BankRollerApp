@@ -17,7 +17,6 @@ export default class Wallet {
 
 		// Create wallet if not exist
 		localDB.getItem('wallet', (err, wallet)=>{
-			console.info(wallet)
 			if (wallet) {
 				_wallet = wallet
 			} else {
