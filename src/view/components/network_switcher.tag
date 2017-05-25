@@ -78,19 +78,31 @@ import _config from 'app.config'
 				height: 9px;
 				min-width: 9px;
 				margin: 0 10px 0 0;
+
+				/*background: #000; */
+				border: 1px solid #EBB33F;
+
 				&.mainnet {
-					transform: rotate(45deg);
-					background: #038789;
+					/*transform: rotate(45deg);*/
+					/*background: #038789;*/
+					border:none;
+					&:after {
+						content:'♦'; font-size: 18px;
+						color: #97abcc;
+						line-height: 0;
+					}
 				}
 
 				&.ropsten {
 					background: #E91550;
 					color: white;
 					border-radius: 10px;
+					border:none;
 				}
 
 				&.rinkeby {
 					background: #EBB33F;
+					border:none;
 				}
 			}
 

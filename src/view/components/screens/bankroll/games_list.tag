@@ -6,7 +6,6 @@ import Games    from 'games'
 		this.games = []
 
 		this.on('update', ()=>{
-			console.log('games list update')
 		})
 		this.on('mount', ()=>{
 			this.getGames()
@@ -75,7 +74,7 @@ import Games    from 'games'
 
 	<div class="game-stat">
 
-		<span if={!games.length}>No games...</span>
+		<span if={!games.length}>You have no active games...</span>
 
 		<table if={games.length} id="games">
 		<caption>Games, contracts</caption>
@@ -113,7 +112,7 @@ import Games    from 'games'
 		</tbody>
 		</table>
 
-		<table class="seeds">
+		<table if={seeds} class="seeds">
 			<caption>Transactions</caption>
 			<thead>
 				<tr>

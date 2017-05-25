@@ -3,7 +3,7 @@ import localDB    from 'localforage'
 import * as Utils from 'utils'
 
 import RPC from './RPC'
-const rpc = new RPC( _config.HttpProviders.infura.url )
+const rpc = new RPC( _config.rpc_url )
 
 // connected as external lib
 const ethWallet = window.lightwallet

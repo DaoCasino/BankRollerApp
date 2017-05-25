@@ -4,32 +4,23 @@ import route from 'riot-route'
 	<script>
 		this.menuitems = {
 			wallet:{
-				link:'wallet',
+				link:'#wallet',
 				name:'Wallet',
 				active:true,
 			},
 			bankroll:{
-				link:'bankroll',
+				link:'#bankroll',
 				name:'Bankroll',
 				active:false,
 			},
-			// stat:{
-			// 	link:'stat',
-			// 	name:'Stat',
-			// 	active:false,
-			// },
+			stat:{
+				link:'#stat',
+				name:'Stat',
+				active:false,
+			},
 		}
 
 		this.on('mount', ()=>{
-
-			let link_prefix = '/'
-			if (window.location.protocol=='file:') {
-				link_prefix = '#'
-			}
-			for(let k in this.menuitems){
-				this.menuitems[k].link = link_prefix+this.menuitems[k].link
-			}
-
 			route((screen, action, other)=>{
 				if (!screen) {
 					screen = 'wallet'

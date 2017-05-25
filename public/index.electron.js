@@ -1,3 +1,5 @@
+require('./server.electron.js')
+
 const {
 	app,
 	BrowserWindow,
@@ -15,6 +17,10 @@ let index_page_url = url.format({
 	protocol: 'file:',
 	slashes:  true
 })
+
+// Electron server url
+index_page_url = 'http://localhost:9999'
+
 // Start page - dev server
 if (process.env.dev) {
 	index_page_url = 'http://localhost:9999'
@@ -35,7 +41,7 @@ function createWindow () {
 
 	// Open links in browser
 	let handleRedirect = (e, url) => {
-		if(url != mainWindow.webContents.getURL()) {
+		if (url.indexOf('accounts.google.com')==-1 && url != mainWindow.webContents.getURL()) {
 			e.preventDefault()
 			shell.openExternal(url)
 		}
