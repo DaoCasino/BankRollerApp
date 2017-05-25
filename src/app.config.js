@@ -1,109 +1,69 @@
 /*
  * App settings
- * for dev and production builds
  */
 
-// const mode = 'dev'
-const mode = 'production'
 
-// const current_network = 'rinkeby'
 let current_network = 'ropsten'
 if (window && window.localStorage.current_network) {
 	current_network = window.localStorage.current_network
 }
 
+
 const networks = {
 	'ropsten': {
-		enabled: true,
-		name:    'Ropsten Test Network',
+		enabled:       true,
+		name:          'Ropsten Test Network',
+		rpc_url:       'https://ropsten.infura.io/JCnK5ifEPH9qcQkX0Ahl',
+		erc20_address: '0x95a48dca999c89e4e284930d9b9af973a7481287',
+		etherscan_url: 'https://ropsten.etherscan.io'
 	},
 	'rinkeby': {
-		enabled: true,
-		name:    'Rinkeby Test Network',
+		enabled:       true,
+		name:          'Rinkeby Test Network',
+		rpc_url:       'https://rinkeby.infura.io/JCnK5ifEPH9qcQkX0Ahl',
+		erc20_address: '0xba2f1399df21c75ce578630ff9ed9285b2146b8d',
+		etherscan_url: 'https://rinkeby.etherscan.io'
 	},
+	// 'mytest': {
+	// 	enabled: true,
+	// 	name:    'My Ropsten node',
+	// 	rpc_url: 'http://91.201.53.97',
+	// 	etherscan_url: 'https://ropsten.etherscan.io'
+	// },
 	'mainnet': {
 		enabled: false,
 		name:    'Main Ethereum Network',
+		rpc_url: 'https://infura.io/JCnK5ifEPH9qcQkX0Ahl',
+		etherscan_url: 'https://etherscan.io'
 	},
 }
 
 const games = {
 	dice:{
-		name:'dice',
-		url:'http://dev.dao.casino/games/dice/',
+		name: 'dice',
+		url:  'http://dev.dao.casino/games/dice/',
+		img:  'https://platform.dao.casino/img/img-game2.jpg',
 	},
 	blackjack:{
-		name:'blackjack',
-		url:'http://blackjackgame.dao.casino/games/bj/',
+		name: 'blackjack',
+		url:  'http://blackjackgame.dao.casino/games/bj/',
 	}
 }
 
+module.exports = {
+	wallet_pass:     '1234',
 
-const configs = {
-	'mainnet': {
-		api_url: 'https://platform.dao.casino/api/',
+	network:         current_network,
+	networks:        networks,
 
-		wallet_pass:'1234',
+	erc20_address:   networks[current_network].erc20_address,
+	rpc_url:         networks[current_network].rpc_url,
+	etherscan_url:   networks[current_network].etherscan_url,
 
-		HttpProviders:{
-			infura:{
-				active:true,
-				url:'https://infura.io/JCnK5ifEPH9qcQkX0Ahl',
-			}
-		},
+	games:           games,
+	contracts:       require('./configs/games.contracts.js'),
 
-		confirm_timeout:7000,
-
-		contracts:{}
-	},
-
-	'rinkeby': {
-		api_url: 'https://platform.dao.casino/api/',
-
-		wallet_pass:'1234',
-
-		HttpProviders:{
-			infura:{
-				active:true,
-				url:'https://rinkeby.infura.io/JCnK5ifEPH9qcQkX0Ahl',
-			}
-		},
-
-		confirm_timeout:7000,
-
-		contracts:{}
-	},
-
-	'ropsten': {
-		api_url: 'https://platform.dao.casino/api/',
-
-		wallet_pass:'1234',
-
-
-		HttpProviders:{
-			infura:{
-				active:true,
-				url:'https://ropsten.infura.io/JCnK5ifEPH9qcQkX0Ahl',
-			}
-		},
-
-		confirm_timeout:7000,
-
-		contracts:{}
-	}
+	api_url:         'https://platform.dao.casino/api/',
+	confirm_timeout: 7000,
 }
-
-let conf = configs[current_network]
-conf.contracts = require('./configs/'+current_network+'.contracts.js')
-conf.mode      = mode
-conf.network   = current_network
-conf.networks  = networks
-conf.games     = games
-
-conf.etherscan_url = 'https://etherscan.io'
-if (current_network!='mainnet') {
-	conf.etherscan_url = `https://${current_network}.etherscan.io`
-};
-
-module.exports = conf
 

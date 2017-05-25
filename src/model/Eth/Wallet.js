@@ -3,7 +3,7 @@ import localDB    from 'localforage'
 import * as Utils from 'utils'
 
 import RPC from './RPC'
-const rpc = new RPC( _config.HttpProviders.infura.url )
+const rpc = new RPC( _config.rpc_url )
 
 // connected as external lib
 const ethWallet = window.lightwallet
@@ -17,7 +17,6 @@ export default class Wallet {
 
 		// Create wallet if not exist
 		localDB.getItem('wallet', (err, wallet)=>{
-			console.info(wallet)
 			if (wallet) {
 				_wallet = wallet
 			} else {

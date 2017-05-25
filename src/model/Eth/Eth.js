@@ -13,7 +13,7 @@ import * as Utils from 'utils'
 
 const web3_sha3 = require('web3/lib/utils/sha3.js')
 
-const rpc    = new RPC( _config.HttpProviders.infura.url )
+const rpc    = new RPC( _config.rpc_url )
 const wallet = new Wallet()
 
 class Eth {
@@ -89,7 +89,7 @@ class Eth {
 
 		this.RPC.request('call', [{
 			'from': this.Wallet.get().openkey,
-			'to':   _config.contracts.erc20.address,
+			'to':   _config.erc20_address,
 			'data': data
 		}, 'latest']
 		).then( response => {

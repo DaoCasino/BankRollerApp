@@ -1,4 +1,3 @@
-import $          from 'jquery'
 import _config    from 'app.config'
 import localDB    from 'localforage'
 import Eth        from 'Eth/Eth'
