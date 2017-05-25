@@ -73,10 +73,11 @@ import Charts from './charts'
 
 			GA.getViews(this.refs.account_id.value, this.refs.site_id.value, views=>{
 				this.views = views
+
 				this.update()
 
 				if (this.views.length==1) {
-					this.refs.site_id.value = this.views[0].id
+					this.refs.view_id.value = this.views[0].id
 					this.selectView()
 				}
 			})
@@ -93,6 +94,9 @@ import Charts from './charts'
 				}
 			}
 			this.renderChart()
+			setTimeout(()=>{
+				this.update()
+			},2000)
 		}
 
 		this.renderChart = ()=>{
@@ -201,6 +205,7 @@ import Charts from './charts'
 			.account-selector {
 				select {
 					margin: 5px;
+					max-width: 30%;
 				}
 			}
 			#chart {
