@@ -28,12 +28,6 @@ export default new class GA {
 		})
 	}
 
-	//
-	//
-	//
-	//
-
-
 	getAccounts(callback){
 		gapi.client.analytics.management.accounts.list().then( r => {
 			callback(r.result.items)
