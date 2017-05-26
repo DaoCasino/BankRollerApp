@@ -14,8 +14,13 @@ class Api {
 	}
 
 
-	getLogs(address){
-		return this.request({a:'unconfirmed', address:address}, 'proxy.php').then(r => {
+	getLogs(address, meta){
+		return this.request({
+			a:       'unconfirmed',
+			address: address,
+			game:    meta.name,
+			version: meta.version,
+		}, 'proxy.php').then(r => {
 			return r.json()
 		})
 	}
@@ -30,9 +35,10 @@ class Api {
 		})
 	}
 
-	sendConfirm(seed, confirm){
+	sendConfirm(address, seed, confirm){
 		return this.request({
 			a:       'confirm',
+			address: address,
 			vconcat: seed,
 			result:  confirm,
 		},'proxy.php').then( response => {

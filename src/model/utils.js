@@ -13,8 +13,15 @@ export const hexToNum = (str) => {
 	return parseInt(str, 16)
 }
 
+export const hexToString = (hex) => {
+	let str = ''
+	for (let i = 0; i < hex.length; i += 2)
+		str += String.fromCharCode(parseInt(hex.substr(i, 2), 16))
+	return str
+}
+
 export const pad = (num, size) => {
-	var s = num + ''
+	let s = num + ''
 	while (s.length < size) s = '0' + s
 	return s
 }

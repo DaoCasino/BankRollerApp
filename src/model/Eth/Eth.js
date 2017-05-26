@@ -87,6 +87,7 @@ class Eth {
 		let data = '0x' + this.hashName('balanceOf(address)')
 				  		+ Utils.pad(Utils.numToHex(address.substr(2)), 64)
 
+
 		this.RPC.request('call', [{
 			'from': this.Wallet.get().openkey,
 			'to':   _config.erc20_address,

@@ -1,14 +1,16 @@
-import GA from './ga'
-import Charts from './charts'
+import _config from 'app.config'
+import Eth     from 'Eth/Eth'
+import GA      from './ga'
+import Charts  from './charts'
 
-
-<stat>
+<referer>
 	<script>
 		this.auth         = false
 		this.need_auth    = false
 		this.ga_site_id   = false
 		this.ga_view_id   = false
 		this.ga_view_name = false
+		this.links        = false
 
 		this.on('mount',()=>{
 			if (localStorage.ga_view_id) {
@@ -53,6 +55,7 @@ import Charts from './charts'
 			})
 
 			this.renderChart()
+			this.generateLinks()
 		}
 
 		this.selectAccount = ()=>{
@@ -73,10 +76,11 @@ import Charts from './charts'
 
 			GA.getViews(this.refs.account_id.value, this.refs.site_id.value, views=>{
 				this.views = views
+
 				this.update()
 
 				if (this.views.length==1) {
-					this.refs.site_id.value = this.views[0].id
+					this.refs.view_id.value = this.views[0].id
 					this.selectView()
 				}
 			})
@@ -93,6 +97,9 @@ import Charts from './charts'
 				}
 			}
 			this.renderChart()
+			setTimeout(()=>{
+				this.update()
+			},2000)
 		}
 
 		this.renderChart = ()=>{
@@ -111,6 +118,29 @@ import Charts from './charts'
 			this.sites      = false
 			this.views      = false
 			this.update()
+		}
+
+		this.generateLinks = ()=>{
+			if (!this.ga_site_id) {
+				return
+			}
+			let addr = Eth.Wallet.get().openkey
+			if (!addr) {
+				return
+			}
+
+			this.links = []
+			for(let k in _config.games){
+				this.links.push({
+					game: _config.games[k].name,
+					href: _config.games[k].url+'?ref='+addr+'&gaid='+this.ga_site_id
+				})
+			}
+			this.update()
+		}
+
+		this.copy = e => {
+			App.view.copyToClipboard( e.target.value )
 		}
 
 	</script>
@@ -139,6 +169,14 @@ import Charts from './charts'
 				</select>
 			</div>
 			<div id="chart"></div>
+		</div>
+
+		<div if={links} class="links">
+			<h3>Your referral links</h3>
+			<div each={link in links} class="link">
+				<label>{link.game}</label>
+				<input type="text" onclick={copy} value="{link.href}">
+			</div>
 		</div>
 	</div>
 
@@ -201,11 +239,13 @@ import Charts from './charts'
 			.account-selector {
 				select {
 					margin: 5px;
+					max-width: 30%;
 				}
 			}
 			#chart {
 				margin: 0 0 0 2%;
 				max-width: 90%;
+				min-height: 300px;
 				.highcharts-title {
 					letter-spacing: 2px;
 					fill-opacity:0.2;
@@ -213,5 +253,13 @@ import Charts from './charts'
 			}
 		}
 
+
+		.links {
+			.link {
+				label {}
+				input {}
+			}
+		}
+
 	</style>
-</stat>
+</referer>

@@ -61,7 +61,7 @@ import './games_list'
 				<legend>Deploy new game contract</legend>
 				<select ref="game_name" required>
 					<option selected="selected" value="">Select game</option>
-					<option each={game in games} value="{game.name}">{game.name}</option>
+					<option each={game in games} value="{game.code}">{game.name}</option>
 				</select>
 				<button class="button" id="create_new_game">Create</button>
 			</fieldset>

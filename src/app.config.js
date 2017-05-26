@@ -39,12 +39,12 @@ const networks = {
 }
 
 const games = {
-	dice:{
-		name: 'dice',
+	dice_v2:{ code: 'dice_v2',
+		name: 'DiceGame',
 		url:  'http://dev.dao.casino/games/dice/',
 		img:  'https://platform.dao.casino/img/img-game2.jpg',
 	},
-	blackjack:{
+	blackjack:{ code: 'blackjack',
 		name: 'blackjack',
 		url:  'http://blackjackgame.dao.casino/games/bj/',
 	}

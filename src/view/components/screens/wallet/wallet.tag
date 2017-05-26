@@ -4,7 +4,6 @@ import Api from 'Api'
 import Eth from 'Eth/Eth'
 
 import QR from 'qrcode-svg'
-import toastr from 'toastr'
 
 import './wallet.less'
 
@@ -69,33 +68,7 @@ import './wallet.less'
 		}
 
 
-		/*
-		 * Copy address to clippboard
-		 */
-		this.copyToClipboard = (text)=>{
-			const input          = document.createElement('input')
-			input.style.position = 'fixed'
-			input.style.opacity  = 0
-			input.value          = text
 
-			document.body.appendChild(input)
-
-			input.select()
-			document.execCommand('Copy')
-			document.body.removeChild(input)
-
-			toastr.options.showDuration = 100
-			toastr.options.hideDuration = 100
-			toastr.options.timeOut = 1000
-			toastr.options.extendedTimeOut = 100
-			if (!this.toastshowed) {
-				toastr.success('Copied to clipboard', 'Copied')
-				this.toastshowed = true
-			}
-			this.toast_t = setTimeout(()=>{
-				this.toastshowed = false
-			}, 2000)
-		}
 
 		this.copy = (e)=>{
 			e.preventDefault()
@@ -103,7 +76,7 @@ import './wallet.less'
 				return
 			}
 
-			this.copyToClipboard( e.target.value )
+			App.view.copyToClipboard( e.target.value )
 		}
 
 
@@ -130,7 +103,7 @@ import './wallet.less'
 		this.private_key = ''
 		this.exportPrivateKey = ()=>{
 			Eth.Wallet.exportPrivateKey(private_key=>{
-				this.copyToClipboard( private_key )
+				App.view.copyToClipboard( private_key )
 				this.private_key = private_key
 				this.update()
 				setTimeout(()=>{

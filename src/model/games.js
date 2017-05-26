@@ -3,6 +3,9 @@ import localDB    from 'localforage'
 import Eth        from 'Eth/Eth'
 import Api        from 'Api'
 import bigInt     from 'big-integer'
+import Web3       from 'web3'
+
+const web3 = new Web3()
 
 import * as Utils from 'utils'
 
@@ -15,6 +18,7 @@ let _pendings_list = {}
 
 class Games {
 	constructor(){
+		this.clearTasks()
 		this.load()
 
 		this.Queue = new AsyncPriorityQueue({
@@ -47,6 +51,11 @@ class Games {
 			let r = signature.slice(0, 66)
 			let s = '0x' + signature.slice(66, 130)
 
+			console.log('VRS type',
+				(typeof v),
+				(typeof r),
+				(typeof s)
+			)
 			/* Equivalent of solidity hash function:
 				function confirm(bytes32 _s) public returns(uint256){
 					return uint256 (sha3(_s));
@@ -62,7 +71,7 @@ class Games {
 
 	load(callback){
 		localDB.getItem('Games', (err, games)=>{
-			if (games) { _games = games }
+			if (games) { this._games = games }
 			if (callback) callback(games)
 		})
 	}
@@ -81,16 +90,16 @@ class Games {
 	}
 
 
-	create(name, callback){
+	create(code, callback){
 		// add task to deploy contract
 		localDB.getItem('deploy_tasks',(err, tasks)=>{
 			if (!tasks) { tasks = [] }
 
-			let task_id = name+'_'+tasks.length
-			tasks.push({name:name, task_id:task_id })
+			let task_id = code+'_'+tasks.length
+			tasks.push({code:code, task_id:task_id })
 
-			_games[name+'_'+tasks.length] = {
-				name: name,
+			_games[code+'_'+tasks.length] = {
+				code: code,
 				task_id:task_id,
 				deploying: true,
 				start_balance:0,
@@ -104,6 +113,19 @@ class Games {
 
 	}
 
+
+	clearTasks(){
+		localDB.setItem('deploy_tasks',[])
+		localDB.getItem('Games',(err, games)=>{
+			for(let k in games){
+				if (games[k].deploying) {
+					delete(games[k])
+				};
+			}
+			localDB.setItem('Games', games)
+		})
+	}
+
 	checkTasks(){
 		localDB.getItem('deploy_tasks',(err, tasks)=>{
 			if (!tasks || tasks.length==0) {
@@ -111,13 +133,13 @@ class Games {
 				return
 			}
 
-			let game_name = tasks[0].name
+			let game_code = tasks[0].code
 			let task_id = tasks[0].task_id
-			console.log('Start deploying: '+game_name+', task_id:'+task_id)
+			console.log('Start deploying: '+game_code+', task_id:'+task_id)
 
 			Eth.deployContract(
-				_config.contracts[game_name].bytecode,
-				_config.contracts[game_name].gasprice,
+				_config.contracts[game_code].bytecode,
+				_config.contracts[game_code].gasprice,
 
 				// Deployed!
 				(address)=>{
@@ -128,7 +150,7 @@ class Games {
 							break
 						}
 					}
-					this.add(game_name, address)
+					this.add(game_code, address)
 
 					// add bets to contract
 					Api.addBets(address).then( result => {
@@ -155,25 +177,34 @@ class Games {
 	add(name, contract_id, callback){
 		console.groupCollapsed('[Games] add ' + contract_id)
 
-		_games[contract_id] = { game:name }
+		this.getMeta(contract_id, (meta)=>{
+			if (!_config.games[meta.code]) {
+				return
+			}
 
-		localDB.setItem('Games', _games)
-
-		console.log('Get game balance')
-		Eth.getBetsBalance(contract_id, (balance)=>{
-
-			console.info('balance', balance)
-
-			_games[contract_id].balance = balance
-			if (!_games[contract_id].start_balance) {
-				_games[contract_id].start_balance = balance
+			_games[contract_id] = {
+				game: name,
+				meta: meta,
 			}
 
 			localDB.setItem('Games', _games)
 
-			console.groupEnd()
+			console.log('Get game balance')
+			Eth.getBetsBalance(contract_id, (balance)=>{
 
-			if (callback) callback()
+				console.info('balance', balance)
+
+				_games[contract_id].balance = balance
+				if (!_games[contract_id].start_balance) {
+					_games[contract_id].start_balance = balance
+				}
+
+				localDB.setItem('Games', _games)
+
+				console.groupEnd()
+
+				if (callback) callback()
+			})
 		})
 	}
 
@@ -210,7 +241,7 @@ class Games {
 					}
 
 					this.getLogs(address, (r)=>{
-						console.log('[UPD] Games.getLogs '+address+' res:',r)
+						console.log('getLogs from blockhain '+address+' res length:', r.length)
 					})
 				}
 
@@ -221,10 +252,59 @@ class Games {
 		})
 	}
 
+	getMeta(address, callback){
+		let meta = {
+			version:0,
+			code:'',
+			name:'',
+			link:'',
+		}
+
+		let getVar = function(varname, type, callback){
+			return Eth.RPC.request('call', [{
+				'to':   address,
+				'data': '0x' + Eth.hashName(varname+'()')
+			}, 'pending']).then( response => {
+
+				if (type=='string') {
+					return web3.toAscii(response.result)
+							.replace(/\u0007/g, '')
+							.replace(/\u0008/g, '')
+							.replace(/\u0025/g, '')
+							.replace(/\u0000/g, '')
+							.trim()
+				}
+				return parseInt(response.result, 16)
+			})
+		}
+
+		getVar('meta_version').then( version =>{
+			meta.version = version
+
+			return getVar('meta_code','string')
+		}).then(code=>{
+			meta.code = code
+
+			return getVar('meta_name','string')
+		}).then(name=>{
+			meta.name = name
+			console.log(encodeURIComponent(name))
+
+			return getVar('meta_link','string')
+		}).then(link=>{
+			console.log(encodeURIComponent(link))
+			meta.link = link
+			callback(meta)
+		})
+	}
 
 	getLogs(address, callback){
-		Api.getLogs(address).then( seeds => {
-			console.info('unconfirmed from server:'+seeds)
+		if (!this._games[address] || !this._games[address].meta) {
+			return
+		}
+
+		Api.getLogs(address, this._games[address].meta).then( seeds => {
+			console.info('unconfirmed from server:', seeds.length )
 			if (seeds && seeds.length) {
 				seeds.forEach( seed => {
 					if (!_seeds_list[seed]) {
@@ -319,7 +399,7 @@ class Games {
 
 		Eth.RPC.request('call', [{
 			'to':   address,
-			'data': '0x' + Eth.hashName('listGames','bytes32') + seed.substr(2)
+			'data': '0x' + Eth.hashName('listGames(bytes32)') + seed.substr(2)
 		}, 'pending'], 0).then( response => {
 
 			console.log(seed)
@@ -341,19 +421,22 @@ class Games {
 			return
 		}
 
-		// this.checkPending(address, seed, ()=>{
-		this.getConfirmNumber(seed, address, _config.contracts.dice.abi, (confirm, PwDerivedKey)=>{
+		let game_code = this._games[address].meta.code
+		console.log('sendRandom2Server',game_code)
 
-			Api.sendConfirm(seed, confirm).then(()=>{
-				_seeds_list[seed].confirm_server_time   = new Date().getTime()
-				_seeds_list[seed].confirm               = confirm
-				_seeds_list[seed].confirm_server        = confirm
-				_seeds_list[seed].confirm_sended_server = true
+		this.checkPending(address, seed, ()=>{
+			this.getConfirmNumber(seed, address, _config.contracts[game_code].abi, (confirm, PwDerivedKey)=>{
 
-				localDB.setItem('seeds_list', _seeds_list)
+				Api.sendConfirm(address, seed, confirm).then(()=>{
+					_seeds_list[seed].confirm_server_time   = new Date().getTime()
+					_seeds_list[seed].confirm               = confirm
+					_seeds_list[seed].confirm_server        = confirm
+					_seeds_list[seed].confirm_sended_server = true
+
+					localDB.setItem('seeds_list', _seeds_list)
+				})
 			})
 		})
-		// })
 	}
 
 	sendRandom(address, seed, callback){
@@ -366,7 +449,10 @@ class Games {
 		_seeds_list[seed].proccess_sended_blockchain = true
 
 		console.log('Eth.Wallet.getSignedTx')
-		this.signTx(seed, address, _config.contracts.dice.abi, (signedTx, confirm)=>{
+
+		let game_code = this._games[address].meta.code
+		console.log('sendRandom',game_code)
+		this.signTx(seed, address, _config.contracts[game_code].abi, (signedTx, confirm)=>{
 
 			console.log('getSignedTx result:', signedTx, confirm)
 
