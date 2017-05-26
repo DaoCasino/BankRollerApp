@@ -1,11 +1,11 @@
 {
   "name": "BankRollerApp",
-  "version": "1.0.0",
+  "version": "0.0.4",
   "description": "Dao.Casino app for bankroller",
   "main": "./build/index.electron.js",
   "homepage": "./",
   "repository": "https://github.com/DaoCasino/",
-  "author": "Alex Step <to@alexstep.com>",
+  "author": "Dao Casino <team@dao.casino>",
   "private": true,
   "scripts": {
     "start":                  "npm run serve_web",
@@ -19,9 +19,9 @@
     "build_electron_windows": "build -w --x64",
     "build_electron_linux":   "build -l --x64",
     "build_electron_mac":     "build -m --x64",
-    "pack_electron_linux":    "npm run cp_electron & electron-packager ./ BankRoller --overwrite --app-version=1.0.0 --out=dist --ignore=node_modules --ignore=src --ignore=config --ignore=scripts --ignore=public --prune",
-    "pack_electron_windows":  "npm run cp_electron & electron-packager ./ BankRoller --overwrite --platform=win32 --app-version=1.0.0 --out=dist --ignore=node_modules --ignore=src --ignore=config --ignore=scripts --ignore=public --prune",
-    "pack_electron":          "npm run cp_electron & electron-packager ./ BankRoller --overwrite --all --app-version=1.0.0 --out=dist --ignore=node_modules --ignore=src --ignore=config --ignore=scripts --ignore=public --prune",
+    "pack_electron_linux":    "npm run cp_electron & electron-packager ./ BankRoller --overwrite --app-version=0.0.4 --out=dist --ignore=node_modules --ignore=src --ignore=config --ignore=scripts --ignore=public --prune",
+    "pack_electron_windows":  "npm run cp_electron & electron-packager ./ BankRoller --overwrite --platform=win32 --app-version=0.0.4 --out=dist --ignore=node_modules --ignore=src --ignore=config --ignore=scripts --ignore=public --prune",
+    "pack_electron":          "npm run cp_electron & electron-packager ./ BankRoller --overwrite --all --app-version=0.0.4 --out=dist --ignore=node_modules --ignore=src --ignore=config --ignore=scripts --ignore=public --prune",
     "test":                   "node scripts/test.js --env=jsdom"
   },
   "build": {
