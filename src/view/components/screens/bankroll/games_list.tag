@@ -28,7 +28,7 @@ import Games    from 'games'
 
 					let contract_link = `${_config.etherscan_url}/address/${contract_id}`
 
-					let game_url = _config.games.dice.url+'?address='+contract_id
+					let game_url = false
 					if (_config.games[game.game]) {
 						game_url = _config.games[game.game].url+'?address='+contract_id
 					}
@@ -45,6 +45,7 @@ import Games    from 'games'
 						contract_link: contract_link,
 						profit:        profit,
 						bankroll:      bankroll,
+						meta:          game.meta,
 					})
 				}
 
@@ -74,7 +75,7 @@ import Games    from 'games'
 
 	<div class="game-stat">
 
-		<span if={!games.length}>You have no active games...</span>
+		<div if={!games.length} class="no-games">You have no active games...</div>
 
 		<table if={games.length} id="games">
 		<caption>Games, contracts</caption>
@@ -88,7 +89,10 @@ import Games    from 'games'
 		<tbody>
 			<tr each={game in games}>
 				<td>
-					<a if={game.url} href="{game.url}" target="_blank" rel="noopener">{game.url}</a>
+					<a if={game.url} href="{game.url}" target="_blank" rel="noopener">
+						<span if={game.meta}>{game.meta.name}</span>
+						<span if={!game.meta}>{game.url}</span>
+					</a>
 				</td>
 				<td>
 					<span if={!game.contract_id}>Deploying...</span>
@@ -96,7 +100,8 @@ import Games    from 'games'
 						href="{game.contract_link}"
 						title="{game.contract_id}"
 						class="address" target="_blank" rel="noopener">
-						{game.contract_id}
+						<span if={game.meta} title="version:{game.meta.version}">{game.meta.code}</span>
+						<span if={!game.meta}>{game.contract_id}</span>
 					</a>
 				</td>
 				<td>{game.bankroll}</td>
@@ -112,7 +117,7 @@ import Games    from 'games'
 		</tbody>
 		</table>
 
-		<table if={seeds} class="seeds">
+		<table if={games.length && seeds.length} class="seeds">
 			<caption>Transactions</caption>
 			<thead>
 				<tr>
@@ -135,8 +140,8 @@ import Games    from 'games'
 						</a>
 					</td>
 					<td>
-						<span if={s.confirm_sended_blockchain}>in blockhain</span>
 						<span if={s.confirm_sended_server}>sended to player</span>
+						<span if={s.confirm_sended_blockchain}>[in blockhain]</span>
 					</td>
 					<td>{s.confirm}</td>
 					<td></td>

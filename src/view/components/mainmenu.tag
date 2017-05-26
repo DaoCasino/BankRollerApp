@@ -13,9 +13,9 @@ import route from 'riot-route'
 				name:'Bankroll',
 				active:false,
 			},
-			stat:{
-				link:'#stat',
-				name:'Stat',
+			referer:{
+				link:'#referer',
+				name:'Referer',
 				active:false,
 			},
 		}
