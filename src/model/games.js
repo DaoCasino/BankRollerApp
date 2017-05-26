@@ -241,7 +241,7 @@ class Games {
 					}
 
 					this.getLogs(address, (r)=>{
-						console.log('[UPD] Games.getLogs '+address+' res:',r)
+						console.log('getLogs from blockhain '+address+' res length:', r.length)
 					})
 				}
 
@@ -304,7 +304,7 @@ class Games {
 		}
 
 		Api.getLogs(address, this._games[address].meta).then( seeds => {
-			console.info('unconfirmed from server:'+seeds)
+			console.info('unconfirmed from server:', seeds.length )
 			if (seeds && seeds.length) {
 				seeds.forEach( seed => {
 					if (!_seeds_list[seed]) {
@@ -421,19 +421,22 @@ class Games {
 			return
 		}
 
-		// this.checkPending(address, seed, ()=>{
-		this.getConfirmNumber(seed, address, _config.contracts.dice.abi, (confirm, PwDerivedKey)=>{
+		let game_code = this._games[address].meta.code
+		console.log('sendRandom2Server',game_code)
 
-			Api.sendConfirm(address, seed, confirm).then(()=>{
-				_seeds_list[seed].confirm_server_time   = new Date().getTime()
-				_seeds_list[seed].confirm               = confirm
-				_seeds_list[seed].confirm_server        = confirm
-				_seeds_list[seed].confirm_sended_server = true
+		this.checkPending(address, seed, ()=>{
+			this.getConfirmNumber(seed, address, _config.contracts[game_code].abi, (confirm, PwDerivedKey)=>{
 
-				localDB.setItem('seeds_list', _seeds_list)
+				Api.sendConfirm(address, seed, confirm).then(()=>{
+					_seeds_list[seed].confirm_server_time   = new Date().getTime()
+					_seeds_list[seed].confirm               = confirm
+					_seeds_list[seed].confirm_server        = confirm
+					_seeds_list[seed].confirm_sended_server = true
+
+					localDB.setItem('seeds_list', _seeds_list)
+				})
 			})
 		})
-		// })
 	}
 
 	sendRandom(address, seed, callback){
@@ -446,7 +449,10 @@ class Games {
 		_seeds_list[seed].proccess_sended_blockchain = true
 
 		console.log('Eth.Wallet.getSignedTx')
-		this.signTx(seed, address, _config.contracts.dice.abi, (signedTx, confirm)=>{
+
+		let game_code = this._games[address].meta.code
+		console.log('sendRandom',game_code)
+		this.signTx(seed, address, _config.contracts[game_code].abi, (signedTx, confirm)=>{
 
 			console.log('getSignedTx result:', signedTx, confirm)
 

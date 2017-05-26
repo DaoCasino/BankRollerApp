@@ -38,7 +38,7 @@ class Api {
 	sendConfirm(address, seed, confirm){
 		return this.request({
 			a:       'confirm',
-			vconcat: address,
+			address: address,
 			vconcat: seed,
 			result:  confirm,
 		},'proxy.php').then( response => {
