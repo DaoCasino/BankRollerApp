@@ -8,6 +8,17 @@ if (window && window.localStorage.current_network) {
 	current_network = window.localStorage.current_network
 }
 
+const games = {
+	dice_v2:{ code: 'dice_v2',
+		name: 'DiceGame',
+		url:  'https://platform.dao.casino/games/DiceGame/',
+		img:  'https://platform.dao.casino/img/img-game2.jpg',
+	},
+	blackjack:{ code: 'blackjack',
+		name: 'blackjack',
+		url:  'http://blackjackgame.dao.casino/games/bj/',
+	}
+}
 
 const networks = {
 	'ropsten': {
@@ -38,17 +49,6 @@ const networks = {
 	},
 }
 
-const games = {
-	dice_v2:{ code: 'dice_v2',
-		name: 'DiceGame',
-		url:  'http://dev.dao.casino/games/dice/',
-		img:  'https://platform.dao.casino/img/img-game2.jpg',
-	},
-	blackjack:{ code: 'blackjack',
-		name: 'blackjack',
-		url:  'http://blackjackgame.dao.casino/games/bj/',
-	}
-}
 
 module.exports = {
 	wallet_pass:     '1234',

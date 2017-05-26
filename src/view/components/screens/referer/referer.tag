@@ -19,13 +19,18 @@ import Charts  from './charts'
 				this.ga_view_name = localStorage.ga_view_name
 			}
 
-			if (GA.api && GA.api.analytics.auth.isAuthorized()) {
+			if (GA.api && GA.api.analytics.auth && GA.api.analytics.auth.isAuthorized()) {
 				this.loadData()
 				return
 			}
 
+			if (window.ga_initied) {
+				window.location.reload()
+			}
+
 			GA.init(()=>{
-				if (GA.api.analytics.auth.isAuthorized()) {
+				window.ga_initied = true
+				if (GA.api.analytics.auth && GA.api.analytics.auth.isAuthorized()) {
 					this.loadData()
 					return
 				}
@@ -35,6 +40,11 @@ import Charts  from './charts'
 				this.update()
 
 				this.t = setInterval(()=>{
+					if (!GA.api.analytics.auth) {
+						clearInterval(this.t)
+						return
+					}
+
 					if (GA.api.analytics.auth.isAuthorized()) {
 						this.need_auth = false
 						this.loadData()
