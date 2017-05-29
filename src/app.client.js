@@ -14,8 +14,9 @@ document.addEventListener('DOMContentLoaded',()=>{
 	}
 
 	setTimeout(()=>{
-		Games.runConfirm()
+		Games.checkTasks()
+		Games.runUpdateBalance()
+		// Games.runConfirm()
 	}, 5000)
 
-	Games.checkTasks()
 })

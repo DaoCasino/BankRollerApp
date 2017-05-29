@@ -10,6 +10,8 @@ var paths                         = require('./paths')
 var getCustomConfig               = require('./get-custom-config')
 
 
+var rootdir = __dirname+'/../..'
+
 // Webpack uses `publicPath` to determine where the app is being served from.
 // In development, we always serve from the root. This makes config easier.
 var publicPath = '/'
@@ -21,6 +23,7 @@ var publicUrl = ''
 var env = getClientEnvironment(publicUrl)
 //Get custom configuration for injecting plugins, presets and loaders
 var customConfig = getCustomConfig(false)
+
 
 // This is the development configuration.
 // It is focused on developer experience and fast rebuilds.
@@ -66,7 +69,7 @@ module.exports = {
 	},
 	resolve: {
 		root: [
-			path.resolve(__dirname+'/../src/model'),
+			path.resolve(rootdir+'/src/model'),
 		],
     // This allows you to set a fallback for where Webpack should look for modules.
     // We read `NODE_PATH` environment variable in `paths.js` and pass paths here.
@@ -80,10 +83,10 @@ module.exports = {
     // https://github.com/facebookincubator/create-react-app/issues/290
 		extensions: ['.js', '.json', '.tag', ''],
 		alias: {
-			'app.config': __dirname+'/../src/app.config.js',
-			// model:        __dirname+'/../src/model',
-			view:         __dirname+'/../src/view',
-			components:   __dirname+'/../src/components',
+			'app.config': rootdir+'/src/app.config.js',
+			// model:        rootdir+'/src/model',
+			view:         rootdir+'/src/view',
+			components:   rootdir+'/src/components',
 		}
 	},
 

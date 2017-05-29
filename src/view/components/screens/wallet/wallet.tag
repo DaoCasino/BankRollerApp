@@ -4,7 +4,7 @@ import Api from 'Api'
 import Eth from 'Eth/Eth'
 
 import QR from 'qrcode-svg'
-
+import toastr from 'toastr'
 import './wallet.less'
 
 <wallet>

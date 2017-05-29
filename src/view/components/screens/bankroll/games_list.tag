@@ -1,83 +1,97 @@
 import _config  from 'app.config'
 import Games    from 'games'
+import DB       from 'DB/DB'
 
 <games_list>
 	<script>
-		this.games = []
+		this.games = {}
+		this.seeds = []
 
 		this.on('update', ()=>{
 		})
 		this.on('mount', ()=>{
 			this.getGames()
-			setInterval(()=>{
-				this.getGames()
-			},2000)
+			// setInterval(()=>{
+			// 	this.getGames()
+			// },2000)
+			console.log(DB)
 		})
 
 		this.getGames = ()=>{
-			Games.get((games) => {
-				this.games = []
-				for(let contract_id in games){
-					let game     = games[contract_id]
-					let bankroll = game.start_balance.toFixed(4)
+			this.games = {}
 
-					let profit = (+game.balance - +game.start_balance).toFixed(4)
-					if (isNaN(profit)) {
-						profit = 0
-					}
+			DB.data.get('Games').map().on( (game, game_id)=>{
+				if (!game || !game_id) { return }
 
-					let contract_link = `${_config.etherscan_url}/address/${contract_id}`
+				let bankroll = 0
+				if (game.start_balance) {
+					bankroll = game.start_balance.toFixed(4)
+				}
 
-					let game_url = false
-					if (_config.games[game.game]) {
-						game_url = _config.games[game.game].url+'?address='+contract_id
-					}
+				let profit = (+game.balance - +game.start_balance).toFixed(4)
+				if (isNaN(profit)) {
+					profit = 0
+				}
 
-					if (game.deploying) {
-						game_url      = false
-						contract_id   = false
-						contract_link = false
-					}
+				let contract_id = game.contract_id
 
-					this.games.push({
-						url:           game_url,
-						contract_id:   contract_id,
-						contract_link: contract_link,
-						profit:        profit,
-						bankroll:      bankroll,
-						meta:          game.meta,
-					})
+				let contract_link = `${_config.etherscan_url}/address/${contract_id}`
+
+				let game_url = false
+				if (_config.games[game.game]) {
+					game_url = _config.games[game.game].url+'?address='+contract_id
+				}
+
+				if (game.deploying) {
+					game_url      = false
+					contract_id   = false
+					contract_link = false
+				}
+
+
+				this.games[game_id] = {
+					game_id:       game_id,
+					url:           game_url,
+					contract_id:   contract_id,
+					contract_link: contract_link,
+					profit:        profit,
+					bankroll:      bankroll,
+					meta_link:     game.meta_link,
+					meta_version:  game.meta_version,
+					meta_code:     game.meta_code,
+					meta_name:     game.meta_name,
 				}
 
 				this.update()
 			})
 
-			Games.getSeeds(seeds=>{
-				this.seeds = []
-				for(let k in seeds){
-					seeds[k].seed = k
-					seeds[k].tx_link = `${_config.etherscan_url}/tx/${seeds[k].seed}`
-					seeds[k].contract_link = `${_config.etherscan_url}/address/${seeds[k].contract}`
-					this.seeds.push(seeds[k])
-				}
-				this.seeds = this.seeds.reverse().slice(0,10)
-				this.update()
-			})
+
+			// Games.getSeeds(seeds=>{
+			// 	this.seeds = []
+			// 	for(let k in seeds){
+			// 		seeds[k].seed = k
+			// 		seeds[k].tx_link = `${_config.etherscan_url}/tx/${seeds[k].seed}`
+			// 		seeds[k].contract_link = `${_config.etherscan_url}/address/${seeds[k].contract}`
+			// 		this.seeds.push(seeds[k])
+			// 	}
+			// 	this.seeds = this.seeds.reverse().slice(0,10)
+			// 	this.update()
+			// })
 		}
 
 
 		this.remove = (e)=>{
+			console.log('rem')
 			e.preventDefault()
-			Games.remove(e.item.game.contract_id)
-			setTimeout(()=>{ this.getGames() },100)
+			Games.remove(e.item.game.game_id)
 		}
 	</script>
 
 	<div class="game-stat">
 
-		<div if={!games.length} class="no-games">You have no active games...</div>
+		<div if={!Object.keys(games).length} class="no-games">You have no active games...</div>
 
-		<table if={games.length} id="games">
+		<table if={Object.keys(games).length} id="games">
 		<caption>Games, contracts</caption>
 		<thead><tr>
 			<th>Game URL</th>
@@ -90,8 +104,8 @@ import Games    from 'games'
 			<tr each={game in games}>
 				<td>
 					<a if={game.url} href="{game.url}" target="_blank" rel="noopener">
-						<span if={game.meta}>{game.meta.name}</span>
-						<span if={!game.meta}>{game.url}</span>
+						<span if={game.meta_name}>{game.meta_name}</span>
+						<span if={!game.meta_name}>{game.url}</span>
 					</a>
 				</td>
 				<td>
@@ -100,8 +114,8 @@ import Games    from 'games'
 						href="{game.contract_link}"
 						title="{game.contract_id}"
 						class="address" target="_blank" rel="noopener">
-						<span if={game.meta} title="version:{game.meta.version}">{game.meta.code}</span>
-						<span if={!game.meta}>{game.contract_id}</span>
+						<span if={game.meta_version} title="version:{game.meta_version}">{game.meta_code}</span>
+						<span if={!game.meta_version}>{game.contract_id}</span>
 					</a>
 				</td>
 				<td>{game.bankroll}</td>
@@ -117,7 +131,7 @@ import Games    from 'games'
 		</tbody>
 		</table>
 
-		<table if={games.length && seeds.length} class="seeds">
+		<table if={Object.keys(games).length && seeds.length} class="seeds">
 			<caption>Transactions</caption>
 			<thead>
 				<tr>

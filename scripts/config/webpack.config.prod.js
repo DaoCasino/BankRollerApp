@@ -11,6 +11,7 @@ var getClientEnvironment  = require('./env')
 var getCustomConfig       = require('./get-custom-config')
 
 
+var rootdir = __dirname+'/../..'
 
 function ensureSlash(path, needsSlash) {
 	var hasSlash = path.endsWith('/')
@@ -75,7 +76,7 @@ module.exports = {
 	},
 	resolve: {
 		root: [
-			path.resolve(__dirname+'/../src/model'),
+			path.resolve(rootdir+'/src/model'),
 		],
 	// This allows you to set a fallback for where Webpack should look for modules.
 	// We read `NODE_PATH` environment variable in `paths.js` and pass paths here.
@@ -89,10 +90,10 @@ module.exports = {
 	// https://github.com/facebookincubator/create-react-app/issues/290
 		extensions: ['.js', '.json', '.tag', ''],
 		alias: {
-			'app.config': __dirname+'/../src/app.config.js',
-			// model:        __dirname+'/../src/model',
-			view:         __dirname+'/../src/view',
-			components:   __dirname+'/../src/components',
+			'app.config': rootdir+'/src/app.config.js',
+			// model:        rootdir+'/src/model',
+			view:         rootdir+'/src/view',
+			components:   rootdir+'/src/components',
 		}
 	},
 

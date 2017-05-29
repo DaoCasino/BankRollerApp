@@ -1,5 +1,5 @@
 import _config    from 'app.config'
-import localDB    from 'localforage'
+import DB         from 'DB/DB'
 import Eth        from 'Eth/Eth'
 import Api        from 'Api'
 import bigInt     from 'big-integer'
@@ -11,14 +11,14 @@ import * as Utils from 'utils'
 
 import {AsyncPriorityQueue, AsyncTask} from 'async-priority-queue'
 
-let _games = {}
-let _seeds_list = {}
+let _games         = {}
+let _seeds_list    = {}
 let _pendings_list = {}
 
 
 class Games {
 	constructor(){
-		this.clearTasks()
+		// this.clearTasks()
 		this.load()
 
 		this.Queue = new AsyncPriorityQueue({
@@ -28,6 +28,18 @@ class Games {
 		})
 
 		this.Queue.start()
+
+
+		// DB.data.get('Games').on(data=>{
+		// 	this._games = data
+		// 	console.log('Games', data)
+		// })
+		// DB.data.get('seeds_list').on(data=>{
+		// 	console.log('seeds_list', data)
+		// })
+		// DB.data.get('deploy_tasks').on(data=>{
+		// 	console.log('deploy_tasks', data)
+		// })
 	}
 
 
@@ -70,87 +82,68 @@ class Games {
 
 
 	load(callback){
-		localDB.getItem('Games', (err, games)=>{
-			if (games) { this._games = games }
-			if (callback) callback(games)
+		DB.data.get('Games').map().on( (game, game_id) =>{
+			_games[game_id] = game
+			if (callback) callback(_games)
 		})
 	}
 
 	get(callback){
-		// if (_games && Object.keys(_games).length ) {
-		// 	callback(_games)
-		// 	return
-		// }
+		if (_games && Object.keys(_games).length ) {
+			callback(_games)
+			return
+		}
 		this.load(callback)
 	}
 	getSeeds(callback){
-		localDB.getItem('seeds_list', (err, seeds_list)=>{
+		DB.getItem('seeds_list', (err, seeds_list)=>{
+			if (err) { return }
 			callback(seeds_list)
 		})
 	}
 
 
-	create(code, callback){
-		// add task to deploy contract
-		localDB.getItem('deploy_tasks',(err, tasks)=>{
-			if (!tasks) { tasks = [] }
+	create(code){
+		let game_id = code+'_'+new Date().getTime()
 
-			let task_id = code+'_'+tasks.length
-			tasks.push({code:code, task_id:task_id })
-
-			_games[code+'_'+tasks.length] = {
-				code: code,
-				task_id:task_id,
-				deploying: true,
-				start_balance:0,
-				balance:0,
-			}
-			localDB.setItem('Games', _games)
-			localDB.setItem('deploy_tasks', tasks)
-
-			if (callback) { callback() }
+		DB.data.get('Games').get(game_id).put({
+			need_deploy:   true,
+			code:          code,
+			start_balance: 0,
+			balance:       0,
 		})
-
 	}
 
 
 	clearTasks(){
-		localDB.setItem('deploy_tasks',[])
-		localDB.getItem('Games',(err, games)=>{
-			for(let k in games){
-				if (games[k].deploying) {
-					delete(games[k])
-				};
-			}
-			localDB.setItem('Games', games)
-		})
+		// DB.data.get('Games').map().val((game, game_id) => {
+		// 	console.log('gamegamegame', game)
+		// 	if (game && game.task_id) {
+		// 		DB.data.get('Games').get(game_id).put(null)
+		// 	}
+		// })
 	}
 
 	checkTasks(){
-		localDB.getItem('deploy_tasks',(err, tasks)=>{
-			if (!tasks || tasks.length==0) {
-				setTimeout(()=>{ this.checkTasks() }, 5000)
-				return
-			}
+		DB.data.get('Games').map().val( (game, game_id) => {
+			console.log('checkTasks', game)
+			if (!game || !game.need_deploy) { return }
+			console.log('checkTasks2')
 
-			let game_code = tasks[0].code
-			let task_id = tasks[0].task_id
-			console.log('Start deploying: '+game_code+', task_id:'+task_id)
+			DB.data.get('Games').get(game_id).get('need_deploy').put(false)
+			DB.data.get('Games').get(game_id).get('deploying').put(true)
+
+			console.log('Start deploy '+game_id)
 
 			Eth.deployContract(
-				_config.contracts[game_code].bytecode,
-				_config.contracts[game_code].gasprice,
+				_config.contracts[game.code].bytecode,
+				_config.contracts[game.code].gasprice,
 
 				// Deployed!
 				(address)=>{
-					console.log(task_id+' - deployed')
-					for(let k in _games){
-						if (_games[k].task_id==task_id) {
-							delete(_games[k])
-							break
-						}
-					}
-					this.add(game_code, address)
+					console.log(game_id+' - deployed')
+
+					this.add(game_id, game.code, address)
 
 					// add bets to contract
 					Api.addBets(address).then( result => {
@@ -158,48 +151,43 @@ class Games {
 						console.log(result)
 						console.groupEnd()
 					})
-
-
-					setTimeout(()=>{
-						this.checkTasks()
-					}, 1000)
 				},
 
 				// Pending
 				()=>{
-					tasks.shift()
-					localDB.setItem('deploy_tasks', tasks)
+					DB.data.get('Games').get(game_id).get('deploying').put(false)
 				}
 			)
 		})
 	}
 
-	add(name, contract_id, callback){
+	add(game_id, name, contract_id, callback){
 		console.groupCollapsed('[Games] add ' + contract_id)
+
+		if (!game_id) {
+			game_id = name+'_'+contract_id
+		}
+
+		let gamedb = DB.data.get('Games').get(game_id)
+
+		gamedb.get('contract_id').put(contract_id)
 
 		this.getMeta(contract_id, (meta)=>{
 			if (!_config.games[meta.code]) {
 				return
 			}
 
-			_games[contract_id] = {
-				game: name,
-				meta: meta,
-			}
-
-			localDB.setItem('Games', _games)
+			gamedb.get('game').put(meta.code)
+			gamedb.get('meta_link').put(meta.link)
+			gamedb.get('meta_code').put(meta.code)
+			gamedb.get('meta_version').put(meta.version)
+			gamedb.get('meta_name').put(meta.name)
 
 			console.log('Get game balance')
 			Eth.getBetsBalance(contract_id, (balance)=>{
-
-				console.info('balance', balance)
-
-				_games[contract_id].balance = balance
-				if (!_games[contract_id].start_balance) {
-					_games[contract_id].start_balance = balance
-				}
-
-				localDB.setItem('Games', _games)
+				console.log('balance', balance)
+				gamedb.get('balance').put(balance)
+				gamedb.get('start_balance').put(balance)
 
 				console.groupEnd()
 
@@ -208,20 +196,27 @@ class Games {
 		})
 	}
 
-	remove(contract_id){
-		delete(_games[contract_id])
-		localDB.setItem('Games', _games)
+	remove(game_id){
+		delete(_games[game_id])
+		DB.data.get('Games').get(game_id).put(null)
+		DB.data.get('deploy_tasks').get(game_id).put(null)
 	}
 
 	runUpdateBalance(){
 		this.get(games => {
-			for(let contract_id in games){
-				Eth.getBetsBalance(contract_id, (balance)=>{
-					_games[contract_id].balance = balance
-					localDB.setItem('Games', _games)
+			for(let game_id in games){
+				if (!games[game_id]) {
+					continue
+				}
+
+				Eth.getBetsBalance(games[game_id].contract_id, (balance)=>{
+					DB.data.get('Games').get(game_id).get('balance').put(balance)
 				})
 			}
 		})
+		setTimeout(()=>{
+			this.runUpdateBalance()
+		}, 2*60*10000)
 	}
 
 	checkBalances(){
@@ -229,7 +224,7 @@ class Games {
 	}
 
 	runConfirm(){
-		localDB.getItem('seeds_list', (err, seeds_list)=>{
+		DB.getItem('seeds_list', (err, seeds_list)=>{
 			if (!err && seeds_list) {
 				_seeds_list = seeds_list
 			}
@@ -433,7 +428,7 @@ class Games {
 					_seeds_list[seed].confirm_server        = confirm
 					_seeds_list[seed].confirm_sended_server = true
 
-					localDB.setItem('seeds_list', _seeds_list)
+					DB.setItem('seeds_list', _seeds_list)
 				})
 			})
 		})
@@ -462,7 +457,7 @@ class Games {
 				_seeds_list[seed].confirm                   = confirm
 				_seeds_list[seed].confirm_blockchain        = confirm
 
-				localDB.setItem('seeds_list', _seeds_list, ()=>{
+				DB.setItem('seeds_list', _seeds_list, ()=>{
 					callback(!!response.result, response)
 				})
 			}).catch( err => {

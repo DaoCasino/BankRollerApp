@@ -21,13 +21,13 @@ import './games_list'
 			this.loading_status = 'Add task to deploy  "'+this.refs.game_name.value+'" contract'
 			this.update()
 
-			Games.create(this.refs.game_name.value,(address)=>{
-				setTimeout(()=>{
-					this.loading = false
-					this.loading_status =  ''
-					this.update()
-				},2000)
-			})
+			Games.create(this.refs.game_name.value)
+
+			setTimeout(()=>{
+				this.loading = false
+				this.loading_status =  ''
+				this.update()
+			},2000)
 		}
 
 		this.addContract = (e)=>{
@@ -37,7 +37,9 @@ import './games_list'
 			this.loading_status = 'Add contract...'
 			this.update()
 
-			Games.add('unknow', this.refs.contract_id.value.split(' ').join(''), (info)=>{
+			let contract_id = this.refs.contract_id.value.split(' ').join('')
+
+			Games.add(false, 'unknow', contract_id, (info)=>{
 				this.loading = true
 				this.loading_status = 'Game added!'
 
