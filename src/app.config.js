@@ -2,11 +2,16 @@
  * App settings
  */
 
+let bankroller_server = 'http://localhost:9998'
+
 
 let current_network = 'ropsten'
-if (window && window.localStorage.current_network) {
+
+if (process.env.NODE_ENV !== 'server' && window && window.localStorage.current_network) {
 	current_network = window.localStorage.current_network
 }
+
+
 
 const games = {
 	dice_v2:{ code: 'dice_v2',
@@ -52,6 +57,7 @@ const networks = {
 
 module.exports = {
 	wallet_pass:     '1234',
+	server:          bankroller_server,
 
 	network:         current_network,
 	networks:        networks,

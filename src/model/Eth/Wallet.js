@@ -1,13 +1,21 @@
 import _config    from 'app.config'
-import localDB    from 'localforage'
+import DB         from 'DB/DB'
 import * as Utils from 'utils'
 
 import RPC from './RPC'
 const rpc = new RPC( _config.rpc_url )
 
-// connected as external lib
-const ethWallet = window.lightwallet
-// import ethWallet from 'eth-lightwallet'
+let ethWallet = false
+
+// in browser connected as external lib
+if ( process.env.NODE_ENV !== 'server' ) {
+	ethWallet = window.lightwallet
+}
+
+// for server
+if (process.env.NODE_ENV === 'server') {
+	ethWallet = require('eth-lightwallet')
+}
 
 let _wallet = {}
 
@@ -16,10 +24,12 @@ export default class Wallet {
 		this.lib = ethWallet
 
 		// Create wallet if not exist
-		localDB.getItem('wallet', (err, wallet)=>{
+		DB.getItem('wallet', (err, wallet)=>{
 			if (wallet) {
 				_wallet = wallet
-			} else {
+				return
+			}
+			if ( process.env.NODE_ENV !== 'server' ) {
 				this.create()
 			}
 		})
@@ -63,7 +73,7 @@ export default class Wallet {
 
 
 	reset(){
-		localDB.setItem('wallet', null)
+		DB.setItem('wallet', null)
 	}
 
 	create(callback){
@@ -89,7 +99,7 @@ export default class Wallet {
 
 				console.info('Wallet created!', wallet)
 
-				localDB.setItem('wallet', wallet)
+				DB.setItem('wallet', wallet)
 
 				_wallet = wallet
 

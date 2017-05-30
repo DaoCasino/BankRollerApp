@@ -14,12 +14,12 @@ class Api {
 	}
 
 
-	getLogs(address, meta){
+	getLogs(address, game_code, game_version){
 		return this.request({
 			a:       'unconfirmed',
 			address: address,
-			game:    meta.name,
-			version: meta.version,
+			game:    game_code,
+			version: game_version,
 		}, 'proxy.php').then(r => {
 			return r.json()
 		})

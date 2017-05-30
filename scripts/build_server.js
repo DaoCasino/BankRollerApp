@@ -1,5 +1,5 @@
 // Do this as the first thing so that any code reading it knows the right env.
-process.env.NODE_ENV = 'production'
+process.env.NODE_ENV = 'server'
 
 // Load environment variables from .env file. Suppress warnings using silent
 // if this file is missing. dotenv will never modify any environment variables
@@ -13,7 +13,7 @@ var path               = require('path')
 var filesize           = require('filesize')
 var gzipSize           = require('gzip-size').sync
 var webpack            = require('webpack')
-var config             = require('./config/webpack.config.prod')
+var config             = require('./config/webpack.config.server')
 var paths              = require('./config/paths')
 var checkRequiredFiles = require('react-dev-utils/checkRequiredFiles')
 var recursive          = require('recursive-readdir')
@@ -62,10 +62,6 @@ recursive(paths.appBuild, (err, fileNames) => {
 	memo[key] = gzipSize(contents)
 	return memo
 }, {})
-
-  // Remove all content but keep the directory so that
-  // if you're in it, you don't end up in Trash
-	fs.emptyDirSync(paths.appBuild)
 
   // Start the webpack build
 	build(previousSizeMap)

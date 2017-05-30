@@ -2,6 +2,7 @@ import _config from 'app.config'
 import View    from 'view/app.view'
 import Games   from 'games'
 
+
 if (window) {
 	window.App = {}
 }
@@ -12,10 +13,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 	if (window.App) {
 		window.App.view = view
 	}
-
-	setTimeout(()=>{
-		Games.runConfirm()
-	}, 5000)
-
-	Games.checkTasks()
 })
+
+// Background job's
+// require('./app.background.js')

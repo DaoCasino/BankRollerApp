@@ -1,7 +1,14 @@
-const http = require('http')
-const fs   = require('fs')
-const path = require('path')
+const _config = require('./config.electron.js')
+const http    = require('http')
+const path    = require('path')
+const fs      = require('fs')
+const Gun     = require('gun')
 
+
+/*
+ * HTTP static file server
+ *  + Gun websocket
+ */
 const filetypes = {
 	'.js':   'text/javascript',
 	'.css':  'text/css',
@@ -11,8 +18,11 @@ const filetypes = {
 	'.jpg':  'image/jpg',
 	'.wav':  'audio/wav',
 }
-http.createServer(function (request, response) {
-	console.log('request starting...')
+
+let server = http.createServer(function (request, response) {
+	if(Gun.serve(request, response)){
+		return
+	}
 
 	let filePath = __dirname + request.url
 	if (filePath == __dirname+'/'){
@@ -39,4 +49,14 @@ http.createServer(function (request, response) {
 		}
 	})
 
-}).listen(9999)
+})
+
+server.listen(_config.http_port)
+
+
+
+global.GunDB  = Gun({file: './database.json', web: server })
+global.fetch  = require('node-fetch')
+global.window = {}
+
+require('./app.background.js')
