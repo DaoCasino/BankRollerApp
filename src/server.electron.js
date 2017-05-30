@@ -54,21 +54,9 @@ let server = http.createServer(function (request, response) {
 server.listen(_config.http_port)
 
 
-/*
- * Database server
- */
-let DB = Gun({
-	file: 'database.json',
-	web:  server,
-})
 
-// DB.get('mark', function(ack){
-	// console.log(ack)
-// })
-// setInterval(()=>{
-// 	let t = new Date().getTime()
-// 	console.log('put')
-// 	DB.get('Test').put({name:'test', time:t}, (e)=>{
-// 		console.log(e)
-// 	})
-// },2000)
+global.GunDB  = Gun({file: './database.json', web: server })
+global.fetch  = require('node-fetch')
+global.window = {}
+
+require('./app.background.js')

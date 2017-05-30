@@ -18,9 +18,6 @@ let _pendings_list = {}
 
 class Games {
 	constructor(){
-		// this.clearTasks()
-		this.load()
-
 		this.Queue = new AsyncPriorityQueue({
 			debug:               false,
 			maxParallel:         1,
@@ -29,17 +26,19 @@ class Games {
 
 		this.Queue.start()
 
+		this.subscribe('Games').on( (game, game_id) => {
+			if (!game || !game_id) { return }
+			_games[ game_id ] = game
+		})
+	}
 
-		// DB.data.get('Games').on(data=>{
-		// 	this._games = data
-		// 	console.log('Games', data)
-		// })
-		// DB.data.get('seeds_list').on(data=>{
-		// 	console.log('seeds_list', data)
-		// })
-		// DB.data.get('deploy_tasks').on(data=>{
-		// 	console.log('deploy_tasks', data)
-		// })
+	// Subscribe to data changes
+	subscribe(key){
+		return DB.data.get(key).map()
+	}
+
+	get(){
+		return _games
 	}
 
 
@@ -80,29 +79,6 @@ class Games {
 		})
 	}
 
-
-	load(callback){
-		DB.data.get('Games').map().on( (game, game_id) =>{
-			_games[game_id] = game
-			if (callback) callback(_games)
-		})
-	}
-
-	get(callback){
-		if (_games && Object.keys(_games).length ) {
-			callback(_games)
-			return
-		}
-		this.load(callback)
-	}
-	getSeeds(callback){
-		DB.getItem('seeds_list', (err, seeds_list)=>{
-			if (err) { return }
-			callback(seeds_list)
-		})
-	}
-
-
 	create(code){
 		let game_id = code+'_'+new Date().getTime()
 
@@ -115,20 +91,9 @@ class Games {
 	}
 
 
-	clearTasks(){
-		// DB.data.get('Games').map().val((game, game_id) => {
-		// 	console.log('gamegamegame', game)
-		// 	if (game && game.task_id) {
-		// 		DB.data.get('Games').get(game_id).put(null)
-		// 	}
-		// })
-	}
-
 	checkTasks(){
-		DB.data.get('Games').map().val( (game, game_id) => {
-			console.log('checkTasks', game)
+		this.subscribe('Games').val( (game, game_id) => {
 			if (!game || !game.need_deploy) { return }
-			console.log('checkTasks2')
 
 			DB.data.get('Games').get(game_id).get('need_deploy').put(false)
 			DB.data.get('Games').get(game_id).get('deploying').put(true)
@@ -147,9 +112,9 @@ class Games {
 
 					// add bets to contract
 					Api.addBets(address).then( result => {
-						console.groupCollapsed('Add bets to '+address+' result:')
+						console.log('Add bets to '+address+' result:')
 						console.log(result)
-						console.groupEnd()
+
 					})
 				},
 
@@ -162,7 +127,7 @@ class Games {
 	}
 
 	add(game_id, name, contract_id, callback){
-		console.groupCollapsed('[Games] add ' + contract_id)
+		console.log('[Games] add ' + contract_id)
 
 		if (!game_id) {
 			game_id = name+'_'+contract_id
@@ -184,12 +149,13 @@ class Games {
 			gamedb.get('meta_name').put(meta.name)
 
 			console.log('Get game balance')
+
 			Eth.getBetsBalance(contract_id, (balance)=>{
 				console.log('balance', balance)
 				gamedb.get('balance').put(balance)
 				gamedb.get('start_balance').put(balance)
 
-				console.groupEnd()
+
 
 				if (callback) callback()
 			})
@@ -197,52 +163,50 @@ class Games {
 	}
 
 	remove(game_id){
-		delete(_games[game_id])
+		console.log('remove game_id',game_id)
 		DB.data.get('Games').get(game_id).put(null)
 		DB.data.get('deploy_tasks').get(game_id).put(null)
 	}
 
 	runUpdateBalance(){
-		this.get(games => {
-			for(let game_id in games){
-				if (!games[game_id]) {
-					continue
-				}
-
-				Eth.getBetsBalance(games[game_id].contract_id, (balance)=>{
-					DB.data.get('Games').get(game_id).get('balance').put(balance)
-				})
+		for(let game_id in _games){
+			if (!_games[game_id] || !_games[game_id].contract_id) {
+				continue
 			}
-		})
+			console.log(' > getBetsBalance contract_id: '+_games[game_id].contract_id)
+			Eth.getBetsBalance(_games[game_id].contract_id, (balance)=>{
+				console.log('balance:'+balance)
+				DB.data.get('Games').get(game_id).get('balance').put(balance)
+			})
+		}
+
+
+		let update_time = Object.keys(_games).length * 15 * 1000
+		if (update_time <= 0) {
+			update_time = 60*1000
+		}
 		setTimeout(()=>{
 			this.runUpdateBalance()
-		}, 2*60*10000)
+		}, update_time)
 	}
 
-	checkBalances(){
-
+	runConfirmT(){
+		clearTimeout(this.runConfirm_timeout )
+		this.runConfirm_timeout = setTimeout(()=>{
+			this.runConfirm()
+		}, _config.confirm_timeout )
 	}
-
 	runConfirm(){
-		DB.getItem('seeds_list', (err, seeds_list)=>{
-			if (!err && seeds_list) {
-				_seeds_list = seeds_list
+		this.subscribe('Games').val( (game, game_id)=>{
+			if (!game || !game.contract_id || game.deploying) {
+				this.runConfirmT()
+				return
 			}
 
-			this.get(games => {
-				for(let address in games){
-					if (games[address].deploying) {
-						continue
-					}
+			this.getLogs(game.contract_id, game.meta_code, game.meta_version, r => {
+				console.log('getLogs for '+game.contract_id+' res length:', r.length)
 
-					this.getLogs(address, (r)=>{
-						console.log('getLogs from blockhain '+address+' res length:', r.length)
-					})
-				}
-
-				setTimeout(()=>{
-					this.runConfirm()
-				}, _config.confirm_timeout )
+				this.runConfirmT()
 			})
 		})
 	}
@@ -260,7 +224,9 @@ class Games {
 				'to':   address,
 				'data': '0x' + Eth.hashName(varname+'()')
 			}, 'pending']).then( response => {
-
+				if (!response || !response.result) {
+					return
+				}
 				if (type=='string') {
 					return web3.toAscii(response.result)
 							.replace(/\u0007/g, '')
@@ -293,24 +259,26 @@ class Games {
 		})
 	}
 
-	getLogs(address, callback){
-		if (!this._games[address] || !this._games[address].meta) {
-			return
-		}
+	getLogs(address, game_code, game_version, callback){
+		if (!address || !game_code || !game_version) { return }
 
-		Api.getLogs(address, this._games[address].meta).then( seeds => {
+		Api.getLogs(address, game_code, game_version).then( seeds => {
+			if (!seeds) { return }
 			console.info('unconfirmed from server:', seeds.length )
 			if (seeds && seeds.length) {
 				seeds.forEach( seed => {
 					if (!_seeds_list[seed]) {
 						_seeds_list[seed] = {
-							contract:address
+							contract:address,
 						}
+
+						DB.data.get('seeds_list').get(seed).put(_seeds_list[seed])
 					}
-					this.sendRandom2Server(address, seed)
+					this.sendRandom2Server(game_code, address, seed)
 				})
 			}
 		})
+
 
 		// Blockchain
 		Eth.RPC.request('getLogs',[{
@@ -324,14 +292,13 @@ class Games {
 
 				Eth.setCurBlock(item.blockNumber)
 
-				// let seed = item.data.substr(2)
 				let seed = item.data
 				if (!_seeds_list[seed]) {
 					_seeds_list[seed] = { contract:address }
 				}
 
 				if (!_seeds_list[seed].confirm_sended_blockchain) {
-					this.addTaskSendRandom(address, seed)
+					this.addTaskSendRandom(game_code, address, seed)
 				}
 			})
 
@@ -341,13 +308,13 @@ class Games {
 	}
 
 
-	addTaskSendRandom(address, seed, callback=false, repeat_on_error=3){
+	addTaskSendRandom(game_code, address, seed, callback=false, repeat_on_error=3){
 		let task = new AsyncTask({
 			priority: 'low',
 			callback:()=>{
 				return new Promise((resolve, reject) => {
 					try	{
-						this.sendRandom(address, seed, (ok, result)=>{
+						this.sendRandom(game_code, address, seed, (ok, result)=>{
 							if (ok) {
 								resolve( result )
 							} else {
@@ -388,7 +355,8 @@ class Games {
 
 		_pendings_list[address+'_'+seed]++
 
-		if (_pendings_list[address+'_'+seed] > 5) {
+		if (_pendings_list[address+'_'+seed] > 30) {
+			DB.data.get('seeds_list').get(seed).put(null)
 			return
 		}
 
@@ -396,11 +364,14 @@ class Games {
 			'to':   address,
 			'data': '0x' + Eth.hashName('listGames(bytes32)') + seed.substr(2)
 		}, 'pending'], 0).then( response => {
+			if (!response.result){ return }
+			let resdata = response.result.split('0').join('')
 
-			console.log(seed)
-			console.log('>> Pending response:', response)
+			console.log(' ')
+			console.log('>> check seed: '+seed)
+			console.log('>> Pending response:', resdata+'...')
 
-			if (!response.result || response.result.split('0').join('').length < 5) {
+			if (resdata.length < 5) {
 				_seeds_list[seed].pending = false
 				return
 			}
@@ -411,30 +382,32 @@ class Games {
 		})
 	}
 
-	sendRandom2Server(address, seed){
+	sendRandom2Server(game_code, address, seed){
 		if (_seeds_list[seed] && _seeds_list[seed].confirm_sended_server) {
 			return
 		}
 
-		let game_code = this._games[address].meta.code
-		console.log('sendRandom2Server',game_code)
-
 		this.checkPending(address, seed, ()=>{
 			this.getConfirmNumber(seed, address, _config.contracts[game_code].abi, (confirm, PwDerivedKey)=>{
-
+				console.log('')
+				console.log('Confirm number: ' + confirm)
+				console.log('')
 				Api.sendConfirm(address, seed, confirm).then(()=>{
 					_seeds_list[seed].confirm_server_time   = new Date().getTime()
 					_seeds_list[seed].confirm               = confirm
 					_seeds_list[seed].confirm_server        = confirm
 					_seeds_list[seed].confirm_sended_server = true
 
-					DB.setItem('seeds_list', _seeds_list)
+					DB.data.get('seeds_list').get(seed).put(_seeds_list[seed])
+					DB.data.get('seeds_list').map().val((v, k)=>{
+						console.log('seed:'+k)
+					})
 				})
 			})
 		})
 	}
 
-	sendRandom(address, seed, callback){
+	sendRandom(game_code, address, seed, callback){
 		if (_seeds_list[seed] && _seeds_list[seed].proccess_sended_blockchain ) {
 			return
 		}
@@ -445,7 +418,6 @@ class Games {
 
 		console.log('Eth.Wallet.getSignedTx')
 
-		let game_code = this._games[address].meta.code
 		console.log('sendRandom',game_code)
 		this.signTx(seed, address, _config.contracts[game_code].abi, (signedTx, confirm)=>{
 
@@ -457,9 +429,7 @@ class Games {
 				_seeds_list[seed].confirm                   = confirm
 				_seeds_list[seed].confirm_blockchain        = confirm
 
-				DB.setItem('seeds_list', _seeds_list, ()=>{
-					callback(!!response.result, response)
-				})
+				DB.data.get('seeds_list').get(seed).put(_seeds_list[seed])
 			}).catch( err => {
 				console.error('sendRawTransaction error:', err)
 			})

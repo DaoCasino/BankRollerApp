@@ -1,6 +1,5 @@
 import _config  from 'app.config'
 import Games    from 'games'
-import DB       from 'DB/DB'
 
 <games_list>
 	<script>
@@ -11,16 +10,12 @@ import DB       from 'DB/DB'
 		})
 		this.on('mount', ()=>{
 			this.getGames()
-			// setInterval(()=>{
-			// 	this.getGames()
-			// },2000)
-			console.log(DB)
 		})
 
 		this.getGames = ()=>{
 			this.games = {}
 
-			DB.data.get('Games').map().on( (game, game_id)=>{
+			Games.subscribe('Games').on( (game, game_id)=>{
 				if (!game || !game_id) { return }
 
 				let bankroll = 0
@@ -65,25 +60,31 @@ import DB       from 'DB/DB'
 				this.update()
 			})
 
+			let seeds = {}
+			Games.subscribe('seeds_list').on((data, seed)=>{
+				if (!data) { return }
 
-			// Games.getSeeds(seeds=>{
-			// 	this.seeds = []
-			// 	for(let k in seeds){
-			// 		seeds[k].seed = k
-			// 		seeds[k].tx_link = `${_config.etherscan_url}/tx/${seeds[k].seed}`
-			// 		seeds[k].contract_link = `${_config.etherscan_url}/address/${seeds[k].contract}`
-			// 		this.seeds.push(seeds[k])
-			// 	}
-			// 	this.seeds = this.seeds.reverse().slice(0,10)
-			// 	this.update()
-			// })
+				data.seed        = seed
+				data.tx_link     = `${_config.etherscan_url}/tx/${seed}`
+				seeds[seed] = data
+
+				this.seeds = []
+				for(let k in seeds){
+					this.seeds.push(seeds[k])
+				}
+				this.seeds = this.seeds.reverse().slice(0,10)
+
+				this.update()
+				console.log('seeds len:'+Object.keys(seeds).length)
+			})
 		}
 
 
 		this.remove = (e)=>{
-			console.log('rem')
 			e.preventDefault()
 			Games.remove(e.item.game.game_id)
+			delete( this.games[e.item.game.game_id] )
+			this.update()
 		}
 	</script>
 
@@ -131,7 +132,7 @@ import DB       from 'DB/DB'
 		</tbody>
 		</table>
 
-		<table if={Object.keys(games).length && seeds.length} class="seeds">
+		<table if={Object.keys(games).length && Object.keys(seeds).length} class="seeds">
 			<caption>Transactions</caption>
 			<thead>
 				<tr>

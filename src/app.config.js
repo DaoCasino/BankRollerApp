@@ -6,10 +6,10 @@ let bankroller_server = 'http://localhost:9998'
 
 
 let current_network = 'ropsten'
-if (window && window.localStorage.current_network) {
+
+if (process.env.NODE_ENV !== 'server' && window && window.localStorage.current_network) {
 	current_network = window.localStorage.current_network
 }
-
 
 
 

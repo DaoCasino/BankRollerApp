@@ -1,9 +1,18 @@
 import _config  from 'app.config'
-import GunDB    from 'gun'
+
 
 const DB = new class Database {
 	constructor() {
-		this.data = GunDB(_config.server+'/gun')
+		// Webpack automatic remove not used code
+		// and there will be only one expression
+
+		if (process.env.NODE_ENV !== 'server') {
+			this.data = require('gun')(_config.server+'/gun')
+		}
+
+		if (process.env.NODE_ENV === 'server') {
+			this.data = GunDB
+		}
 	}
 
 	// localforage compatibility
@@ -24,7 +33,5 @@ const DB = new class Database {
 		this.data.get(key).put(null)
 	}
 }
-
-window.DB = DB
 
 export default DB

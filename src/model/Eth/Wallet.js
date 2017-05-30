@@ -5,14 +5,15 @@ import * as Utils from 'utils'
 import RPC from './RPC'
 const rpc = new RPC( _config.rpc_url )
 
-
 let ethWallet = false
+
 // in browser connected as external lib
-if ( window.lightwallet ) {
+if ( process.env.NODE_ENV !== 'server' ) {
 	ethWallet = window.lightwallet
 }
+
 // for server
-if (typeof proccess !== 'undefined') {
+if (process.env.NODE_ENV === 'server') {
 	ethWallet = require('eth-lightwallet')
 }
 
@@ -28,8 +29,9 @@ export default class Wallet {
 				_wallet = wallet
 				return
 			}
-
-			this.create()
+			if ( process.env.NODE_ENV !== 'server' ) {
+				this.create()
+			}
 		})
 	}
 

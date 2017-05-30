@@ -1,31 +1,46 @@
 {
-  "name": "BankRollerApp",
-  "version": "0.0.4",
+  "name":        "BankRollerApp",
+  "version":     "0.0.5",
   "description": "Dao.Casino app for bankroller",
-  "main": "./build/index.electron.js",
+  "repository":  "https://github.com/DaoCasino/",
+  "author":      "Dao Casino <team@dao.casino>",
+  "private":     false,
+
+  "main":     "./build/index.electron.js",
   "homepage": "./",
-  "repository": "https://github.com/DaoCasino/",
-  "author": "Dao Casino <team@dao.casino>",
-  "private": true,
+
   "scripts": {
-    "start": "npm run serve_web_server",
-    "serve_web": "node scripts/start.js",
-    "serve_web_server": "node scripts/start.js & node ./src/server.electron.js",
-    "build_web": "node scripts/build.js",
-    "build": "npm run cp_electron & npm run build_web",
-    "cp_electron": "cp ./src/index.electron.js ./public/index.electron.js & cp ./src/index.electron.js ./build/index.electron.js & cp ./src/server.electron.js ./public/server.electron.js & cp ./src/server.electron.js ./build/server.electron.js ",
-    "serve_electron": "npm run cp_electron & npm run serve_web & sleep 5; export dev=true; electron .",
-    "run_electron": "npm run cp_electron; electron .",
-    "pack_electron_linux": "npm run cp_electron & electron-packager ./ BankRoller --overwrite --app-version=0.0.4 --out=dist --ignore=node_modules --ignore=src --ignore=config --ignore=scripts --ignore=public --prune",
-    "pack_electron_windows": "npm run cp_electron & electron-packager ./ BankRoller --overwrite --platform=win32 --app-version=0.0.4 --out=dist --ignore=node_modules --ignore=src --ignore=config --ignore=scripts --ignore=public --prune",
-    "pack_electron": "npm run cp_electron & electron-packager ./ BankRoller --overwrite --all --app-version=0.0.4 --out=dist --ignore=node_modules --ignore=src --ignore=config --ignore=scripts --ignore=public --prune",
-    "build_electron": "build -mwl --x64 --ia32",
-    "build_electron_windows": "build -w --x64",
-    "build_electron_linux": "build -l --x64",
-    "build_electron_mac": "build -m --x64",
+    "start":                    "npm run webserver",
+    "serve_web":                "node scripts/start.js",
+    "webserver":                "npm run server & npm run serve_web",
+    "server":                   "NODE_ENV=server npm run build_server && node ./build/server.electron.js",
+
+    "build_all":                "npm run build && npm run build_electron_all",
+    "build_web":                "node scripts/build.js",
+    "build_server":             "npm run cp_electron & node scripts/build_server.js",
+    "build":                    "npm run build_web && npm run build_server",
+
+    "cp_electron":              "cp ./src/index.electron.js ./public/index.electron.js & cp ./src/index.electron.js ./build/index.electron.js & cp ./src/server.electron.js ./public/server.electron.js & cp ./src/server.electron.js ./build/server.electron.js & cp ./src/config.electron.js ./build/config.electron.js ",
+    "serve_electron":           "npm run cp_electron & npm run serve_web & sleep 5; export dev=true; electron .",
+    "run_electron":             "npm run cp_electron; electron .",
+
+
+    "build_electron_all":       "npm run pack_electron && npm run build_electron_linux_deb && npm run build_electron",
+
+    "pack_electron_linux":      "npm run cp_electron & electron-packager ./ BankRoller --overwrite --app-version=0.0.4 --out=dist --ignore=node_modules --ignore=src --ignore=config --ignore=scripts --ignore=public --prune",
+    "pack_electron_windows":    "npm run cp_electron & electron-packager ./ BankRoller --overwrite --platform=win32 --app-version=0.0.4 --out=dist --ignore=node_modules --ignore=src --ignore=config --ignore=scripts --ignore=public --prune",
+    "pack_electron":            "npm run cp_electron & electron-packager ./ BankRoller --overwrite --all --app-version=0.0.4 --out=dist --ignore=node_modules --ignore=src --ignore=config --ignore=scripts --ignore=public --prune",
+
+    "build_electron":           "build -mwl --x64 --ia32",
+    "build_electron_windows":   "build -w --x64",
+    "build_electron_linux":     "build -l --x64",
+    "build_electron_mac":       "build -m --x64",
     "build_electron_linux_deb": "electron-installer-debian --src ./dist/BankRoller-linux-x64 --dest ./dist/ --arch amd64",
-    "test": "node scripts/test.js --env=jsdom"
+
+
+    "test":                     "node scripts/test.js --env=jsdom"
   },
+
   "build": {
     "appId": "com.daocasino.bankroller",
     "files": [
@@ -47,7 +62,7 @@
       "src/**/*.{js,tag}"
     ],
     "setupFiles": [
-      "<rootDir>/config/polyfills.js"
+      "<rootDir>/scripts/config/polyfills.js"
     ],
     "testPathIgnorePatterns": [
       "<rootDir>[/\\\\](build|docs|node_modules|scripts)[/\\\\]"
@@ -56,8 +71,8 @@
     "testURL": "http://localhost",
     "transform": {
       "^.+\\.(js|tag)$": "<rootDir>/node_modules/babel-jest",
-      "^.+\\.(styl|sass|less|css)$": "<rootDir>/config/jest/cssTransform.js",
-      "^(?!.*\\.(js|tag|styl|sass|less|css|json)$)": "<rootDir>/config/jest/fileTransform.js"
+      "^.+\\.(styl|sass|less|css)$": "<rootDir>/scripts/config/jest/cssTransform.js",
+      "^(?!.*\\.(js|tag|styl|sass|less|css|json)$)": "<rootDir>/scripts/config/jest/fileTransform.js"
     },
     "transformIgnorePatterns": [
       "[/\\\\]node_modules[/\\\\].+\\.(js|tag)$"
@@ -77,6 +92,7 @@
     "highcharts": "^5.0.12",
     "jquery": "^3.2.1",
     "localforage": "^1.5.0",
+    "node-fetch": "^1.7.0",
     "qrcode-svg": "^0.9.0",
     "riot": "^3.5.1",
     "riot-route": "^3.1.1",

@@ -1,3 +1,5 @@
+const _config = require('./config.electron.js')
+
 require('./server.electron.js')
 
 const {
@@ -12,19 +14,12 @@ const path = require('path')
 const url  = require('url')
 
 // Start page
-let index_page_url = url.format({
-	pathname: path.join(__dirname, 'index.html'),
-	protocol: 'file:',
-	slashes:  true
-})
+// let index_page_url = url.format({
+// 	pathname: path.join(__dirname, 'index.html'),
+// 	protocol: 'file:',
+// 	slashes:  true
+// })
 
-// Electron server url
-index_page_url = 'http://localhost:9999'
-
-// Start page - dev server
-if (process.env.dev) {
-	index_page_url = 'http://localhost:9999'
-}
 
 let mainWindow
 
@@ -35,7 +30,7 @@ function createWindow () {
 	})
 
 
-	mainWindow.loadURL(index_page_url)
+	mainWindow.loadURL(_config.index_page_url)
 
 	mainWindow.on('closed', () => { mainWindow = null })
 

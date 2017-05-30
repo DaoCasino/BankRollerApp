@@ -1,9 +1,9 @@
-import Games  from 'games'
+import Games from 'games'
 
 setTimeout(()=>{
-	Games.checkBalances()
-
 	Games.checkTasks()
-
 	Games.runConfirm()
+	setTimeout(()=>{
+		Games.runUpdateBalance()
+	}, 5000)
 }, 5000)
