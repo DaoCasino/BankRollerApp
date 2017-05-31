@@ -1,14 +1,12 @@
 {
-  "name":        "BankRollerApp",
-  "version":     "0.0.5",
+  "name": "BankRollerApp",
+  "version": "0.0.5",
   "description": "Dao.Casino app for bankroller",
-  "repository":  "https://github.com/DaoCasino/",
-  "author":      "Dao Casino <team@dao.casino>",
-  "private":     false,
-
-  "main":     "./build/index.electron.js",
+  "repository": "https://github.com/DaoCasino/",
+  "author": "Dao Casino <team@dao.casino>",
+  "private": false,
+  "main": "./build/index.electron.js",
   "homepage": "./",
-
   "scripts": {
     "start":                    "npm run webserver",
     "serve_web":                "node scripts/start.js",
@@ -24,12 +22,11 @@
     "serve_electron":           "npm run cp_electron & npm run serve_web & sleep 5; export dev=true; electron .",
     "run_electron":             "npm run cp_electron; electron .",
 
-
     "build_electron_all":       "npm run pack_electron && npm run build_electron_linux_deb && npm run build_electron",
 
-    "pack_electron_linux":      "npm run cp_electron & electron-packager ./ BankRoller --overwrite --app-version=0.0.4 --out=dist --ignore=node_modules --ignore=src --ignore=config --ignore=scripts --ignore=public --prune",
-    "pack_electron_windows":    "npm run cp_electron & electron-packager ./ BankRoller --overwrite --platform=win32 --app-version=0.0.4 --out=dist --ignore=node_modules --ignore=src --ignore=config --ignore=scripts --ignore=public --prune",
-    "pack_electron":            "npm run cp_electron & electron-packager ./ BankRoller --overwrite --all --app-version=0.0.4 --out=dist --ignore=node_modules --ignore=src --ignore=config --ignore=scripts --ignore=public --prune",
+    "pack_electron_linux":      "npm run cp_electron & electron-packager ./ BankRoller --overwrite --app-version=0.0.5 --out=dist --ignore=node_modules --ignore=src --ignore=config --ignore=scripts --ignore=public --prune",
+    "pack_electron_windows":    "npm run cp_electron & electron-packager ./ BankRoller --overwrite --platform=win32 --app-version=0.0.5 --out=dist --ignore=node_modules --ignore=src --ignore=config --ignore=scripts --ignore=public --prune",
+    "pack_electron":            "npm run cp_electron & electron-packager ./ BankRoller --overwrite --all --app-version=0.0.5 --out=dist --ignore=node_modules --ignore=src --ignore=config --ignore=scripts --ignore=public --prune",
 
     "build_electron":           "build -mwl --x64 --ia32",
     "build_electron_windows":   "build -w --x64",
@@ -37,10 +34,8 @@
     "build_electron_mac":       "build -m --x64",
     "build_electron_linux_deb": "electron-installer-debian --src ./dist/BankRoller-linux-x64 --dest ./dist/ --arch amd64",
 
-
     "test":                     "node scripts/test.js --env=jsdom"
   },
-
   "build": {
     "appId": "com.daocasino.bankroller",
     "files": [
@@ -122,6 +117,7 @@
     "electron-builder": "^17.10.0",
     "electron-installer-debian": "^0.5.1",
     "electron-packager": "^8.7.0",
+    "electron-simple-updater": "^1.2.0",
     "eslint": "3.8.1",
     "eslint-loader": "1.6.0",
     "eslint-plugin-flowtype": "2.21.0",
