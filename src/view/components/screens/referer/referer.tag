@@ -19,6 +19,9 @@ import './referer.less'
 
 			this.getBlockchainStat()
 
+			this.generateLinks()
+
+
 			if (localStorage.ga_view_id) {
 				this.ga_site_id   = localStorage.ga_site_id
 				this.ga_view_id   = localStorage.ga_view_id
@@ -86,7 +89,6 @@ import './referer.less'
 			})
 
 			this.renderChart()
-			this.generateLinks()
 		}
 
 		this.selectAccount = ()=>{
@@ -152,9 +154,6 @@ import './referer.less'
 		}
 
 		this.generateLinks = ()=>{
-			if (!this.ga_site_id) {
-				return
-			}
 			let addr = Eth.Wallet.get().openkey
 			if (!addr) {
 				return
@@ -162,9 +161,15 @@ import './referer.less'
 
 			this.links = []
 			for(let k in _config.games){
+				let href = _config.games[k].url+'?ref='+addr
+
+				if (this.ga_site_id) {
+					href += '&gaid='+this.ga_site_id
+				}
+
 				this.links.push({
 					game: _config.games[k].name,
-					href: _config.games[k].url+'?ref='+addr+'&gaid='+this.ga_site_id
+					href: href
 				})
 			}
 			this.update()
@@ -187,7 +192,7 @@ import './referer.less'
 			</span>
 		</div>
 		<div class={auth:true, show:need_auth}>
-			<p>For see stats you need grant access </p>
+			<p>For see google analytics data you need grant access </p>
 			<section id="auth_button"></section>
 		</div>
 

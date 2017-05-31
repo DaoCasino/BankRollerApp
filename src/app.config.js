@@ -2,7 +2,7 @@
  * App settings
  */
 
-let bankroller_server = 'http://localhost:9998'
+let bankroller_server = 'http://localhost:9999'
 
 
 let current_network = 'ropsten'
