@@ -17,5 +17,5 @@
 # misc
 .DS_Store
 .env
-.publisher.json
+publisher.json
 npm-debug.log
