@@ -1,9 +1,10 @@
 import Games from 'games'
 
 setTimeout(()=>{
-	Games.checkTasks()
-	Games.runConfirm()
-	setTimeout(()=>{
-		Games.runUpdateBalance()
-	}, 5000)
-}, 5000)
+	Games.runUpdateBalance()
+
+	Games.checkDeployTasks()
+
+	Games.runServerConfirm()
+	Games.runBlockchainConfirm()
+}, 10000)

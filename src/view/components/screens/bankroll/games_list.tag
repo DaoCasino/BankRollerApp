@@ -16,6 +16,7 @@ import Games    from 'games'
 			this.games = {}
 
 			Games.subscribe('Games').on( (game, game_id)=>{
+				console.log('Games_update')
 				if (!game || !game_id) { return }
 
 				let bankroll = 0
@@ -62,6 +63,7 @@ import Games    from 'games'
 
 			let seeds = {}
 			Games.subscribe('seeds_list').on((data, seed)=>{
+				console.log('seeds_list_update')
 				if (!data) { return }
 
 				data.seed        = seed
@@ -75,7 +77,6 @@ import Games    from 'games'
 				this.seeds = this.seeds.reverse().slice(0,10)
 
 				this.update()
-				console.log('seeds len:'+Object.keys(seeds).length)
 			})
 		}
 

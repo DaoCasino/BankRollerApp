@@ -13,15 +13,29 @@ const {
 const path = require('path')
 const url  = require('url')
 
-// Start page
-// let index_page_url = url.format({
-// 	pathname: path.join(__dirname, 'index.html'),
-// 	protocol: 'file:',
-// 	slashes:  true
-// })
+
+// Check updates
+require('electron-simple-updater').init({
+	checkUpdateOnStart: true,
+	autoDownload:       true
+})
 
 
-let mainWindow
+let mainWindow = null
+
+// Prevent double open
+var shouldQuit = app.makeSingleInstance(function(commandLine, workingDirectory) {
+	if (mainWindow) {
+		if (mainWindow.isMinimized()) {
+			mainWindow.restore()
+		}
+		mainWindow.focus()
+	}
+})
+if (shouldQuit) {
+	app.quit()
+}
+
 
 function createWindow () {
 	mainWindow = new BrowserWindow({
@@ -72,17 +86,17 @@ function createWindow () {
 		mainWindow.isVisible() ? mainWindow.hide() : mainWindow.show()
 	})
 
-	mainWindow.on('minimize', event => {
-		event.preventDefault()
-		mainWindow.hide()
-	})
-	mainWindow.on('close', event => {
-		if(!app.isQuiting){
-			event.preventDefault()
-			mainWindow.hide()
-		}
-		return false
-	})
+	// mainWindow.on('minimize', event => {
+	// 	event.preventDefault()
+	// 	mainWindow.hide()
+	// })
+	// mainWindow.on('close', event => {
+	// 	if(!app.isQuiting){
+	// 		event.preventDefault()
+	// 		mainWindow.hide()
+	// 	}
+	// 	return false
+	// })
 }
 
 app.on('ready', createWindow)

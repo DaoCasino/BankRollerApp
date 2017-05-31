@@ -1,8 +1,7 @@
 import $ from 'jquery'
 import _config from '../app.config.js'
-import localDB from 'localforage'
 
-import riot from 'riot'
+import riot  from 'riot'
 import route from 'riot-route'
 
 import toastr from 'toastr'
