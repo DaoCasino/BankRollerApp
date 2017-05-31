@@ -17,7 +17,7 @@ if (process.env.NODE_ENV === 'server') {
 	ethWallet = require('eth-lightwallet')
 }
 
-let _wallet = {}
+let _wallet = false
 
 export default class Wallet {
 	constructor() {
@@ -36,8 +36,23 @@ export default class Wallet {
 
 		DB.data.get('wallet').on(wallet => {
 			if(wallet) _wallet = wallet
-			console.log('wallet update!', wallet)
 		})
+
+		this.checkWallet()
+	}
+
+	checkWallet(){
+		if (_wallet) return
+
+		setTimeout(()=>{
+			DB.data.get('wallet', ack => {
+				if(!ack.put){
+					this.checkWallet()
+				} else {
+					_wallet = ack.put
+				}
+			})
+		},3000)
 	}
 
 	get(){
@@ -48,6 +63,10 @@ export default class Wallet {
 		if (this.keyStore) {
 			return this.keyStore
 		}
+		if (!_wallet || !_wallet.keystorage) {
+			return false
+		}
+
 		this.keyStore = ethWallet.keystore.deserialize( _wallet.keystorage  )
 		return this.keyStore
 	}
@@ -66,6 +85,9 @@ export default class Wallet {
 			callback(this.pwDerivedKey)
 			return
 		}
+
+		if (!this.getKs()) { return }
+
 		this.getKs().keyFromPassword(_config.wallet_pass, (err, pwDerivedKey)=>{
 			if (err && limit>0 ) { this.getPwDerivedKey(callback, (limit-1)); return }
 
