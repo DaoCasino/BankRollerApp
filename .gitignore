@@ -15,7 +15,10 @@
 /builds
 
 # misc
-.DS_Store
-.env
 publisher.json
 npm-debug.log
+package-lock.json
+yarn-error.log
+yarn.lock
+.DS_Store
+.env
