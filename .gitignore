@@ -1,5 +1,9 @@
 # See http://help.github.com/ignore-files/ for more about ignoring files.
 
+#private
+publisher.json
+.env
+
 # data
 /database.json
 
@@ -15,10 +19,8 @@
 /builds
 
 # misc
-publisher.json
 npm-debug.log
 package-lock.json
 yarn-error.log
 yarn.lock
 .DS_Store
-.env
