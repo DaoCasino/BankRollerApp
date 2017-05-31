@@ -2,7 +2,6 @@
 
 #private
 publisher.json
-.env
 
 # data
 /database.json
