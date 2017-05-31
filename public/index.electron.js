@@ -10,6 +10,10 @@ const {
 	shell
 } = require('electron')
 
+// for ballon nofify
+global.Tray = Tray
+
+
 const path = require('path')
 const url  = require('url')
 

@@ -2,6 +2,7 @@ import _config    from 'app.config'
 import DB         from 'DB/DB'
 import Eth        from 'Eth/Eth'
 import Api        from 'Api'
+import Notify     from 'notify'
 import bigInt     from 'big-integer'
 import Web3       from 'web3'
 
@@ -70,7 +71,6 @@ class Games {
 
 	// check games waiting deploy
 	checkDeployTasks(){
-
 		// Deploy ONE game for cycle
 		let game_to_deploy_id = false, game_to_deploy = false
 		for(let game_id in _games){
@@ -110,6 +110,8 @@ class Games {
 					console.log('Add bets to '+address+' result:')
 					console.log(result)
 				})
+
+				Notify.send('Contract succefull deployed!', 'Address: '+address)
 			},
 
 			// Pending
@@ -142,8 +144,9 @@ class Games {
 			gamedb.get('meta_version').put(meta.version)
 			gamedb.get('meta_name').put(meta.name)
 
-			console.log('Get game balance')
+			Notify.send('Game added!', 'Game '+meta.name+' succefull add')
 
+			console.log('Get game balance')
 			Eth.getBetsBalance(contract_id, (balance)=>{
 				console.log('balance', balance)
 				gamedb.get('balance').put(balance)

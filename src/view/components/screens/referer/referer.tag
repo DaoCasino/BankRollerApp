@@ -1,7 +1,10 @@
 import _config from 'app.config'
 import Eth     from 'Eth/Eth'
+import Stat    from 'stat'
 import GA      from './ga'
 import Charts  from './charts'
+
+import './referer.less'
 
 <referer>
 	<script>
@@ -13,6 +16,12 @@ import Charts  from './charts'
 		this.links        = false
 
 		this.on('mount',()=>{
+
+			this.getBlockchainStat()
+
+			this.generateLinks()
+
+
 			if (localStorage.ga_view_id) {
 				this.ga_site_id   = localStorage.ga_site_id
 				this.ga_view_id   = localStorage.ga_view_id
@@ -53,6 +62,21 @@ import Charts  from './charts'
 			})
 		})
 
+		this.getBlockchainStat = ()=>{
+			clearTimeout( this.getBlockchainStatTimeout )
+			this.getBlockchainStatTimeout = setTimeout(()=>{
+				Stat.getReferralsCount( referrals => {
+					this.referrals_cnt = ''+referrals
+					this.update()
+				})
+
+				Stat.getProfit( profit => {
+					this.profit = ''+profit
+					this.update()
+				})
+			}, 2000)
+		}
+
 		this.loadData = ()=>{
 			clearInterval(this.t)
 
@@ -65,7 +89,6 @@ import Charts  from './charts'
 			})
 
 			this.renderChart()
-			this.generateLinks()
 		}
 
 		this.selectAccount = ()=>{
@@ -131,9 +154,6 @@ import Charts  from './charts'
 		}
 
 		this.generateLinks = ()=>{
-			if (!this.ga_site_id) {
-				return
-			}
 			let addr = Eth.Wallet.get().openkey
 			if (!addr) {
 				return
@@ -141,9 +161,15 @@ import Charts  from './charts'
 
 			this.links = []
 			for(let k in _config.games){
+				let href = _config.games[k].url+'?ref='+addr
+
+				if (this.ga_site_id) {
+					href += '&gaid='+this.ga_site_id
+				}
+
 				this.links.push({
 					game: _config.games[k].name,
-					href: _config.games[k].url+'?ref='+addr+'&gaid='+this.ga_site_id
+					href: href
 				})
 			}
 			this.update()
@@ -155,8 +181,18 @@ import Charts  from './charts'
 
 	</script>
 	<div class="stat-wrap">
+
+		<div class="blockchain-stat">
+			<span if={referrals_cnt} class="referrals_cnt">
+				<em>{referrals_cnt}</em> refferals
+			</span>
+
+			<span if={profit} class="profit">
+				<em>{profit}</em> BETS
+			</span>
+		</div>
 		<div class={auth:true, show:need_auth}>
-			<p>For see stats you need grant access </p>
+			<p>For see google analytics data you need grant access </p>
 			<section id="auth_button"></section>
 		</div>
 
@@ -191,85 +227,6 @@ import Charts  from './charts'
 	</div>
 
 	<style type="less">
-		.stat-wrap {
-			margin: 40px 20px;
-			width: 100%;
-		}
-
-		.auth {
-			display: none;
-			&.show { display: block;  }
-
-			margin-top: 100px;
-			p {
-				text-align: center;
-				font-size: 12px; margin: 10px;
-			}
-			#auth_button {
-				display: block;
-				width: 300px;
-				text-align: center;
-				cursor: pointer;
-				margin: 0 auto;
-
-				opacity: 0.8; transition:opacity 0.2s ease;
-				&:hover {opacity: 0.9; }
-			}
-		}
-
-		.stat {
-			.selected-account, .account-selector {
-				height: 70px;
-				padding-left: 60px;
-			}
-			.selected-account {
-				padding-left: 70px;
-				cursor: pointer;
-				text-transform: uppercase; letter-spacing:1px;
-				font-weight: 300; font-size: 20px;
-
-				color: #fff;
-					opacity:0.6;
-
-				b { font-weight:200; }
-
-				span {
-					opacity: 0.4;
-					font-weight:200; font-size:14px;
-					position:relative; top:-3px;
-					text-transform:lowercase;
-					margin-left: 10px;
-				}
-
-				&:hover {
-					opacity:0.8;
-					span { opacity:1; color:#fff; }
-				}
-			}
-			.account-selector {
-				select {
-					margin: 5px;
-					max-width: 30%;
-				}
-			}
-			#chart {
-				margin: 0 0 0 2%;
-				max-width: 90%;
-				min-height: 300px;
-				.highcharts-title {
-					letter-spacing: 2px;
-					fill-opacity:0.2;
-				}
-			}
-		}
-
-
-		.links {
-			.link {
-				label {}
-				input {}
-			}
-		}
 
 	</style>
 </referer>

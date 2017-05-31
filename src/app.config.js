@@ -2,7 +2,7 @@
  * App settings
  */
 
-let bankroller_server = 'http://localhost:9998'
+let bankroller_server = 'http://localhost:9999'
 
 
 let current_network = 'ropsten'
@@ -11,6 +11,8 @@ if (process.env.NODE_ENV !== 'server' && window && window.localStorage.current_n
 	current_network = window.localStorage.current_network
 }
 
+// Contract with referral stat
+let stat_contract = '0x94cfd3646f89166afe094940159742a3f6ba9a0c'
 
 
 const games = {
@@ -63,6 +65,7 @@ module.exports = {
 	networks:        networks,
 
 	erc20_address:   networks[current_network].erc20_address,
+	stat_contract:   stat_contract,
 	rpc_url:         networks[current_network].rpc_url,
 	etherscan_url:   networks[current_network].etherscan_url,
 
@@ -72,4 +75,3 @@ module.exports = {
 	api_url:         'https://platform.dao.casino/api/',
 	confirm_timeout: 7000,
 }
-
