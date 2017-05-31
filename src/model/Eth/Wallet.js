@@ -56,6 +56,10 @@ export default class Wallet {
 	}
 
 	get(){
+		if (_wallet && !_wallet.address) {
+			_wallet.address = Utils.pad( _wallet.addr, 64 )
+		}
+
 		return _wallet
 	}
 
@@ -119,10 +123,10 @@ export default class Wallet {
 
 				ks.generateNewAddress(pwDerivedKey, 1)
 
-				wallet.addr         = ks.getAddresses()[0]
-				wallet.keystorage   = ks.serialize()
-				wallet.openkey      = '0x' + wallet.addr
-
+				wallet.keystorage = ks.serialize()
+				wallet.addr       = ks.getAddresses()[0]
+				wallet.openkey    = '0x' + ks.getAddresses()[0]
+				wallet.address    = Utils.pad( ks.getAddresses()[0], 64 )
 
 				console.info('Wallet created!', wallet)
 

@@ -1,0 +1,109 @@
+.stat-wrap {
+	margin: 40px 20px;
+	width: 100%;
+}
+
+
+.blockchain-stat {
+	width:100%;
+	margin:0px 0px 50px 0px;
+
+	padding:10px 40px;
+	text-align: center;
+	text-transform:uppercase;
+
+	span {
+		display:inline-block;
+		margin:10px;
+
+		font-size:14px;
+		letter-spacing:1px;
+		em {
+			color:#d99736;
+			font-size:22px;
+		}
+	}
+
+	.referrals_cnt {
+
+	}
+
+	.profit {
+
+	}
+}
+
+.auth {
+	display: none;
+	&.show { display: block;  }
+
+	margin-top: 100px;
+	p {
+		text-align: center;
+		font-size: 12px; margin: 10px;
+	}
+	#auth_button {
+		display: block;
+		width: 300px;
+		text-align: center;
+		cursor: pointer;
+		margin: 0 auto;
+
+		opacity: 0.8; transition:opacity 0.2s ease;
+		&:hover {opacity: 0.9; }
+	}
+}
+
+.stat {
+	.selected-account, .account-selector {
+		height: 70px;
+		padding-left: 60px;
+	}
+	.selected-account {
+		padding-left: 70px;
+		cursor: pointer;
+		text-transform: uppercase; letter-spacing:1px;
+		font-weight: 300; font-size: 20px;
+
+		color: #fff;
+			opacity:0.6;
+
+		b { font-weight:200; }
+
+		span {
+			opacity: 0.4;
+			font-weight:200; font-size:14px;
+			position:relative; top:-3px;
+			text-transform:lowercase;
+			margin-left: 10px;
+		}
+
+		&:hover {
+			opacity:0.8;
+			span { opacity:1; color:#fff; }
+		}
+	}
+	.account-selector {
+		select {
+			margin: 5px;
+			max-width: 30%;
+		}
+	}
+	#chart {
+		margin: 0 0 0 2%;
+		max-width: 90%;
+		min-height: 300px;
+		.highcharts-title {
+			letter-spacing: 2px;
+			fill-opacity:0.2;
+		}
+	}
+}
+
+
+.links {
+	.link {
+		label {}
+		input {}
+	}
+}

@@ -149,8 +149,8 @@
     "detect-port":                              "1.0.1",
     "dotenv":                                   "2.0.0",
 
-    "electron":                                 "^1.6.7",
-    "electron-builder":                         "^17.10.0",
+    "electron":                                 "^1.7.2",
+    "electron-builder":                         "^18.3.0",
     "electron-installer-debian":                "^0.5.1",
     "electron-packager":                        "^8.7.0",
     "electron-simple-publisher":                "^0.4.5",
