@@ -14,6 +14,13 @@ const path = require('path')
 const url  = require('url')
 
 
+// Check updates
+require('electron-simple-updater').init({
+	checkUpdateOnStart: true,
+	autoDownload:       true
+})
+
+
 let mainWindow = null
 
 // Prevent double open
