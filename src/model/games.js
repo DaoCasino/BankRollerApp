@@ -1,21 +1,21 @@
 import _config    from 'app.config'
-import DB         from 'DB/DB'
-import Eth        from 'Eth/Eth'
-import Api        from 'Api'
-import Notify     from 'notify'
+import DB         from './DB/DB'
+import Eth        from './Eth/Eth'
+import Api        from './Api'
+import Notify     from './notify'
+
 import bigInt     from 'big-integer'
 import Web3       from 'web3'
 
 const web3 = new Web3()
 
-import * as Utils from 'utils'
+import * as Utils from './utils'
 
 import {AsyncPriorityQueue, AsyncTask} from 'async-priority-queue'
 
 let _games         = {}
 let _seeds_list    = {}
 let _pendings_list = {}
-
 
 class Games {
 	constructor(){
@@ -24,6 +24,7 @@ class Games {
 			maxParallel:         1,
 			processingFrequency: 500,
 		})
+
 
 		this.Queue.start()
 
@@ -53,7 +54,6 @@ class Games {
 		}
 		return active_games
 	}
-
 
 	// Add task - deploy game
 	create(code){

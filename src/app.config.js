@@ -65,7 +65,10 @@ module.exports = {
 	networks:        networks,
 
 	erc20_address:   networks[current_network].erc20_address,
+	erc20_abi:       require('./configs/erc20.abi.js'),
+
 	stat_contract:   stat_contract,
+
 	rpc_url:         networks[current_network].rpc_url,
 	etherscan_url:   networks[current_network].etherscan_url,
 
@@ -75,3 +78,4 @@ module.exports = {
 	api_url:         'https://platform.dao.casino/api/',
 	confirm_timeout: 7000,
 }
+

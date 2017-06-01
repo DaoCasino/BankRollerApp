@@ -157,7 +157,7 @@ export default class Wallet {
 	}
 
 
-	signTx(options, callback){
+	signContractTx(options, callback){
 		this.getPwDerivedKey( PwDerivedKey => {
 			this.getNonce( nonce => {
 				options.nonce = nonce
@@ -172,6 +172,36 @@ export default class Wallet {
 				callback(signedTx)
 			})
 		})
+	}
+
+	signRawTransaction(to_address, contract_abi, function_name, function_args, callback){
+		this.getPwDerivedKey( PwDerivedKey => { this.getNonce( nonce => {
+
+			let options = {
+				to:       to_address,
+				nonce:    nonce,
+				gasPrice: '0x737be7600',
+				gasLimit: '0x927c0',
+				value:    0,
+			}
+
+			let registerTx = ethWallet.txutils.functionTx(
+								_config.erc20_abi,
+								function_name,
+								function_args,
+								options
+							)
+
+			let signedTx = ethWallet.signing.signTx(
+								this.getKs(),
+								PwDerivedKey,
+								registerTx,
+								this.get().openkey.substr(2)
+							)
+
+			callback(signedTx)
+
+		}) })
 	}
 }
 

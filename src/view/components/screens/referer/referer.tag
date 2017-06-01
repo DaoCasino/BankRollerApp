@@ -6,7 +6,7 @@ import Charts  from './charts'
 
 import './referer.less'
 
-<referer>
+<referer class="screen">
 	<script>
 		this.auth         = false
 		this.need_auth    = false
@@ -180,15 +180,17 @@ import './referer.less'
 		}
 
 	</script>
-	<div class="stat-wrap">
+	<div class="screen stat-wrap">
 
 		<div class="blockchain-stat">
 			<span if={referrals_cnt} class="referrals_cnt">
-				<em>{referrals_cnt}</em> refferals
+				You attracted
+				<em>{referrals_cnt}</em> refferal(s)
 			</span>
 
 			<span if={profit} class="profit">
-				<em>{profit}</em> BETS
+				and earned
+				<em>{profit}</em> BET(s)
 			</span>
 		</div>
 		<div class={auth:true, show:need_auth}>

@@ -16,6 +16,7 @@ import './wallet.less'
 			bet: '...',
 		}
 
+
 		this.on('mount', ()=>{
 			this.testnet = _config.network!=='mainnet'
 			this.updateWallet()
@@ -40,19 +41,20 @@ import './wallet.less'
 			this.update()
 
 			this.refs.wallet_qr_code.innerHTML = new QR({
-				content:    this.address,
-				padding:    2,
-				width:      190,
-				height:     190,
-				color:      "#d99736",
-				background: "#202020",
-				ecl:        "M"
+				content    : this.address,
+				padding    : 2,
+				width      : 190,
+				height     : 190,
+				color      : "#d99736",
+				background : "#202020",
+				ecl        : "M"
 			}).svg()
 
 
 			Eth.getEthBalance(this.address, (balance_eth)=>{
 				if (balance_eth===0) {
 					balance_eth = '0'
+					this.bets_requested = false
 				}
 				this.balance.eth = balance_eth
 				this.update()
@@ -61,6 +63,7 @@ import './wallet.less'
 			Eth.getBetsBalance(this.address, (balance_bet)=>{
 				if (balance_bet===0) {
 					balance_bet = '0'
+					this.bets_requested = false
 				}
 				this.balance.bet = balance_bet
 				this.update()
@@ -85,6 +88,7 @@ import './wallet.less'
 		 */
 		this.getTestBets_proccess = false
 		this.bets_requested = localStorage.getItem('bets_requested_'+_config.network)
+
 		this.getTestBets = (e)=>{
 			e.preventDefault()
 			this.getTestBets_proccess = true
@@ -100,6 +104,11 @@ import './wallet.less'
 		/*
 		 * Export
 		 */
+		this.toggleExport = ()=>{
+			this.export_show = !this.export_show
+			this.update()
+		}
+
 		this.private_key = ''
 		this.exportPrivateKey = ()=>{
 			Eth.Wallet.exportPrivateKey(private_key=>{
@@ -109,12 +118,13 @@ import './wallet.less'
 				setTimeout(()=>{
 					this.private_key = ''
 					this.update()
+					this.toggleExport()
 				}, 5000)
 			})
 		}
 
 	</script>
-	<div id="wallet">
+	<div id="wallet" class="screen">
 	<div if={!address} class="wallet-wrap">
 		<spinner text="Loading your wallet, please wait one moment..."></spinner>
 	</div>
@@ -124,7 +134,7 @@ import './wallet.less'
 
 			<a class="etherscan" href="{_config.etherscan_url}/address/{address}" target="_blank" rel="noopener">blockchain</a>
 
-			<label>Account Address:</label>
+			<label>Account Address</label>
 
 			<div onclick={copy}>
 			<input disabled="disabled" type="text" value="{address}" size="42">
@@ -135,7 +145,7 @@ import './wallet.less'
 			<button if={bets_requested} class="bets-requested">free bets requested</button>
 			<button class={loading:getTestBets_proccess} if={testnet && !bets_requested} onclick={getTestBets}>get test bets</button>
 
-			<label>Account Balance:</label>
+			<label>Account Balance</label>
 			<span>
 				<b if={!balance.eth} class="loading">:.</b>
 				<b if={balance.eth}>{balance.eth}</b> ETH
@@ -147,15 +157,24 @@ import './wallet.less'
 		</div>
 
 
-		<div class="export">
-			<label>Export private key:</label>
-			<input onclick={copy} value="{private_key}" disabled="disabled" type="text" placeholder="****************************************************************************************************************************************">
-			<button onclick={exportPrivateKey} class="ripple">Export</button>
-			<p>
-				You can access to your wallet by Private Key in services like
-				<a target="_blank" rel="noopener" href="https://www.myetherwallet.com/#view-wallet-info">myetherwallet</a> or <a target="_blank" rel="noopener" href="https://metamask.io/">metamask</a>
-			</p>
+		<div class={export:true, show:export_show}>
+			<label onclick={toggleExport}>Export private key</label>
+			<div class="wrap">
+				<input onclick={copy} value="{private_key}" disabled="disabled" type="text" placeholder="****************************************************************************************************************************************">
+				<button onclick={exportPrivateKey} class="ripple">Export</button>
+				<p>
+					You can access to your wallet by Private Key in services like
+					<a target="_blank" rel="noopener" href="https://www.myetherwallet.com/#view-wallet-info">myetherwallet</a> or <a target="_blank" rel="noopener" href="https://metamask.io/">metamask</a>
+				</p>
+			</div>
 		</div>
+
+
+
+		<send balance_bets={balance.bet} balance_eth={balance.eth} />
+
+		<!-- <history /> -->
+
 	</div>
 	</div>
 </wallet>

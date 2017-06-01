@@ -52,7 +52,7 @@ import './games_list'
 		}
 	</script>
 
-	<div id="bankroll" class={loading:this.loading}>
+	<div id="bankroll" class={screen:true, loading:this.loading}>
 		<div id="loading_status">{loading_status}</div>
 
 		<games_list></games_list>
