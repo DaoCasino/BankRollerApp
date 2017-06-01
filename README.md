@@ -3,7 +3,10 @@ Download app from the release section https://github.com/DaoCasino/BankRollerApp
 
 <h3>QA</h3>
 Q: Contracts not deploying <br>
-A: use 0x6a8f29e3d9e25bc683a852765f24ecb4be5903fc as demo contract (ropsten)
+A: Check BET and ETH balance on wallet tab.
+
+Q: Game added to TRANSACTIONS no have any status.
+A: Game frontend issue. Contact https://daocasino.slack.com/messages/@alexander42/details/ 
 
 
 <h3>Develop</h3>
