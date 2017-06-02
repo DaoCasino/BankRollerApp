@@ -44,7 +44,7 @@ if (shouldQuit) {
 function createWindow () {
 	mainWindow = new BrowserWindow({
 		icon: path.join(__dirname, 'assets/icons/icon-128.png'),
-		width: 800, height: 600
+		width: 650, height: 500
 	})
 
 

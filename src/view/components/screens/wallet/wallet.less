@@ -52,11 +52,25 @@
 		position:relative;
 		span {
 			display:inline-block;
-			margin:10px 20px 10px 0px;
-
+			margin:10px 30px 10px 0px;
+			line-height: 22px;
 			b {
 				color:#d99736;
 				font-size:24px;
+				display:inline-block;
+				overflow:hidden;
+				text-overflow: ellipsis;
+				width:150px;
+				position:relative; top:3px;
+			}
+			text-align:right;
+
+			&.eth-balance {
+				margin-left: -10px;
+			}
+			&.bet-balance {
+				margin-right: 0px;
+				margin-right: 0px;
 			}
 		}
 
@@ -92,7 +106,7 @@
 			pointer-events:none;
 			border: 0;
 			color:#c22;
-			left:480px;
+			left:470px;
 		}
 	}
 

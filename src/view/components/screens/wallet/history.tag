@@ -1,30 +1,37 @@
 import _config  from 'app.config'
+import TxHistory from 'txhistory'
 import './history.less'
 <history>
 
 	<script>
-		this.history = [
-			{
-				time   : '2017-05-31 22:47',
-				in     : true,
-				tokens : true,
-				summ   : 1.034,
-				from   : '0x8b0333fa45185a03d4cdc98f6a40eba8a2c393f3',
-				address: '0x8b0333fa45185a03d4cdc98f6a40eba8a2c393f3',
-			},
-			{
-				time   : '2017-05-31 22:47',
-				out    : true,
-				tokens : false,
-				summ   : 1.034,
-				from   : '0x8b0333fa45185a03d4cdc98f6a40eba8a2c393f3',
-				address: '0x8b0333fa45185a03d4cdc98f6a40eba8a2c393f3',
-			},
-		]
+		this.etherscan_url = _config.etherscan_url
+
+		this.history = []
+
+		this.on('mount', ()=>{
+			TxHistory.subscribe( history => {
+				if (history.length) {
+					this.history = history
+					this.update()
+				}
+			})
+		})
+
+		this.copy = (e)=>{
+			e.preventDefault()
+			if (!e.target.value) {
+				return
+			}
+
+			App.view.copyToClipboard( e.target.value )
+		}
+
 	</script>
 
 	<div class="history" >
-		<h3>History</h3>
+		<h3 if={history.length}>History</h3>
+		<!-- <div if={!history.length} class="empty">transactions history empty...</div> -->
+
 		<div each={trans in history} class={
 			transaction: true,
 			incoming:    trans.in,
@@ -32,21 +39,25 @@ import './history.less'
 			bet:         trans.tokens,
 		}>
 			<time>{trans.time}</time>
+			<label if={trans.to}><span>tx:</span>
+			<a class="tx" href="{etherscan_url}/tx/{trans.tx}" target="_blank" rel="noopener">
+				{trans.tx}
+			</a>
+			</label>
 
-			<a class="etherscan" href="{_config.etherscan_url}/tx/{trans.address}" target="_blank" rel="noopener">blockchain</a>
-
-
-			<span class="summ">
-				<em>{trans.summ}</em>
+			<span class="amount">
+				<em>{trans.amount}</em>
 				<span if={trans.tokens}>bet</span>
 				<span if={!trans.tokens}>eth</span>
 			</span>
 
-			<label><span>from:</span>
+			<label if={trans.from}><span>from:</span>
 				<input onclick={copy} value={trans.from} class="from" type="text">
+				<a class="blockchain" href="{etherscan_url}/taddress/{trans.tx}" target="_blank" rel="noopener">blockchain</a>
 			</label>
-			<label><span>tx:</span>
-				<input onclick={copy} value={trans.address} class="tx" type="text">
+			<label if={trans.to}><span>to:</span>
+				<input onclick={copy} value={trans.to} class="tx" type="text">
+				<a class="blockchain" href="{etherscan_url}/taddress/{trans.tx}" target="_blank" rel="noopener">blockchain</a>
 			</label>
 		</div>
 	</div>

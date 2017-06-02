@@ -146,11 +146,11 @@ import './wallet.less'
 			<button class={loading:getTestBets_proccess} if={testnet && !bets_requested} onclick={getTestBets}>get test bets</button>
 
 			<label>Account Balance</label>
-			<span>
+			<span class="eth-balance">
 				<b if={!balance.eth} class="loading">:.</b>
 				<b if={balance.eth}>{balance.eth}</b> ETH
 			</span>
-			<span>
+			<span class="bet-balance">
 				<b if={!balance.bet} class="loading">.:</b>
 				<b if={balance.bet}>{balance.bet}</b> BET
 			</span>
@@ -173,7 +173,7 @@ import './wallet.less'
 
 		<send balance_bets={balance.bet} balance_eth={balance.eth} />
 
-		<!-- <history /> -->
+		<history />
 
 	</div>
 	</div>

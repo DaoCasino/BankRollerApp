@@ -256,12 +256,12 @@ class Games {
 
 			let confirm
 
-			confirm = confirmNuber_dice(s)
+			confirm = this.confirmNumber_dice(s)
 
 			callback(confirm, PwDerivedKey, v,r,s)
 		})
 	}
-	confirmNuber_dice(input){
+	confirmNumber_dice(input){
 		/* Equivalent of solidity hash function:
 			function confirm(bytes32 _s) public returns(uint256){
 				return uint256 (sha3(_s));
@@ -271,7 +271,7 @@ class Games {
 		let    confirm = bigInt(hash,16).divmod(65536).remainder.value
 		return confirm
 	}
-	confirmNuber_blackjack(input){
+	confirmNumber_blackjack(input){
 		//     this.testSHA("0x14963965039618f89a0d8a00af57fe504dc40e2dc241276b065abb83636d14d0")
 		let    hash    = Eth.ABI.soliditySHA3(['bytes32'],[ input ]).toString('hex')
 		let    confirm = bigInt(hash,16).divmod(52).remainder.value

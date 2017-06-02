@@ -115,7 +115,7 @@ class Eth {
 
 				// send transacriont to RPC
 				this.RPC.request('sendRawTransaction', ['0x'+signedTx], 0).then( response => {
-					if (!response || response.result) { return }
+					if (!response || !response.result) { return }
 					callback( response.result )
 				})
 			}
@@ -128,8 +128,7 @@ class Eth {
 		this.Wallet.signedEthTx(to, amount, signedEthTx=>{
 			console.log(signedEthTx)
 			this.RPC.request('sendRawTransaction', ['0x'+signedEthTx], 0).then( response => {
-				console.info(response)
-				if (!response || response.result) { return }
+				if (!response || !response.result) { return }
 				callback( response.result )
 			})
 

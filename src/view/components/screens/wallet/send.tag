@@ -1,7 +1,8 @@
 import _config  from 'app.config'
 import Eth from 'Eth/Eth'
-
+import TxHistory from 'txhistory'
 import './send.less'
+import toastr from 'toastr'
 
 <send>
 	<script>
@@ -46,6 +47,7 @@ import './send.less'
 			}
 		}
 
+
 		this.sendBet = (e)=>{
 			e.preventDefault()
 			if (!this.refs.bet_to.validity.valid || !this.refs.bet_amount.validity.valid){
@@ -53,10 +55,31 @@ import './send.less'
 				return
 			}
 
-			Eth.sendBets(this.refs.bet_to.value, this.refs.bet_amount.value, transaction => {
-				console.log(transaction)
+			this.lock_betform = true
+			this.update()
+
+			let to     = this.refs.bet_to.value
+			let amount = this.refs.bet_amount.value
+
+			Eth.sendBets(to, amount, transaction => {
+				console.log('Eth.sendBets transaction', transaction)
+				toastr.success(amount+' BET succefull sended', 'Bets sended')
+
+				TxHistory.add({
+					out:    true,
+					tokens: true,
+					tx:     transaction,
+					to:     to,
+					amount: amount,
+				})
+
+				setTimeout(()=>{
+					this.lock_betform = false
+					this.update()
+				}, 2000)
 			})
 		}
+
 
 		this.sendEth = (e)=>{
 			e.preventDefault()
@@ -65,8 +88,29 @@ import './send.less'
 				return
 			}
 
-			Eth.sendEth(this.refs.eth_to.value, this.refs.eth_amount.value, transaction => {
-				console.log(transaction)
+			let to     = this.refs.eth_to.value
+			let amount = this.refs.eth_amount.value
+
+			this.lock_ethform = true
+			this.update()
+
+			Eth.sendEth(to, amount, transaction => {
+				console.log('Eth.sendEth transaction', transaction)
+
+				toastr.success(amount+' ETH succefull sended', 'Eth sended')
+
+				TxHistory.add({
+					out:    true,
+					tokens: false,
+					tx:     transaction,
+					to:     to,
+					amount: amount,
+				})
+
+				setTimeout(()=>{
+					this.lock_ethform = false
+					this.update()
+				}, 2000)
 			})
 		}
 
@@ -86,7 +130,12 @@ import './send.less'
 			</ul>
 		</div>
 
-		<form ref="bet_send_form" if={(this.tab=='bet')} id="send_bets">
+		<form id="send_bets"
+			ref="bet_send_form"
+			if={(this.tab=='bet')}
+			class={locked:lock_betform}
+		>
+
 			<label>
 				<span>to:</span>
 				<input onkeyup={checkValid} ref="bet_to" placeholder="0x8ac300f0dd296145380424a9118ac59d32c8c6a5" required minlength="42" maxlength="42" type="text" name="to">
@@ -99,7 +148,11 @@ import './send.less'
 			<button onclick={sendBet} class="button">send</button>
 		</form>
 
-		<form ref="eth_send_form" if={(this.tab=='eth')} id="send_eth">
+		<form id="send_eth"
+			ref="eth_send_form"
+			if={(this.tab=='eth')}
+			class={locked:lock_ethform}
+		>
 			<label>
 				<span>to:</span>
 				<input onkeyup={checkValid} ref="eth_to" placeholder="0x8ac300f0dd296145380424a9118ac59d32c8c6a5" required minlength="42" maxlength="42" type="text" name="to">

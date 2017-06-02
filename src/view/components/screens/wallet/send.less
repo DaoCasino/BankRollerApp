@@ -85,6 +85,29 @@
 		&#send_eth {
 			transform:translate3d(500px,0,0);
 		}
+
+		transition:opacity 0.3s ease;
+		opacity:1;
+		&.locked {
+			* { pointer-events:none }
+			opacity:0.3;
+
+			button {
+				background:#aaa; pointer-events:none;
+			}
+
+			&:after {
+				content: 'Sending...';
+				display:block;
+				position:absolute;
+				z-index: 2;
+				background:rgba(0,0,0,0.5); color:#fff;
+				font-size:18px; text-align:center; letter-spacing:2px;
+				padding:20px 40px;
+				top:10px; left:200px;
+				border-radius: 5px;
+			}
+		}
 	}
 
 }
