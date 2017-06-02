@@ -53,7 +53,7 @@ import './wallet.less'
 
 			Eth.getEthBalance(this.address, (balance_eth)=>{
 				if (balance_eth===0) {
-					balance_eth = '0'
+					balance_eth = '0.000000000'
 					this.bets_requested = false
 				}
 				this.balance.eth = balance_eth
@@ -62,7 +62,7 @@ import './wallet.less'
 
 			Eth.getBetsBalance(this.address, (balance_bet)=>{
 				if (balance_bet===0) {
-					balance_bet = '0'
+					balance_bet = '0.000000000'
 					this.bets_requested = false
 				}
 				this.balance.bet = balance_bet

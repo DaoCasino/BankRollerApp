@@ -19,10 +19,10 @@ const url  = require('url')
 
 
 // Check updates
-require('electron-simple-updater').init({
-	checkUpdateOnStart: true,
-	autoDownload:       true
-})
+// require('electron-simple-updater').init({
+// 	checkUpdateOnStart: true,
+// 	autoDownload:       true
+// })
 
 
 let mainWindow = null
@@ -43,8 +43,12 @@ if (shouldQuit) {
 
 function createWindow () {
 	mainWindow = new BrowserWindow({
+		resizable: false, width: 670, height: 530,
+
 		icon: path.join(__dirname, 'assets/icons/icon-128.png'),
-		width: 650, height: 500
+
+		// without frame
+		// frame: false, transparent: true,
 	})
 
 
