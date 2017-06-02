@@ -1,0 +1,113 @@
+.send {
+	width:590px; overflow:hidden;
+	margin:40px 20px 20px 10px;
+	box-sizing: border-box;
+
+	.tabs {
+		&, li, a, span {  display:inline-block; }
+
+		width:100%;
+		border-bottom:1px solid #333;
+
+		span {
+			text-transform:uppercase; letter-spacing:1px;
+			font-weight: 500;
+			font-size:12px;
+			margin:0 10px 0 10px;
+		}
+
+		ul { display:inline-block; }
+
+		a {
+			overflow:inherit;
+			border-bottom: 2px solid #222;
+			padding:15px 20px 10px 20px;
+			text-transform: uppercase; letter-spacing: 1px; font-size: 12px;
+
+			transition:opacity 0.2s ease, border 0.2s ease;
+			opacity: 0.5;
+			&:hover {
+				opacity: 0.6;
+				border-color: #aaa;
+			}
+
+		}
+
+		.active a {
+			opacity:0.8;
+			border-color: #fff;
+		}
+	}
+
+
+	form {
+		position: relative;
+		height: 110px;
+		label {
+			margin:20px 0 10px 0;
+			display:block;
+
+			span {
+				display:inline-block;
+				width:70px;
+				text-align: right;
+			}
+
+			input {}
+
+			input[name="to"] {
+				width:500px;
+			}
+			input[name="amount"] {
+				width:200px;
+				text-align:right;
+				padding-right: 10px;
+				color:#d99736;
+			}
+		}
+
+		button {
+			position:absolute;
+			bottom: 0; right:10px;
+		}
+		&.error button {
+			background:#aaa; pointer-events:none;
+		}
+
+		input:not(:placeholder-shown):not(:focus):invalid { border-color:red; }
+
+
+		transform:translate3d(-500px,0,0);
+		animation: slide 0.5s forwards;
+		@keyframes slide {
+		    100% { transform:translate3d(0,0,0); }
+		}
+		&#send_eth {
+			transform:translate3d(500px,0,0);
+		}
+
+		transition:opacity 0.3s ease;
+		opacity:1;
+		&.locked {
+			* { pointer-events:none }
+			opacity:0.3;
+
+			button {
+				background:#aaa; pointer-events:none;
+			}
+
+			&:after {
+				content: 'Sending...';
+				display:block;
+				position:absolute;
+				z-index: 2;
+				background:rgba(0,0,0,0.5); color:#fff;
+				font-size:18px; text-align:center; letter-spacing:2px;
+				padding:20px 40px;
+				top:10px; left:200px;
+				border-radius: 5px;
+			}
+		}
+	}
+
+}

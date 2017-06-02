@@ -1,0 +1,117 @@
+.history {
+	width:600px;
+	padding:0px;
+	margin:40px 0 0 0;
+	h3 {
+		padding-left: 0px;
+		text-transform:uppercase;
+		font-size:18px; font-weight: 200;
+		letter-spacing:1px;
+		text-align:right;
+
+		margin:5px 7px 10px 5px;
+	}
+
+	.empty {
+		text-align:center;
+		padding:20px; letter-spacing:1px; font-weight:300;
+	}
+
+
+	.transaction {
+		position:relative;
+		border-bottom:1px solid #333;
+		padding:10px 10px 15px 5px;
+		font-size:12px;
+
+		min-height:90px;
+
+		&:hover {
+			background:#232323;
+		}
+
+		&.bet {}
+
+
+
+		time {
+			display:block;
+			margin:0 0 10px 5px;
+			letter-spacing:1px;
+		}
+
+		label {
+			span {
+				display:inline-block; width:35px;
+				// text-align:right;
+				position:relative; top:-2px;
+			}
+			margin:2px 5px 5px 0px;
+			font-size:10px;
+		}
+
+		input {
+			cursor:pointer;
+			display:inline-block;
+			font-size:10px;
+			padding:0;
+			border-bottom:0;
+			opacity:0.7;
+			width:70%;
+			&:hover {
+				opacity:1;
+			}
+		}
+
+		.tx {
+			display:inline-block;
+			overflow: hidden; max-width: 85%;
+			text-overflow: ellipsis;
+		}
+
+		.blockchain {
+			border:1px solid #aaa; font-size:8px;
+			padding:1px 4px;
+			position:absolute;
+			top:51px; right:200px;
+		}
+
+		.etherscan {
+			position:absolute; top:auto; bottom:10px; right:10px;
+			left:auto;
+		}
+
+		.amount {
+			position:absolute; top:7px; right:10px;
+			font-size:18px;
+			em {
+				font-weight: 300;
+				color:#d99736;
+			}
+			span {
+				font-weight: 200;
+				text-transform:uppercase;
+				color:#fff;
+			}
+		}
+
+		&.incoming {
+			.amount:before {
+				content:'+';
+				display:inline-block; margin:0 3px 0 0;
+				color:#d99736;
+			}
+		}
+		&.outcoming {
+			.amount em {
+				color:#f34350;
+			}
+			.amount:before {
+				content:'−';
+				display:inline-block; margin:0 3px 0 0;
+				color:#f34350;
+			}
+		}
+
+	}
+}

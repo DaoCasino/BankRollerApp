@@ -156,21 +156,82 @@ export default class Wallet {
 		})
 	}
 
+	// Make and Sing contract creation transaction
+	signedCreateContractTx(options, callback){
+		this.getNonce( nonce => {
 
-	signTx(options, callback){
+			options.nonce = nonce
+
+			let registerTx = ethWallet.txutils.createContractTx(
+								_wallet.openkey.substr(2),
+								options
+							 ).tx
+
+			this.signTx(registerTx, callback)
+		})
+	}
+
+	// Make and Sing eth send transaction
+	signedEthTx(to_address, value, callback){
+		this.getNonce( nonce => {
+
+			// https://github.com/ConsenSys/eth-lightwallet#txutilsvaluetxtxobject
+			let options = {
+				from:     this.get().openkey,
+				to:       to_address,
+				value:    value,
+				nonce:    nonce,
+				gasPrice: '0x737be7600',
+				gasLimit: '0x927c0',
+			}
+
+			// Make transaction
+			let registerTx = ethWallet.txutils.valueTx(options)
+
+			//  Sign transaction
+			this.signTx(registerTx, callback)
+		})
+	}
+
+	//  Make and Sing contract function transaction
+	signedContractFuncTx(contract_address, contract_abi, function_name, function_args, callback){
+		this.getNonce( nonce => {
+
+			let options = {
+				to:       contract_address,
+				nonce:    nonce,
+				gasPrice: '0x737be7600',
+				gasLimit: '0x927c0',
+				value:    0,
+			}
+
+			//  Make contract function transaction
+			// https://github.com/ConsenSys/eth-lightwallet#txutilsfunctiontxabi-functionname-args-txobject
+			let registerTx = ethWallet.txutils.functionTx(
+								contract_abi,
+								function_name,
+								function_args,
+								options
+							)
+
+			//  Sign transaction
+			this.signTx(registerTx, callback)
+		})
+	}
+
+	// Sing transaction
+	// https://github.com/ConsenSys/eth-lightwallet#signingsigntxkeystore-pwderivedkey-rawtx-signingaddress-hdpathstring
+	signTx(registerTx, callback){
 		this.getPwDerivedKey( PwDerivedKey => {
-			this.getNonce( nonce => {
-				options.nonce = nonce
 
-				let signedTx = ethWallet.signing.signTx(
-					this.getKs(),
-					PwDerivedKey,
-					ethWallet.txutils.createContractTx(_wallet.openkey.substr(2), options).tx,
-					_wallet.openkey.substr(2)
-				)
+			let signedTx = ethWallet.signing.signTx(
+								this.getKs(),
+								PwDerivedKey,
+								registerTx,
+								this.get().openkey.substr(2)
+							)
 
-				callback(signedTx)
-			})
+			callback(signedTx)
 		})
 	}
 }

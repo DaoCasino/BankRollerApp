@@ -1,9 +1,8 @@
 .wallet-wrap {
 	padding: 30px 20px 20px 20px;
 
-	spinner {
-		margin:200px;
-	}
+	min-height:100vh;
+	spinner { }
 
 	label {
 		display: block; padding-left: 5px;
@@ -30,18 +29,20 @@
 			margin:10px 0 0 -5px;
 			font-size:15px;
 		}
-		.etherscan {
-			// text-transform:uppercase;
-			font-size:10px; letter-spacing:1.5px;
-			position: absolute; left:525px; top:0px;
-			border: 1px solid #fff;
-			display:block;
-			padding: 3px 5px 3px 6px;
-			opacity:0.7;
 
-			&:hover {
-				color:#fff; opacity:1;
-			}
+	}
+
+	.etherscan {
+		// text-transform:uppercase;
+		font-size:10px; letter-spacing:1.5px;
+		position: absolute; left:525px; top:0px;
+		border: 1px solid #fff;
+		display:block;
+		padding: 3px 5px 3px 6px;
+		opacity:0.7;
+
+		&:hover {
+			color:#fff; opacity:1;
 		}
 	}
 
@@ -50,11 +51,25 @@
 		position:relative;
 		span {
 			display:inline-block;
-			margin:10px 20px 10px 0px;
-
+			margin:15px 30px 10px 0px;
+			line-height: 22px;
 			b {
 				color:#d99736;
 				font-size:24px;
+				display:inline-block;
+				overflow:hidden;
+				text-overflow: ellipsis;
+				width:150px;
+				position:relative; top:3px;
+			}
+			text-align:right;
+
+			&.eth-balance {
+				margin-left: -10px;
+			}
+			&.bet-balance {
+				margin-right: 0px;
+				margin-right: 0px;
 			}
 		}
 
@@ -90,15 +105,17 @@
 			pointer-events:none;
 			border: 0;
 			color:#c22;
-			left:480px;
+			left:470px;
 		}
 	}
 
 
 	.export {
 		clear:both;
-		margin:40px 0 0 10px;
+		margin:10px 0 0 10px;
+
 		label { padding-left:0; padding-right:0; }
+
 		input {
 			width:490px; padding-left:0;
 			font-size:12px;
@@ -120,6 +137,27 @@
 			font-size:14px;
 			margin:10px 10px 10px 0px;
 		}
-	}
-}
 
+		label {
+			cursor: pointer;
+			transition:all 0.2s ease;
+			&:hover { color:#fff; }
+
+			transform:translate3d(15px,-10px,0)
+		}
+		.wrap {
+			overflow:hidden; height:0;
+			transition:height 0.3s ease;
+		}
+		&.show {
+			label { transform:translate3d(0,0,0) }
+			.wrap {
+				height:70px;
+			}
+		}
+	}
+
+
+
+
+}

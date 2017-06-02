@@ -11,6 +11,7 @@ import ABI     from 'ethereumjs-abi'
 
 import * as Utils from 'utils'
 
+// Web3 utils
 const web3_sha3 = require('web3/lib/utils/sha3.js')
 
 const rpc    = new RPC( _config.rpc_url )
@@ -48,7 +49,7 @@ class Eth {
 			})
 		}, 9000)}
 
-		this.Wallet.signTx({
+		this.Wallet.signedCreateContractTx({
 			data:     contract_bytecode,
 			gasLimit: '0x4630C0',
 			gasPrice: '0x' + Utils.numToHex(gasprice),
@@ -100,6 +101,48 @@ class Eth {
 		})
 	}
 
+	sendBets(to, amount, callback){
+		// Create contract function transaction
+		this.Wallet.signedContractFuncTx(
+			// contract with bets
+			_config.erc20_address, _config.erc20_abi,
+
+			// contract function and params
+			'transfer', [to, (amount*100000000)],
+
+			// result: signed transaction
+			signedTx => {
+
+				// send transacriont to RPC
+				this.RPC.request('sendRawTransaction', ['0x'+signedTx], 0).then( response => {
+					if (!response || !response.result) { return }
+					callback( response.result )
+				})
+			}
+		)
+	}
+
+	sendEth(to, amount, callback){
+		amount = amount * 1000000000000000000
+
+		this.Wallet.signedEthTx(to, amount, signedEthTx=>{
+			console.log(signedEthTx)
+			this.RPC.request('sendRawTransaction', ['0x'+signedEthTx], 0).then( response => {
+				if (!response || !response.result) { return }
+				callback( response.result )
+			})
+
+		})
+	}
+
+	getBlock(num, callback){
+		this.RPC.request('getBlockByNumber', [ '0x'+Utils.numToHex(num), true]).then( response => {
+			if (!response || !response.result) { return }
+			callback(response.result)
+		}).catch( err => {
+			console.error('getBlockByNumber error:', err)
+		})
+	}
 
 	getCurBlock(){
 		if (!this.cur_block_upd || this.cur_block_upd < new Date().getTime()) {

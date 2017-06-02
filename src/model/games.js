@@ -1,21 +1,21 @@
 import _config    from 'app.config'
-import DB         from 'DB/DB'
-import Eth        from 'Eth/Eth'
-import Api        from 'Api'
-import Notify     from 'notify'
+import DB         from './DB/DB'
+import Eth        from './Eth/Eth'
+import Api        from './Api'
+import Notify     from './notify'
+
 import bigInt     from 'big-integer'
 import Web3       from 'web3'
 
 const web3 = new Web3()
 
-import * as Utils from 'utils'
+import * as Utils from './utils'
 
 import {AsyncPriorityQueue, AsyncTask} from 'async-priority-queue'
 
 let _games         = {}
 let _seeds_list    = {}
 let _pendings_list = {}
-
 
 class Games {
 	constructor(){
@@ -24,6 +24,7 @@ class Games {
 			maxParallel:         1,
 			processingFrequency: 500,
 		})
+
 
 		this.Queue.start()
 
@@ -53,7 +54,6 @@ class Games {
 		}
 		return active_games
 	}
-
 
 	// Add task - deploy game
 	create(code){
@@ -237,7 +237,7 @@ class Games {
 	/*
 	 * Random
 	 **/
-	getConfirmNumber(seed, address, abi, callback){
+	getConfirmNumber(seed, callback){
 		Eth.Wallet.getPwDerivedKey( PwDerivedKey => {
 
 			let VRS = Eth.Wallet.lib.signing.signMsg(
@@ -254,17 +254,31 @@ class Games {
 			let r = signature.slice(0, 66)
 			let s = '0x' + signature.slice(66, 130)
 
-			/* Equivalent of solidity hash function:
-				function confirm(bytes32 _s) public returns(uint256){
-					return uint256 (sha3(_s));
-				}
-			*/
-			let hash    = '0x'+Eth.ABI.soliditySHA3(['bytes32'],[ s ]).toString('hex')
-			let confirm = bigInt(hash,16).divmod(65536).remainder.value
+			let confirm
+
+			confirm = this.confirmNumber_dice(s)
 
 			callback(confirm, PwDerivedKey, v,r,s)
 		})
 	}
+	confirmNumber_dice(input){
+		/* Equivalent of solidity hash function:
+			function confirm(bytes32 _s) public returns(uint256){
+				return uint256 (sha3(_s));
+			}
+		*/
+		let    hash    = '0x'+Eth.ABI.soliditySHA3(['bytes32'],[ input ]).toString('hex')
+		let    confirm = bigInt(hash,16).divmod(65536).remainder.value
+		return confirm
+	}
+	confirmNumber_blackjack(input){
+		//     this.testSHA("0x14963965039618f89a0d8a00af57fe504dc40e2dc241276b065abb83636d14d0")
+		let    hash    = Eth.ABI.soliditySHA3(['bytes32'],[ input ]).toString('hex')
+		let    confirm = bigInt(hash,16).divmod(52).remainder.value
+		return confirm
+	}
+
+
 
 
 	/*
@@ -366,7 +380,8 @@ class Games {
 
 		console.log('')
 		console.log('sendRandom2Blockchain', _seeds_list[seed])
-		this.signTx(seed, address, _config.contracts[game_code].abi, (signedTx, confirm)=>{
+
+		this.signConfirmTx(seed, address, _config.contracts[game_code].abi, (signedTx, confirm)=>{
 
 			Eth.RPC.request('sendRawTransaction', ['0x'+signedTx], 0).then( response => {
 				_seeds_list[seed].confirm_blockchain_time   = new Date().getTime()
@@ -385,34 +400,21 @@ class Games {
 		})
 	}
 
-	signTx(seed, address, abi, callback){
-		this.getConfirmNumber(seed, address, abi, (confirm, PwDerivedKey, v,r,s)=>{
-			Eth.Wallet.getNonce( nonce => {
+	signConfirmTx(seed, address, abi, callback){
+		this.getConfirmNumber(seed, (confirm, PwDerivedKey, v,r,s)=>{
 
-				let options = {
-					to:       address,
-					nonce:    nonce,
-					gasPrice: '0x737be7600',
-					gasLimit: '0x927c0',
-					value:    0,
+			// get signed transaction for confirm function
+			Eth.Wallet.signedContractFuncTx(
+				// game contract address and ABI
+				address, abi,
+				// function adn params
+				'confirm', [seed, v, r, s],
+
+				// result: transaction
+				signedTx => {
+					callback(signedTx, confirm)
 				}
-
-				let registerTx = Eth.Wallet.lib.txutils.functionTx(
-									abi,
-									'confirm',
-									[seed, v, r, s],
-									options
-								)
-
-				let signedTx = Eth.Wallet.lib.signing.signTx(
-									Eth.Wallet.getKs(),
-									PwDerivedKey,
-									registerTx,
-									Eth.Wallet.get().openkey.substr(2)
-								)
-
-				callback(signedTx, confirm)
-			})
+			)
 		})
 	}
 
@@ -455,7 +457,7 @@ class Games {
 		}
 
 		this.checkPending(address, seed, ()=>{
-			this.getConfirmNumber(seed, address, _config.contracts[game_code].abi, (confirm, PwDerivedKey)=>{
+			this.getConfirmNumber(seed, (confirm, PwDerivedKey)=>{
 				console.log('')
 				console.log('Confirm number: ' + confirm)
 				console.log('')
