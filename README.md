@@ -1,7 +1,8 @@
-
+# Dao.Casino desktop Application
 Download app from the release section https://github.com/DaoCasino/BankRollerApp/releases
+<img src="https://raw.githubusercontent.com/DaoCasino/BankRollerApp/master/public/assets/img/mac_screenshot.png">
 
-<h3>QA</h3>
+## QA
 Q: Contracts not deploying <br>
 A: Check BET and ETH balance on wallet tab.
 
@@ -9,6 +10,6 @@ Q: Game added to TRANSACTIONS no have any status.
 A: Game frontend issue. Contact https://daocasino.slack.com/messages/@alexander42/details/ 
 
 
-<h3>Develop</h3>
+## Develop
 You need nodejs 6.9+
 <pre>npm install && npm start</pre>
