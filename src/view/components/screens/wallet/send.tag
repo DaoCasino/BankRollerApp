@@ -58,6 +58,19 @@ import './send.less'
 			})
 		}
 
+		this.sendEth = (e)=>{
+			e.preventDefault()
+			if (!this.refs.eth_to.validity.valid || !this.refs.eth_amount.validity.valid){
+				this.refs.eth_send_form.classList.add('error')
+				return
+			}
+
+			Eth.sendEth(this.refs.eth_to.value, this.refs.eth_amount.value, transaction => {
+				console.log(transaction)
+			})
+		}
+
+
 	</script>
 
 	<div class="send">

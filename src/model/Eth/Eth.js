@@ -11,6 +11,7 @@ import ABI     from 'ethereumjs-abi'
 
 import * as Utils from 'utils'
 
+// Web3 utils
 const web3_sha3 = require('web3/lib/utils/sha3.js')
 
 const rpc    = new RPC( _config.rpc_url )
@@ -21,11 +22,6 @@ class Eth {
 		this.ABI     = ABI
 		this.RPC     = rpc
 		this.Wallet  = wallet
-
-		// setTimeout(()=>{
-		// 	console.clear()
-		// 	this.getTransactionsByAccount('0x8ac300f0dd296145380424a9118ac59d32c8c6a5')
-		// },3000)
 
 		this.getCurBlock()
 	}
@@ -53,7 +49,7 @@ class Eth {
 			})
 		}, 9000)}
 
-		this.Wallet.signContractTx({
+		this.Wallet.signedCreateContractTx({
 			data:     contract_bytecode,
 			gasLimit: '0x4630C0',
 			gasPrice: '0x' + Utils.numToHex(gasprice),
@@ -106,13 +102,18 @@ class Eth {
 	}
 
 	sendBets(to, amount, callback){
-		this.Wallet.signRawTransaction(
+		// Create contract function transaction
+		this.Wallet.signedContractFuncTx(
+			// contract with bets
 			_config.erc20_address, _config.erc20_abi,
 
+			// contract function and params
 			'transfer', [to, (amount*100000000)],
 
+			// result: signed transaction
 			signedTx => {
 
+				// send transacriont to RPC
 				this.RPC.request('sendRawTransaction', ['0x'+signedTx], 0).then( response => {
 					if (!response || response.result) { return }
 					callback( response.result )
@@ -121,41 +122,19 @@ class Eth {
 		)
 	}
 
-	// getTransactionsByAccount(myaccount, startBlockNumber, endBlockNumber) {
-	// 	if (!endBlockNumber) {
-	// 		endBlockNumber = this.getCurBlock()
-	// 	}
-	// 	if (!startBlockNumber) {
-	// 		startBlockNumber = endBlockNumber - 1000
-	// 	}
+	sendEth(to, amount, callback){
+		amount = amount * 1000000000000000000
 
-	// 	for (let i = startBlockNumber; i <= endBlockNumber; i++) {
-	// 		if (i % 1000 == 0) {
-	// 			console.log('Searching block ' + i)
-	// 		}
-	// 		let block = this.getBlock(i, true)
+		this.Wallet.signedEthTx(to, amount, signedEthTx=>{
+			console.log(signedEthTx)
+			this.RPC.request('sendRawTransaction', ['0x'+signedEthTx], 0).then( response => {
+				console.info(response)
+				if (!response || response.result) { return }
+				callback( response.result )
+			})
 
-	// 		if (block != null && block.transactions != null) {
-	// 			block.transactions.forEach( function(e) {
-	// 				if (myaccount == '*' || myaccount == e.from || myaccount == e.to) {
-	// 					console.log('  tx hash          : ' + e.hash + '\n'
-	// 						+ '   nonce           : ' + e.nonce + '\n'
-	// 						+ '   blockHash       : ' + e.blockHash + '\n'
-	// 						+ '   blockNumber     : ' + e.blockNumber + '\n'
-	// 						+ '   transactionIndex: ' + e.transactionIndex + '\n'
-	// 						+ '   from            : ' + e.from + '\n'
-	// 						+ '   to              : ' + e.to + '\n'
-	// 						+ '   value           : ' + e.value + '\n'
-	// 						+ '   time            : ' + block.timestamp + ' ' + new Date(block.timestamp * 1000).toGMTString() + '\n'
-	// 						+ '   gasPrice        : ' + e.gasPrice + '\n'
-	// 						+ '   gas             : ' + e.gas + '\n'
-	// 						+ '   input           : ' + e.input)
-	// 				}
-	// 			})
-	// 		}
-	// 	}
-	// }
-
+		})
+	}
 
 	getBlock(num, callback){
 		this.RPC.request('getBlockByNumber', [ '0x'+Utils.numToHex(num), true]).then( response => {
@@ -164,8 +143,8 @@ class Eth {
 		}).catch( err => {
 			console.error('getBlockByNumber error:', err)
 		})
-
 	}
+
 	getCurBlock(){
 		if (!this.cur_block_upd || this.cur_block_upd < new Date().getTime()) {
 			this.RPC.request('blockNumber').then( response => {
