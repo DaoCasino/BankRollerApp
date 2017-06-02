@@ -1,5 +1,8 @@
-# Dao.Casino desktop Application
+# Dao.Casino Desktop Application
+
 Download app from the release section https://github.com/DaoCasino/BankRollerApp/releases
+
+
 <img src="https://raw.githubusercontent.com/DaoCasino/BankRollerApp/master/public/assets/img/mac_screenshot.png">
 
 ## QA
