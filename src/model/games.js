@@ -1,3 +1,4 @@
+// @flow weak
 import _config    from 'app.config'
 import DB         from './DB/DB'
 import Eth        from './Eth/Eth'

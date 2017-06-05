@@ -7,12 +7,22 @@ import Games    from 'games'
 		this.seeds = []
 
 		this.on('update', ()=>{
+			// console.log('list update')
 		})
+		this.upd = ()=>{
+			clearTimeout(this.updt)
+			this.updt = setTimeout(()=>{
+				this.update()
+			}, 200)
+		}
+
 		this.on('mount', ()=>{
-			this.getGames()
+			console.log('list mount')
+			this.subscribeGames()
+			this.subscribeSeeds()
 		})
 
-		this.getGames = ()=>{
+		this.subscribeGames = ()=>{
 			this.games = {}
 
 			Games.subscribe('Games').on( (game, game_id)=>{
@@ -57,14 +67,13 @@ import Games    from 'games'
 					meta_name:     game.meta_name,
 				}
 
-				this.update()
+				this.upd()
 			})
-
-			this.seedUpd()
 		}
 
-		this.seedUpd = ()=>{
+		this.subscribeSeeds = ()=>{
 			let seeds = {}
+
 			Games.subscribe('seeds_list').on((data, seed)=>{
 				if (!data) { return }
 
@@ -78,9 +87,8 @@ import Games    from 'games'
 				}
 				this.seeds = this.seeds.reverse().slice(0,10)
 
-				this.update()
+				this.upd()
 			})
-			setTimeout(()=>{ this.seedUpd() }, 4000)
 		}
 
 		this.remove = (e)=>{

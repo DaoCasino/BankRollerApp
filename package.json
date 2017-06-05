@@ -21,6 +21,7 @@
 	"webserver"                : "npm run server & npm run serve_web",
 	"server"                   : "NODE_ENV=server npm run build_server && node ./build/server.electron.js",
 
+	"flow"                     : "flow",
 	"test"                     : "node scripts/test.js --env=jsdom",
 
 	"build_all"                : "npm run build && npm run build_electron_all",
