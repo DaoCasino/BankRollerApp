@@ -97,9 +97,9 @@ class Games {
 
 
 		// BJ
-		if (game_to_deploy.code.indexOf('blackjack')) {
-			return
-		}
+		// if (game_to_deploy.code.indexOf('blackjack') ) {
+			// return
+		// }
 
 
 		// Dice
