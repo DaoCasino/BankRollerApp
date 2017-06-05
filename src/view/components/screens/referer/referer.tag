@@ -193,7 +193,7 @@ import './referer.less'
 				<em>{profit}</em> BET(s)
 			</span>
 		</div>
-		<div class={auth:true, show:need_auth}>
+		<div class={auth:true, show:need_auth, hide:auth}>
 			<p>For see google analytics data you need grant access </p>
 			<section id="auth_button"></section>
 		</div>

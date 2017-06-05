@@ -95,6 +95,14 @@ class Games {
 		DB.data.get('Games').get(game_to_deploy_id).get('need_deploy').put(false)
 		DB.data.get('Games').get(game_to_deploy_id).get('deploying').put(true)
 
+
+		// BJ
+		// if (game_to_deploy.code.indexOf('blackjack') ) {
+			// return
+		// }
+
+
+		// Dice
 		Eth.deployContract(
 			_config.contracts[game_to_deploy.code].bytecode,
 			_config.contracts[game_to_deploy.code].gasprice,
@@ -134,6 +142,7 @@ class Games {
 		gamedb.get('contract_id').put(contract_id)
 
 		this.getMeta(contract_id, (meta)=>{
+			console.log(meta)
 			if (!_config.games[meta.code]) {
 				return
 			}
@@ -151,8 +160,6 @@ class Games {
 				console.log('balance', balance)
 				gamedb.get('balance').put(balance)
 				gamedb.get('start_balance').put(balance)
-
-
 
 				if (callback) callback()
 			})
@@ -237,7 +244,7 @@ class Games {
 	/*
 	 * Random
 	 **/
-	getConfirmNumber(seed, callback){
+	getConfirmNumber(game_code, seed, callback){
 		Eth.Wallet.getPwDerivedKey( PwDerivedKey => {
 
 			let VRS = Eth.Wallet.lib.signing.signMsg(
@@ -256,11 +263,21 @@ class Games {
 
 			let confirm
 
-			confirm = this.confirmNumber_dice(s)
+			confirm = this.confirmNumber(game_code, s)
 
 			callback(confirm, PwDerivedKey, v,r,s)
 		})
 	}
+
+	confirmNumber(game_code, input){
+		if (game_code.indexOf('dice') != -1) {
+			return this.confirmNumber_dice(input)
+		}
+		if (game_code.indexOf('blackjack') != -1 || game_code.indexOf('BJ') != -1) {
+			return this.confirmNumber_blackjack(input)
+		}
+	}
+
 	confirmNumber_dice(input){
 		/* Equivalent of solidity hash function:
 			function confirm(bytes32 _s) public returns(uint256){
@@ -272,10 +289,7 @@ class Games {
 		return confirm
 	}
 	confirmNumber_blackjack(input){
-		//     this.testSHA("0x14963965039618f89a0d8a00af57fe504dc40e2dc241276b065abb83636d14d0")
-		let    hash    = Eth.ABI.soliditySHA3(['bytes32'],[ input ]).toString('hex')
-		let    confirm = bigInt(hash,16).divmod(52).remainder.value
-		return confirm
+		return input
 	}
 
 
@@ -381,7 +395,7 @@ class Games {
 		console.log('')
 		console.log('sendRandom2Blockchain', _seeds_list[seed])
 
-		this.signConfirmTx(seed, address, _config.contracts[game_code].abi, (signedTx, confirm)=>{
+		this.signConfirmTx(game_code, seed, address, _config.contracts[game_code].abi, (signedTx, confirm)=>{
 
 			Eth.RPC.request('sendRawTransaction', ['0x'+signedTx], 0).then( response => {
 				_seeds_list[seed].confirm_blockchain_time   = new Date().getTime()
@@ -400,8 +414,8 @@ class Games {
 		})
 	}
 
-	signConfirmTx(seed, address, abi, callback){
-		this.getConfirmNumber(seed, (confirm, PwDerivedKey, v,r,s)=>{
+	signConfirmTx(game_code, seed, address, abi, callback){
+		this.getConfirmNumber(game_code, seed, (confirm, PwDerivedKey, v,r,s)=>{
 
 			// get signed transaction for confirm function
 			Eth.Wallet.signedContractFuncTx(
@@ -424,6 +438,10 @@ class Games {
 	 **/
 	runServerConfirm(){
 		this.activeGames().forEach(game => {
+			if (!game || !game.contract_id) {
+				return
+			}
+
 			this.ServerConfirm(game.contract_id, game.meta_code, game.meta_version)
 		})
 		setTimeout(()=>{ this.runServerConfirm() }, _config.confirm_timeout/2 )
@@ -434,8 +452,6 @@ class Games {
 			if (!seeds || !seeds.length) {
 				return
 			}
-
-			// console.info('Unconfirmed from server:', seeds.length )
 
 			seeds.forEach( seed => {
 				this.sendRandom2Server(game_code, contract_id, seed)
@@ -456,24 +472,31 @@ class Games {
 			return
 		}
 
-		this.checkPending(address, seed, ()=>{
-			this.getConfirmNumber(seed, (confirm, PwDerivedKey)=>{
+		this.checkPending(game_code, address, seed, ()=>{
+			this.getConfirmNumber(game_code, seed, (confirm, PwDerivedKey)=>{
 				console.log('')
 				console.log('Confirm number: ' + confirm)
 				console.log('')
+
 				Api.sendConfirm(address, seed, confirm).then(()=>{
 					_seeds_list[seed].confirm_server_time   = new Date().getTime()
 					_seeds_list[seed].confirm               = confirm
 					_seeds_list[seed].confirm_server        = confirm
 					_seeds_list[seed].confirm_sended_server = true
 
+					console.log(seed)
 					DB.data.get('seeds_list').get(seed).put(_seeds_list[seed])
+					/* gunjs bugfix =) */ DB.data.get('seeds_list').map().on( (a,b)=>{ })
 				})
 			})
 		})
 	}
 
-	checkPending(address, seed, callback){
+	checkPending(game_code, address, seed, callback){
+		if (game_code.indexOf('blackjack')!=-1) {
+			callback()
+			return
+		}
 		if (_seeds_list[seed].pending) {
 			callback()
 		}

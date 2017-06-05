@@ -107,7 +107,9 @@ function createWindow () {
 	// })
 }
 
-app.on('ready', createWindow)
+app.on('ready', ()=>{
+	setTimeout(()=>{ createWindow() }, 3000 )
+})
 
 app.on('activate', () => {
 	if (mainWindow === null) {

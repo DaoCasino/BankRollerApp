@@ -2,7 +2,8 @@
  * Wrap for google analytics API
  * docs: https://developers.google.com/analytics/devguides/config/mgmt/v3/quickstart/web-js
  **/
-const gAppID = '700779122572-amttr8ulikte1fgbjogdvdfuios08p9s.apps.googleusercontent.com'
+// const gAppID = '700779122572-amttr8ulikte1fgbjogdvdfuios08p9s.apps.googleusercontent.com'
+const gAppID = '626443043382-q4ombknv6fgonr7iccieq1o7ls5f70um.apps.googleusercontent.com'
 
 export default new class GA {
 	constructor() {

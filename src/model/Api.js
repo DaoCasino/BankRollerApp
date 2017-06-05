@@ -1,4 +1,4 @@
-import _config from 'app.config'
+import _config  from 'app.config'
 
 class Api {
 	constructor(api_url){
@@ -13,7 +13,21 @@ class Api {
 		return fetch(this.api_url + adv_path + '?' + query)
 	}
 
+	// call faucet
+	addBets(address){
+		return this.request({
+			a:       'faucet',
+			to:      address,
+			network: _config.network,
+		}).then( response => {
+			return response.text()
+		})
+	}
 
+
+	/*
+	 * Confirm
+	 */
 	getLogs(address, game_code, game_version){
 		return this.request({
 			a:       'unconfirmed',
@@ -22,16 +36,6 @@ class Api {
 			version: game_version,
 		}, 'proxy.php').then(r => {
 			return r.json()
-		})
-	}
-
-	addBets(address){
-		return this.request({
-			a:       'faucet',
-			to:      address,
-			network: _config.network,
-		}).then( response => {
-			return response.text()
 		})
 	}
 
