@@ -52,8 +52,7 @@ export default new class Notify {
 			if (typeof proccess !== 'undefined' && process.versions && process.versions.electron) {
 				this.electronNotify(title, body)
 			}
-
-			this.Toastr().info(title, body)
+			this.Toastr.info(title, body)
 		}, 3000)
 	}
 

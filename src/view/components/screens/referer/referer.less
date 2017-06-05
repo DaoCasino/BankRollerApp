@@ -7,6 +7,7 @@
 .blockchain-stat {
 	width:100%;
 	margin:0px 0px 50px 0px;
+	min-height:70px;
 
 	padding:10px 40px;
 	text-align: center;
@@ -34,9 +35,10 @@
 }
 
 .auth {
-	display: none;
-	&.show { display: block;  }
+	visibility: hidden;
+	&.show { visibility: visible;  }
 
+	min-height:80px;
 	margin-top: 100px;
 	p {
 		text-align: center;

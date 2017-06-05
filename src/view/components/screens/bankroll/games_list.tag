@@ -16,7 +16,6 @@ import Games    from 'games'
 			this.games = {}
 
 			Games.subscribe('Games').on( (game, game_id)=>{
-				console.log('Games_update')
 				if (!game || !game_id) { return }
 
 				let bankroll = 0
@@ -61,9 +60,12 @@ import Games    from 'games'
 				this.update()
 			})
 
+			this.seedUpd()
+		}
+
+		this.seedUpd = ()=>{
 			let seeds = {}
 			Games.subscribe('seeds_list').on((data, seed)=>{
-				console.log('seeds_list_update')
 				if (!data) { return }
 
 				data.seed        = seed
@@ -78,8 +80,8 @@ import Games    from 'games'
 
 				this.update()
 			})
+			setTimeout(()=>{ this.seedUpd() }, 4000)
 		}
-
 
 		this.remove = (e)=>{
 			e.preventDefault()
@@ -159,7 +161,7 @@ import Games    from 'games'
 						<span if={s.confirm_sended_server}>sended to player</span>
 						<span if={s.confirm_sended_blockchain}>[in blockhain]</span>
 					</td>
-					<td>{s.confirm}</td>
+					<td><span class="confirm">{s.confirm}</span></td>
 					<td></td>
 				</tr>
 			</tbody>

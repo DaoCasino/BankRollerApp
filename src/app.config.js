@@ -4,7 +4,6 @@
 
 let bankroller_server = 'http://localhost:9999'
 
-
 let current_network = 'ropsten'
 
 if (process.env.NODE_ENV !== 'server' && window && window.localStorage.current_network) {
@@ -21,8 +20,9 @@ const games = {
 		url:  'https://platform.dao.casino/games/DiceGame/',
 		img:  'https://platform.dao.casino/img/img-game2.jpg',
 	},
-	blackjack:{ code: 'blackjack',
-		name: 'blackjack',
+
+	blackjack_v1: { code: 'blackjack_v1',
+		name: 'BlackjackGame',
 		url:  'http://blackjackgame.dao.casino/games/bj/',
 	}
 }
