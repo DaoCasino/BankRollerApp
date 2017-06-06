@@ -147,16 +147,16 @@ import Games    from 'games'
 			<caption>Transactions</caption>
 			<thead>
 				<tr>
-					<th>TX</th>
+					<th>seed</th>
 					<th>Contract</th>
 					<th>status</th>
 					<th>random</th>
-					<th>actions</th>
+					<th></th>
 				</tr>
 			</thead>
 			<tbody>
 				<tr each={s in seeds}>
-					<td><a href="{s.tx_link}" title="{s.seed}" class="address" target="_blank" rel="noopener">{s.seed}</a></td>
+					<td><span  class="address">{s.seed}</span></td>
 					<td>
 						<a  if={s.contract}
 							href="{s.contract_link}"

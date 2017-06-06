@@ -1,5 +1,5 @@
 import _config from 'app.config'
-
+import DB      from 'DB/DB'
 <network_switcher>
 	<script>
 		this.current_network = false
@@ -16,17 +16,47 @@ import _config from 'app.config'
 				}
 			}
 
+			setTimeout(()=>{
+				console.log('current_networkcurrent_networkcurrent_network')
+				console.log(DB.data.get('current_network'))
+				DB.data.get('current_network').on( n => {
+					console.log(n)
+				})
+			},1000)
+
 			this.update()
 		})
 
 		this.selectNetwork = (e)=>{
-			if (this.current_network.code==e.item.network.code) {
+			if (this.current_network.code==e.item.network.code && e.item.network.code!='custom') {
 				return
 			}
+
+			if (!confirm('After change network, app will be restarted')) {
+				return
+			}
+
 			this.current_network = e.item.network
 			this.update()
 
+			let url = '', erc20 = ''
+			if (e.item.network.code == 'custom') {
+				url = prompt('Enter RPC url')
+				if (!url) { return }
+				erc20 = prompt('Enter erc20 contract address')
+
+				localStorage.setItem('custom_network_url', url)
+				localStorage.setItem('custom_network_erc20', erc20)
+			}
+
+			DB.data.get('network').put({
+				code:  e.item.network.code,
+				url:   url,
+				erc20: erc20,
+			}, ack=>{ console.log(ack) })
+
 			localStorage.setItem('current_network', e.item.network.code)
+
 			setTimeout(()=>{
 				window.location.reload()
 			}, 1000)
