@@ -3,7 +3,10 @@ import DB      from 'DB/DB'
 <network_switcher>
 	<script>
 		this.current_network = false
-		this.networks = []
+		this.networks        = []
+
+		this.showRPCform = false
+
 		this.on('mount', ()=>{
 			for(let code in _config.networks){
 				let n = {
@@ -24,6 +27,10 @@ import DB      from 'DB/DB'
 				})
 			},1000)
 
+			this.custom_network_url   = localStorage.custom_network_url || 'http://localhost:8545'
+			this.custom_network_erc20 = localStorage.custom_network_erc20
+
+
 			this.update()
 		})
 
@@ -36,30 +43,62 @@ import DB      from 'DB/DB'
 				return
 			}
 
-			this.current_network = e.item.network
-			this.update()
-
 			let url = '', erc20 = ''
 			if (e.item.network.code == 'custom') {
-				url = prompt('Enter RPC url')
-				if (!url) { return }
-				erc20 = prompt('Enter erc20 contract address')
-
-				localStorage.setItem('custom_network_url', url)
-				localStorage.setItem('custom_network_erc20', erc20)
+				this.showRPCform = true
+				this.update()
+				return
 			}
 
-			DB.data.get('network').put({
+			this.setNetwork({
 				code:  e.item.network.code,
 				url:   url,
 				erc20: erc20,
+			})
+		}
+
+		this.setNetwork = (network)=>{
+			this.current_network = network.code
+			this.update()
+
+			DB.data.get('network').put({
+				code:  network.code,
+				url:   network.url,
+				erc20: network.erc20,
 			}, ack=>{ console.log(ack) })
 
-			localStorage.setItem('current_network', e.item.network.code)
+			localStorage.setItem('current_network',      network.code)
+			localStorage.setItem('custom_network_url',   network.url)
+			localStorage.setItem('custom_network_erc20', network.erc20)
 
 			setTimeout(()=>{
 				window.location.reload()
 			}, 1000)
+
+		}
+
+		this.setCustomRPC = (e)=>{
+			e.preventDefault()
+
+			let url   = this.refs.rpc_url.value()
+			let erc20 = this.refs.rpc_erc20.value()
+
+			if (!url) {
+				return
+			}
+
+			this.setNetwork({
+				code:  'custom',
+				url:   url,
+				erc20: erc20,
+			})
+
+			this.update()
+		}
+
+		this.hideRPCform = (e)=>{
+			this.showRPCform = false
+			this.update()
 		}
 	</script>
 
@@ -79,7 +118,55 @@ import DB      from 'DB/DB'
 			</li>
 		</ul>
 	</div>
+
+	<form if={showRPCform} onsubmit={setCustomRPC} class="custom-rpc-form">
+		<label>url:
+			<input type="text" name="url" value={custom_network_url}>
+		</label>
+		<label>erc20address:
+			<input type="text" name="erc20" value={custom_network_erc20}>
+		</label>
+		<a href="#" onclick={hideRPCform} class="cancel">Cancel</a>
+		<input type="submit" class="button" value="Change">
+	</form>
+
 	<style type="less">
+		.custom-rpc-form {
+			position: absolute; top:45px; right:5px;
+
+			width:300px; height:240px; overflow:hidden;
+			padding: 20px 30px;
+
+			background:#222;
+			box-shadow:0 5px 5px 0px rgba(0,0,0,0.3);
+
+			label {
+				text-transform: uppercase; font-weight: 200;
+				display:block;
+				margin-bottom: 20px;
+				width:100%;
+				input {
+					padding-left: 0; width:100%;
+				}
+			}
+
+			a.cancel {
+				display:inline-block;
+				margin: 18px 10px 10px 10px;
+				float: left;
+			}
+
+			input[type="submit"] {
+				display:inline-block;
+				float: right;
+				opacity:0.9;
+				&:hover {
+					opacity:1;
+				}
+			}
+		}
+
+
 		.network {
 			display: inline-block;
 
