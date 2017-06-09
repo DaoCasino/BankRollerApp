@@ -26,29 +26,30 @@ class Eth {
 		this.getCurBlock()
 	}
 
+	deployGameContract(factory, callback_deployed, callback_proccess){
+		// Create contract function transaction
+		this.Wallet.signedContractFuncTx(
+			factory.address, factory.abi,
+			'createDiceRoll', [],
+
+			// result: signed transaction
+			signedTx => {
+				// send transacriont to RPC
+				this.RPC.request('sendRawTransaction', ['0x'+signedTx], 0).then( response => {
+					if (!response.result) {
+						console.log(response.message)
+						if (!response.message || response.message.indexOf('known transaction')==-1) {
+							return
+						}
+					}
+					this.checkContractDeployed(response.result, callback_deployed)
+					callback_proccess()
+				})
+			}
+		)
+	}
+
 	deployContract(contract_bytecode, gasprice=151000000000, callback_deployed, callback_proccess){
-
-		let checkContractDeployed = (transaction_hash, callback)=>{ setTimeout(()=>{
-			console.log('checkContractDeployed', _config.etherscan_url+'/tx/'+transaction_hash)
-
-			this.RPC.request('getTransactionReceipt', [transaction_hash]).then( response => {
-
-				console.log('checkContractDeployed result', response.result)
-
-				if (!response || !response.result || !response.result.contractAddress) {
-					checkContractDeployed(transaction_hash, callback)
-					return
-				}
-
-				console.log('[OK] checkContractDeployed - address:', _config.etherscan_url+'/address/'+response.result.contractAddress)
-
-				callback(response.result.contractAddress)
-			}).catch( err => {
-				console.error('checkContractDeployed:', err)
-				checkContractDeployed(transaction_hash, callback)
-			})
-		}, 9000)}
-
 		this.Wallet.signedCreateContractTx({
 			data:     contract_bytecode,
 			gasLimit: '0x4630C0',
@@ -62,11 +63,33 @@ class Eth {
 						return
 					}
 				}
-				checkContractDeployed(response.result, callback_deployed)
+				this.checkContractDeployed(response.result, callback_deployed)
 				callback_proccess()
 			})
 		})
 	}
+
+	checkContractDeployed(transaction_hash, callback){ setTimeout(()=>{
+		console.log('checkContractDeployed', _config.etherscan_url+'/tx/'+transaction_hash)
+
+		this.RPC.request('getTransactionReceipt', [transaction_hash]).then( response => {
+
+			if (!response || !response.result || !response.result.logs || !response.result.logs[0] || !response.result.logs[0].data) {
+				this.checkContractDeployed(transaction_hash, callback)
+				return
+			}
+
+			var contractAddress = '0x'+response.result.logs[0].data.substr(-40)
+
+			console.log('[OK] checkContractDeployed - address:', _config.etherscan_url+'/address/'+contractAddress)
+
+			callback(contractAddress)
+		}).catch( err => {
+			console.error('checkContractDeployed:', err)
+			this.checkContractDeployed(transaction_hash, callback)
+		})
+	}, 9000)}
+
 
 	// Get contract function hash name
 	// https://github.com/ethereum/homestead-guide/blob/master/source/contracts-and-transactions/accessing-contracts-and-transactions.rst#interacting-with-smart-contracts

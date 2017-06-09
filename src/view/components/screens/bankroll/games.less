@@ -60,7 +60,8 @@
 
 		th, td { padding:7px 5px 7px 15px; font-size:13px;
 			white-space:nowrap;
-			a {
+			span, a {
+				overflow:hidden; text-overflow: ellipsis;
 				white-space:nowrap;
 				display:inline-block;
 				max-width:100px;
@@ -85,6 +86,10 @@
 		}
 
 		tr:hover td { background:#222; }
+
+		tr[data-bankroll="0"] td {
+			background:#581e1e;
+		}
 	}
 
 

@@ -59,4 +59,45 @@ global.GunDB  = Gun({file: './database.json', web: server })
 global.fetch  = require('node-fetch')
 global.window = {}
 
-require('./app.background.js')
+
+/*
+ * Network change
+ */
+let start_net = {
+	code:'ropsten'
+}
+
+GunDB.get('network').val( n => {
+	console.log('DB get network', n)
+	if (!n || typeof n === 'undefined') { return }
+	start_net = n
+})
+
+
+setTimeout(()=>{
+	global.network = Object.assign({}, start_net)
+
+	console.log('NETWORK:' + global.network.code +' url:'+ global.network.url)
+
+	// Subscribe to change network
+	GunDB.get('network').on( n =>{
+		if (!n || typeof n === 'undefined') { return }
+
+		console.log('NETWORK CHANGED', network.code+' -> '+n.code)
+
+		if (network.code != n.code || (n.code=='custom' && (n.url!=network.url || n.erc20!=network.erc20)) ) {
+			console.log('App shut down')
+			clearTimeout(global.restartT)
+			global.restartT = setTimeout(()=>{
+				if (typeof app!=='undefined') {
+					app.quit()
+					return
+				}
+				process.exit()
+			}, 5000)
+		}
+	})
+
+	require('./app.background.js')
+
+}, 1000)
