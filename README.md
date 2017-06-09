@@ -1,4 +1,6 @@
 # Dao.Casino Desktop Application
+[![Github All Releases](https://img.shields.io/github/downloads/DaoCasino/BankRollerApp/total.svg)]()
+[![Github All Releases](https://img.shields.io/github/release/DaoCasino/BankRollerApp/all.svg)]()
 
 Download app from the release section https://github.com/DaoCasino/BankRollerApp/releases
 
