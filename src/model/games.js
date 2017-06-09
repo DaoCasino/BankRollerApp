@@ -58,15 +58,21 @@ class Games {
 
 	// Add task - deploy game
 	create(code){
-		let game_id = code+'_'+new Date().getTime()
+		Eth.getEthBalance(Eth.Wallet.get().openkey, eths => {
+			if (eths < 0.5) {
+				Notify.send('Please send some ETH to your account', 'insufficient funds')
+			} else {
+				let game_id = code+'_'+new Date().getTime()
 
-		DB.data.get('Games').get(game_id).put({
-			// game add to local DB, and waiting deploy contract
-			need_deploy:   true,
+				DB.data.get('Games').get(game_id).put({
+					// game add to local DB, and waiting deploy contract
+					need_deploy:   true,
 
-			code:          code,
-			start_balance: 0,
-			balance:       0,
+					code:          code,
+					start_balance: 0,
+					balance:       0,
+				})
+			}
 		})
 	}
 
@@ -170,6 +176,16 @@ class Games {
 	// Remove game item from local database
 	remove(game_id){
 		console.log('remove game_id',game_id)
+
+		for(let k in _seeds_list){
+			if (_seeds_list[k].contract==_games[game_id].contract_id) {
+				delete(_seeds_list[k])
+				DB.data.get('seeds_list').get(k).put(null)
+			}
+		}
+
+		/* gunjs bugfix =) */ DB.data.get('seeds_list').map().on( (a,b)=>{ })
+
 		DB.data.get('Games').get(game_id).put(null)
 		DB.data.get('deploy_tasks').get(game_id).put(null)
 	}
@@ -181,7 +197,13 @@ class Games {
 			// console.log(' > getBetsBalance contract_id: '+game.contract_id)
 			Eth.getBetsBalance(game.contract_id, (balance)=>{
 				// console.log('balance:'+balance)
-				DB.data.get('Games').get(game.id).get('balance').put(balance)
+				if (_games[game.id].start_balance==0) {
+					_games[game.id].start_balance = balance
+					DB.data.get('Games').get(game.id).get('start_balance').put(balance)
+				} else {
+					_games[game.id].balance = balance
+					DB.data.get('Games').get(game.id).get('balance').put(balance)
+				}
 			})
 		})
 
@@ -294,18 +316,36 @@ class Games {
 	}
 
 
+	hasFunds(callback){
+		Eth.getEthBalance(Eth.Wallet.get().openkey, eths => {
+			if (eths < 0.01) {
+				Notify.send('Please send some ETH to your account', 'insufficient funds')
+				return
+			}
+			if (eths < 0.5) {
+				Notify.send('Please send some ETH to your account', 'LOW BALANCE '+eths)
+			}
 
+			callback()
+		})
+	}
 
 	/*
 	 * Blockchain confirm
 	 **/
 	runBlockchainConfirm(){
-		this.activeGames().forEach(game => {
-			this.BlockchainConfirm(game.contract_id, game.meta_code)
+		this.hasFunds(()=>{
+			this.activeGames().forEach(game => {
+				if (game.balance > 0.5) {
+					this.BlockchainConfirm(game.contract_id, game.meta_code)
+				} else {
+					Notify.send('Please send BETs to game contract', game.meta_name+' - LOW BALANCE')
+				}
+			})
 		})
-
 		setTimeout(()=>{ this.runBlockchainConfirm() }, _config.confirm_timeout )
 	}
+
 	BlockchainConfirm(contract_id, game_code){
 		// Get wait seeds list from contract logs
 		this.getBlockchainLogs(contract_id, seeds => {
@@ -438,13 +478,18 @@ class Games {
 	 * Server confirm
 	 **/
 	runServerConfirm(){
-		this.activeGames().forEach(game => {
-			if (!game || !game.contract_id) {
-				return
-			}
+		this.hasFunds(()=>{
+			this.activeGames().forEach(game => {
+				if (!game || !game.contract_id) {
+					return
+				}
 
-			this.ServerConfirm(game.contract_id, game.meta_code, game.meta_version)
+				if (game.balance > 0.5) {
+					this.ServerConfirm(game.contract_id, game.meta_code, game.meta_version)
+				}
+			})
 		})
+
 		setTimeout(()=>{ this.runServerConfirm() }, _config.confirm_timeout/2 )
 	}
 

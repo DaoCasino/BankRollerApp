@@ -20,8 +20,6 @@ import DB      from 'DB/DB'
 			}
 
 			setTimeout(()=>{
-				console.log('current_networkcurrent_networkcurrent_network')
-				console.log(DB.data.get('current_network'))
 				DB.data.get('current_network').on( n => {
 					console.log(n)
 				})
@@ -45,6 +43,9 @@ import DB      from 'DB/DB'
 
 			let url = '', erc20 = ''
 			if (e.item.network.code == 'custom') {
+				this.current_network = _config.networks[ e.item.network.code ]
+				this.update()
+
 				this.showRPCform = true
 				this.update()
 				return
@@ -58,7 +59,7 @@ import DB      from 'DB/DB'
 		}
 
 		this.setNetwork = (network)=>{
-			this.current_network = network.code
+			this.current_network = _config.networks[network.code]
 			this.update()
 
 			DB.data.get('network').put({
@@ -80,8 +81,8 @@ import DB      from 'DB/DB'
 		this.setCustomRPC = (e)=>{
 			e.preventDefault()
 
-			let url   = this.refs.rpc_url.value()
-			let erc20 = this.refs.rpc_erc20.value()
+			let url   = this.refs.rpc_url.value
+			let erc20 = this.refs.rpc_erc20.value
 
 			if (!url) {
 				return
@@ -97,7 +98,9 @@ import DB      from 'DB/DB'
 		}
 
 		this.hideRPCform = (e)=>{
-			this.showRPCform = false
+			this.current_network      = _config.networks[localStorage.current_network]
+			this.current_network.code = localStorage.current_network
+			this.showRPCform          = false
 			this.update()
 		}
 	</script>
@@ -121,13 +124,13 @@ import DB      from 'DB/DB'
 
 	<form if={showRPCform} onsubmit={setCustomRPC} class="custom-rpc-form">
 		<label>url:
-			<input type="text" name="url" value={custom_network_url}>
+			<input ref="rpc_url" type="text" name="url" value={custom_network_url}>
 		</label>
 		<label>erc20address:
-			<input type="text" name="erc20" value={custom_network_erc20}>
+			<input ref="rpc_erc20" type="text" name="erc20" value={custom_network_erc20}>
 		</label>
 		<a href="#" onclick={hideRPCform} class="cancel">Cancel</a>
-		<input type="submit" class="button" value="Change">
+		<input type="submit" class="button" value="Connect">
 	</form>
 
 	<style type="less">

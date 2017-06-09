@@ -3,8 +3,9 @@ import Games    from 'games'
 
 <games_list>
 	<script>
-		this.games = {}
-		this.seeds = []
+		this.contracts = {}
+		this.games     = {}
+		this.seeds     = []
 
 		this.on('update', ()=>{
 			// console.log('list update')
@@ -53,6 +54,7 @@ import Games    from 'games'
 					contract_link = false
 				}
 
+				this.contracts[contract_id] = game.meta_code
 
 				this.games[game_id] = {
 					game_id:       game_id,
@@ -75,11 +77,12 @@ import Games    from 'games'
 			let seeds = {}
 
 			Games.subscribe('seeds_list').on((data, seed)=>{
-				if (!data) { return }
+				if (!data || !this.contracts[data.contract]) { return }
 
-				data.seed        = seed
-				data.tx_link     = `${_config.etherscan_url}/tx/${seed}`
-				seeds[seed] = data
+				data.seed      = seed
+				data.meta_code = this.contracts[data.contract]
+				data.tx_link   = `${_config.etherscan_url}/tx/${seed}`
+				seeds[seed]    = data
 
 				this.seeds = []
 				for(let k in seeds){
@@ -113,7 +116,7 @@ import Games    from 'games'
 			<th>actions</th>
 		</tr></thead>
 		<tbody>
-			<tr each={game in games}>
+			<tr each={game in games} data-bankroll={Math.floor(game.bankroll)}>
 				<td>
 					<a if={game.url} href="{game.url}" target="_blank" rel="noopener">
 						<span if={game.meta_name}>{game.meta_name}</span>
@@ -156,13 +159,13 @@ import Games    from 'games'
 			</thead>
 			<tbody>
 				<tr each={s in seeds}>
-					<td><span  class="address">{s.seed}</span></td>
+					<td><span  class="address" title="{s.seed}">{s.seed}</span></td>
 					<td>
 						<a  if={s.contract}
 							href="{s.contract_link}"
 							title="{s.contract}"
 							class="address" target="_blank" rel="noopener">
-							{s.contract}
+							{s.meta_code}
 						</a>
 					</td>
 					<td>
