@@ -365,7 +365,7 @@ class Games {
 
 				let seed = item.data
 				if (!_seeds_list[seed]) {
-					_seeds_list[seed] = { contract:address }
+					_seeds_list[seed] = { contract:contract_id }
 				}
 
 				if (!_seeds_list[seed].confirm_sended_blockchain) {
@@ -432,7 +432,6 @@ class Games {
 		_seeds_list[seed].proccess_sended_blockchain = true
 
 		this.signConfirmTx(game_code, seed, address, _config.contracts[game_code].abi, (signedTx, confirm)=>{
-
 			Eth.RPC.request('sendRawTransaction', ['0x'+signedTx], 0).then( response => {
 				_seeds_list[seed].confirm_blockchain_time   = new Date().getTime()
 				_seeds_list[seed].confirm_sended_blockchain = true
