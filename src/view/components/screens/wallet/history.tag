@@ -53,11 +53,11 @@ import './history.less'
 
 			<label if={trans.from}><span>from:</span>
 				<input onclick={copy} value={trans.from} class="from" type="text">
-				<a class="blockchain" href="{etherscan_url}/taddress/{trans.tx}" target="_blank" rel="noopener">blockchain</a>
+				<a class="blockchain" href="{etherscan_url}/address/{trans.from}" target="_blank" rel="noopener">blockchain</a>
 			</label>
 			<label if={trans.to}><span>to:</span>
 				<input onclick={copy} value={trans.to} class="tx" type="text">
-				<a class="blockchain" href="{etherscan_url}/address/{trans.tx}" target="_blank" rel="noopener">blockchain</a>
+				<a class="blockchain" href="{etherscan_url}/address/{trans.to}" target="_blank" rel="noopener">blockchain</a>
 			</label>
 		</div>
 	</div>
