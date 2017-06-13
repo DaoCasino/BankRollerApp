@@ -96,6 +96,10 @@ import Games    from 'games'
 
 		this.remove = (e)=>{
 			e.preventDefault()
+			if (!confirm('You really want to stop game?')) {
+				return
+			}
+
 			Games.remove(e.item.game.game_id)
 			delete( this.games[e.item.game.game_id] )
 			this.update()
@@ -140,7 +144,7 @@ import Games    from 'games'
 					<span if={game.profit == 0} >{game.profit} bet</span>
 				</td>
 				<td>
-					<a href="#remove" onclick={remove} class="remove">remove</a>
+					<a href="#remove" onclick={remove} class="remove">refund and close</a>
 				</td>
 			</tr>
 		</tbody>

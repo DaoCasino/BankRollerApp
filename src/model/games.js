@@ -197,10 +197,31 @@ class Games {
 
 		/* gunjs bugfix =) */ DB.data.get('seeds_list').map().on( (a,b)=>{ })
 
+		// Return money
+		this.withdraw( Object.assign({}, _games[game_id]) )
+
 		DB.data.get('Games').get(game_id).put(null)
 		DB.data.get('deploy_tasks').get(game_id).put(null)
 	}
 
+	withdraw(game){
+		Eth.getBetsBalance(game.contract_id, (balance)=>{
+
+			Eth.Wallet.signedContractFuncTx(
+				// game contract address and ABI
+				game.contract_id, _config.contracts[game.meta_code].abi,
+				// function adn params
+				'withdraw', [balance*100000000],
+
+				// result: transaction
+				signedTx => {
+					Eth.RPC.request('sendRawTransaction', ['0x'+signedTx], 0).then( response => {
+
+					})
+				}
+			)
+		})
+	}
 
 	// [Cycle] Update contracts balances
 	runUpdateBalance(){
