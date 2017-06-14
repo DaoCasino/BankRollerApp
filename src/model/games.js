@@ -188,17 +188,19 @@ class Games {
 
 	// Remove game item from local database
 	remove(game_id){
-		for(let k in _seeds_list){
-			if (_seeds_list[k].contract==_games[game_id].contract_id) {
-				delete(_seeds_list[k])
-				DB.data.get('seeds_list').get(k).put(null)
+		if (_games[game_id].contract_id) {
+			for(let k in _seeds_list){
+				if (_seeds_list[k].contract==_games[game_id].contract_id) {
+					delete(_seeds_list[k])
+					DB.data.get('seeds_list').get(k).put(null)
+				}
 			}
+
+			/* gunjs bugfix =) */ DB.data.get('seeds_list').map().on( (a,b)=>{ })
+
+			// Return money
+			this.withdraw( Object.assign({}, _games[game_id]) )
 		}
-
-		/* gunjs bugfix =) */ DB.data.get('seeds_list').map().on( (a,b)=>{ })
-
-		// Return money
-		this.withdraw( Object.assign({}, _games[game_id]) )
 
 		DB.data.get('Games').get(game_id).put(null)
 		DB.data.get('deploy_tasks').get(game_id).put(null)
