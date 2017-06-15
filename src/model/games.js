@@ -10,6 +10,8 @@ import Web3       from 'web3'
 
 const web3 = new Web3()
 
+const web3_sha3 = require('web3/lib/utils/sha3.js')
+
 import * as Utils from './utils'
 
 import {AsyncPriorityQueue, AsyncTask} from 'async-priority-queue'
@@ -299,26 +301,25 @@ class Games {
 	 **/
 	getConfirmNumber(game_code, seed, callback){
 		Eth.Wallet.getPwDerivedKey( PwDerivedKey => {
+			let msg = seed
+			// let msg = '0x'+web3_sha3(seed)
 
-			let VRS = Eth.Wallet.lib.signing.signMsg(
+			let VRS = Eth.Wallet.lib.signing.signMsgHash(
 				Eth.Wallet.getKs(),
 				PwDerivedKey,
-				seed,
-				Eth.Wallet.get().openkey.substr(2)
+				msg,
+				Eth.Wallet.get().openkey
 			)
 
 			let signature = Eth.Wallet.lib.signing.concatSig(VRS)
 
-
-			let v = VRS.v
+			let v = Utils.hexToNum(signature.slice(130, 132)) // 27 or 28
 			let r = signature.slice(0, 66)
 			let s = '0x' + signature.slice(66, 130)
 
-			let confirm
+			let confirm = this.confirmNumber(game_code, s)
 
-			confirm = this.confirmNumber(game_code, s)
-
-			callback(confirm, PwDerivedKey, v,r,s)
+			callback(confirm, PwDerivedKey, msg,v,r,s)
 		})
 	}
 
@@ -472,14 +473,14 @@ class Games {
 	}
 
 	signConfirmTx(game_code, seed, address, abi, callback){
-		this.getConfirmNumber(game_code, seed, (confirm, PwDerivedKey, v,r,s)=>{
+		this.getConfirmNumber(game_code, seed, (confirm, PwDerivedKey, msg,v,r,s)=>{
 
 			// get signed transaction for confirm function
 			Eth.Wallet.signedContractFuncTx(
 				// game contract address and ABI
 				address, abi,
 				// function adn params
-				'confirm', [seed, v, r, s],
+				'confirm', [msg, v, r, s],
 
 				// result: transaction
 				signedTx => {
