@@ -16,17 +16,14 @@ import './referer.less'
 		this.links        = false
 
 		this.on('mount',()=>{
-
-			this.getBlockchainStat()
-
-			this.generateLinks()
-
-
 			if (localStorage.ga_view_id) {
 				this.ga_site_id   = localStorage.ga_site_id
 				this.ga_view_id   = localStorage.ga_view_id
 				this.ga_view_name = localStorage.ga_view_name
 			}
+
+			this.getBlockchainStat()
+			this.generateLinks()
 
 			if (GA.api && GA.api.analytics.auth && GA.api.analytics.auth.isAuthorized()) {
 				this.loadData()
@@ -159,10 +156,10 @@ import './referer.less'
 				return
 			}
 
+			console.log(this.ga_site_id)
 			this.links = []
 			for(let k in _config.games){
 				let href = _config.games[k].url+'?ref='+addr
-
 				if (this.ga_site_id) {
 					href += '&gaid='+this.ga_site_id
 				}

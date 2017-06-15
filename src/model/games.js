@@ -10,6 +10,8 @@ import Web3       from 'web3'
 
 const web3 = new Web3()
 
+const web3_sha3 = require('web3/lib/utils/sha3.js')
+
 import * as Utils from './utils'
 
 import {AsyncPriorityQueue, AsyncTask} from 'async-priority-queue'
@@ -188,19 +190,42 @@ class Games {
 
 	// Remove game item from local database
 	remove(game_id){
-		for(let k in _seeds_list){
-			if (_seeds_list[k].contract==_games[game_id].contract_id) {
-				delete(_seeds_list[k])
-				DB.data.get('seeds_list').get(k).put(null)
+		if (_games[game_id].contract_id) {
+			for(let k in _seeds_list){
+				if (_seeds_list[k].contract==_games[game_id].contract_id) {
+					delete(_seeds_list[k])
+					DB.data.get('seeds_list').get(k).put(null)
+				}
 			}
-		}
 
-		/* gunjs bugfix =) */ DB.data.get('seeds_list').map().on( (a,b)=>{ })
+			/* gunjs bugfix =) */ DB.data.get('seeds_list').map().on( (a,b)=>{ })
+
+			// Return money
+			this.withdraw( Object.assign({}, _games[game_id]) )
+		}
 
 		DB.data.get('Games').get(game_id).put(null)
 		DB.data.get('deploy_tasks').get(game_id).put(null)
 	}
 
+	withdraw(game){
+		Eth.getBetsBalance(game.contract_id, (balance)=>{
+
+			Eth.Wallet.signedContractFuncTx(
+				// game contract address and ABI
+				game.contract_id, _config.contracts[game.meta_code].abi,
+				// function adn params
+				'withdraw', [balance*100000000],
+
+				// result: transaction
+				signedTx => {
+					Eth.RPC.request('sendRawTransaction', ['0x'+signedTx], 0).then( response => {
+
+					})
+				}
+			)
+		})
+	}
 
 	// [Cycle] Update contracts balances
 	runUpdateBalance(){
@@ -276,26 +301,25 @@ class Games {
 	 **/
 	getConfirmNumber(game_code, seed, callback){
 		Eth.Wallet.getPwDerivedKey( PwDerivedKey => {
+			let msg = seed
+			// let msg = '0x'+web3_sha3(seed)
 
-			let VRS = Eth.Wallet.lib.signing.signMsg(
+			let VRS = Eth.Wallet.lib.signing.signMsgHash(
 				Eth.Wallet.getKs(),
 				PwDerivedKey,
-				seed,
-				Eth.Wallet.get().openkey.substr(2)
+				msg,
+				Eth.Wallet.get().openkey
 			)
 
 			let signature = Eth.Wallet.lib.signing.concatSig(VRS)
 
-
-			let v = VRS.v
+			let v = Utils.hexToNum(signature.slice(130, 132)) // 27 or 28
 			let r = signature.slice(0, 66)
 			let s = '0x' + signature.slice(66, 130)
 
-			let confirm
+			let confirm = this.confirmNumber(game_code, s)
 
-			confirm = this.confirmNumber(game_code, s)
-
-			callback(confirm, PwDerivedKey, v,r,s)
+			callback(confirm, PwDerivedKey, msg,v,r,s)
 		})
 	}
 
@@ -365,7 +389,7 @@ class Games {
 
 				let seed = item.data
 				if (!_seeds_list[seed]) {
-					_seeds_list[seed] = { contract:address }
+					_seeds_list[seed] = { contract:contract_id }
 				}
 
 				if (!_seeds_list[seed].confirm_sended_blockchain) {
@@ -432,7 +456,6 @@ class Games {
 		_seeds_list[seed].proccess_sended_blockchain = true
 
 		this.signConfirmTx(game_code, seed, address, _config.contracts[game_code].abi, (signedTx, confirm)=>{
-
 			Eth.RPC.request('sendRawTransaction', ['0x'+signedTx], 0).then( response => {
 				_seeds_list[seed].confirm_blockchain_time   = new Date().getTime()
 				_seeds_list[seed].confirm_sended_blockchain = true
@@ -450,14 +473,14 @@ class Games {
 	}
 
 	signConfirmTx(game_code, seed, address, abi, callback){
-		this.getConfirmNumber(game_code, seed, (confirm, PwDerivedKey, v,r,s)=>{
+		this.getConfirmNumber(game_code, seed, (confirm, PwDerivedKey, msg,v,r,s)=>{
 
 			// get signed transaction for confirm function
 			Eth.Wallet.signedContractFuncTx(
 				// game contract address and ABI
 				address, abi,
 				// function adn params
-				'confirm', [seed, v, r, s],
+				'confirm', [msg, v, r, s],
 
 				// result: transaction
 				signedTx => {

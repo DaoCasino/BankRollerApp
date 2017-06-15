@@ -1,5 +1,6 @@
 import _config  from 'app.config'
 import Games    from 'games'
+import route    from 'riot-route'
 
 <games_list>
 	<script>
@@ -94,8 +95,16 @@ import Games    from 'games'
 			})
 		}
 
+		this.addBets = (e)=>{
+			e.preventDefault()
+			route('/wallet/sendBets/?to='+e.item.game.contract_id)
+		}
 		this.remove = (e)=>{
 			e.preventDefault()
+			if (!confirm('You really want to stop game?')) {
+				return
+			}
+
 			Games.remove(e.item.game.game_id)
 			delete( this.games[e.item.game.game_id] )
 			this.update()
@@ -140,7 +149,10 @@ import Games    from 'games'
 					<span if={game.profit == 0} >{game.profit} bet</span>
 				</td>
 				<td>
-					<a href="#remove" onclick={remove} class="remove">remove</a>
+					<a if={game.contract_id} href="#addBets" onclick={addBets} class="remove">+bets</a>
+					&nbsp;&nbsp;
+					<a if={game.contract_id} href="#remove" onclick={remove} class="remove">refund</a>
+					<a if={!game.contract_id} href="#remove" onclick={remove} class="remove">remove</a>
 				</td>
 			</tr>
 		</tbody>
@@ -169,6 +181,7 @@ import Games    from 'games'
 						</a>
 					</td>
 					<td>
+						<span if={!s.confirm_sended_server && !s.confirm_sended_blockchain}>pending...</span>
 						<span if={s.confirm_sended_server}>sended to player</span>
 						<span if={s.confirm_sended_blockchain}>[in blockhain]</span>
 					</td>

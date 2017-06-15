@@ -1,6 +1,6 @@
-import riot from 'riot'
+import riot  from 'riot'
 import route from 'riot-route'
-
+import $     from 'jquery'
 <app>
 	<script>
 		this.on('mount', ()=>{
@@ -9,6 +9,7 @@ import route from 'riot-route'
 					screen = 'wallet'
 				}
 
+				$('html,body').scrollTop(0)
 				riot.mount(this.refs.mount_point, screen)
 			})
 		})

@@ -5,7 +5,7 @@
 let bankroller_server = 'http://localhost:9999'
 
 // Contract with referral stat
-let stat_contract = '0x94cfd3646f89166afe094940159742a3f6ba9a0c'
+let stat_contract = '0xe195eed0e77b48146aa246dadf987d2504ac88cb'
 
 const networks = {
 	'custom': {

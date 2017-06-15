@@ -214,6 +214,7 @@ export default class Wallet {
 								function_args,
 								options
 							)
+			console.log('registerTx', registerTx)
 
 			//  Sign transaction
 			this.signTx(registerTx, callback)

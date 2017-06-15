@@ -1,8 +1,11 @@
-import _config  from 'app.config'
-import Eth from 'Eth/Eth'
+import _config   from 'app.config'
+import route     from 'riot-route'
+import Eth       from 'Eth/Eth'
 import TxHistory from 'txhistory'
+import toastr    from 'toastr'
+import $         from 'jquery'
+
 import './send.less'
-import toastr from 'toastr'
 
 <send>
 	<script>
@@ -14,8 +17,18 @@ import toastr from 'toastr'
 		this.tab = 'bet'
 
 		this.on('mount', ()=>{
+			let send_bets_to = route.query().to
+			if (send_bets_to) {
+				this.refs.bet_to.value     = send_bets_to
+				this.refs.bet_amount.value = 1
 
+				// this.refs.bet_send_form.scrollIntoView({block: "end", behavior: "smooth"})
+				setTimeout(()=>{
+					$('html,body').animate({scrollTop:270}, 400)
+				}, 500)
+			}
 		})
+
 
 		this.tabEth = (e)=>{
 			e.preventDefault()
@@ -60,6 +73,9 @@ import toastr from 'toastr'
 
 			let to     = this.refs.bet_to.value
 			let amount = this.refs.bet_amount.value
+
+			this.refs.bet_to.value     = ''
+			this.refs.bet_amount.value = 0
 
 			Eth.sendBets(to, amount, transaction => {
 				console.log('Eth.sendBets transaction', transaction)
@@ -142,7 +158,7 @@ import toastr from 'toastr'
 			</label>
 			<label>
 				<span>amount:</span>
-				<input onkeyup={checkValid} ref="bet_amount" placeholder="1.00" required name="amount" type="number" step="0.001" min="0.001" max="{balance.bets}"> BET
+				<input onkeyup={checkValid} ref="bet_amount" placeholder="1.00" required name="bet_amount" type="number" step="0.001" min="0.001" max="{balance.bets}"> BET
 			</label>
 
 			<button onclick={sendBet} class="button">send</button>
@@ -159,7 +175,7 @@ import toastr from 'toastr'
 			</label>
 			<label>
 				<span>amount:</span>
-				<input onkeyup={checkValid} ref="eth_amount" placeholder="1.00" required name="amount" type="number" step="0.001" min="0.001" max="{balance.eth}"> ETH
+				<input onkeyup={checkValid} ref="eth_amount" placeholder="1.00" required name="eth_amount" type="number" step="0.001" min="0.001" max="{balance.eth}"> ETH
 			</label>
 
 			<button onclick={sendEth} class="button">send</button>
