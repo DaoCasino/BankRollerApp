@@ -416,8 +416,8 @@ class Games {
 	}
 
 	// Add send random task to queue
-	addTaskSendRandom(game_code, address, seed, callback=false, repeat_on_error=3){
-		let task = new AsyncTask({ priority: 'low',
+	addTaskSendRandom(game_code, address, seed, callback=false, repeat_on_error=7, priority='low'){
+		let task = new AsyncTask({ priority: priority,
 			callback:()=>{
 				return new Promise((resolve, reject) => {
 
@@ -440,7 +440,7 @@ class Games {
 			e => {
 				if (repeat_on_error>0) {
 					repeat_on_error--
-					this.addTaskSendRandom(address, seed, callback, repeat_on_error)
+					this.addTaskSendRandom(address, seed, callback, repeat_on_error, 'high')
 				}
 			}
 		)
@@ -457,6 +457,13 @@ class Games {
 
 		this.signConfirmTx(game_code, seed, address, _config.contracts[game_code].abi, (signedTx, confirm)=>{
 			Eth.RPC.request('sendRawTransaction', ['0x'+signedTx], 0).then( response => {
+
+				if (!response.result) {
+					callback(false, response)
+					return
+				}
+
+				_seeds_list[seed].tx                        = response.result
 				_seeds_list[seed].confirm_blockchain_time   = new Date().getTime()
 				_seeds_list[seed].confirm_sended_blockchain = true
 				_seeds_list[seed].confirm                   = confirm

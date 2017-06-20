@@ -82,7 +82,7 @@ import route    from 'riot-route'
 
 				data.seed      = seed
 				data.meta_code = this.contracts[data.contract]
-				data.tx_link   = `${_config.etherscan_url}/tx/${seed}`
+				data.tx_link   = _config.etherscan_url+'/tx/'+data.tx
 				seeds[seed]    = data
 
 				this.seeds = []
@@ -162,7 +162,7 @@ import route    from 'riot-route'
 			<caption>Transactions</caption>
 			<thead>
 				<tr>
-					<th>seed</th>
+					<th>TX</th>
 					<th>Contract</th>
 					<th>status</th>
 					<th>random</th>
@@ -171,7 +171,7 @@ import route    from 'riot-route'
 			</thead>
 			<tbody>
 				<tr each={s in seeds}>
-					<td><span  class="address" title="{s.seed}">{s.seed}</span></td>
+					<td><a href="{s.tx_link}" target="_blank" rel="noopener" class="address" title="{s.tx}">{s.tx}</a></td>
 					<td>
 						<a  if={s.contract}
 							href="{s.contract_link}"
