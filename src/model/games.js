@@ -388,12 +388,14 @@ class Games {
 				Eth.setCurBlock(item.blockNumber)
 
 				let seed = item.data
-				if (!_seeds_list[seed]) {
-					_seeds_list[seed] = { contract:contract_id }
-				}
+				if (this.isValidSeed(seed)) {
+					if (!_seeds_list[seed]) {
+						_seeds_list[seed] = { contract:contract_id }
+					}
 
-				if (!_seeds_list[seed].confirm_sended_blockchain) {
-					this.addTaskSendRandom(game_code, contract_id, seed)
+					if (!_seeds_list[seed].confirm_sended_blockchain) {
+						this.addTaskSendRandom(game_code, contract_id, seed)
+					}
 				}
 			})
 		})
@@ -596,6 +598,10 @@ class Games {
 			delete( _pendings_list[address+'_'+seed] )
 			callback()
 		})
+	}
+
+	isValidSeed(seed){
+		return (seed.length==66)
 	}
 
 

@@ -82,6 +82,8 @@
     "collectCoverageFrom": [
       "src/**/*.{js,tag}"
     ],
+    "verbose": true,
+    "moduleDirectories": ["node_modules", "src"],
     "setupFiles": [
       "<rootDir>/scripts/config/polyfills.js"
     ],
