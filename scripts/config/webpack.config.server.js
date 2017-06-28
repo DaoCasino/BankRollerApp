@@ -80,13 +80,24 @@ module.exports = {
 				}
 			},
 			{
-				test: /\.(js|tag)$/,
+				test: /\.js$/,
 				include: paths.appSrc,
 				loader: 'babel',
 				query: {
-					presets: ['es2015-riot'],
+					presets: ['es2015'],
 				}
 			},
+			{
+				test: /\/bufferutil\/fallback.js$/,
+				loader: 'babel-loader',
+				options: { presets: ['es2015'] }
+			},
+			{
+				test: /\/utf-8-validate\/fallback.js$/,
+				loader: 'babel-loader',
+				options: { presets: ['es2015'] }
+			},
+
 			{
 				test: /\.json$/,
 				loader: 'json'
