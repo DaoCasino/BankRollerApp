@@ -3,6 +3,7 @@ import _config    from 'app.config'
 import DB         from './DB/DB'
 import Eth        from './Eth/Eth'
 import Api        from './Api'
+import Rtc        from './rtc'
 import Notify     from './notify'
 
 import bigInt     from 'big-integer'
@@ -35,6 +36,33 @@ class Games {
 			if (!game || !game_id) { return }
 			_games[ game_id ] = game
 		})
+	}
+
+	startMesh(){
+		let user_id = Eth.Wallet.get().openkey || false
+		this.RTC = new Rtc(user_id)
+
+		DB.data.get('Games').map().on((game, game_id)=>{ if (game) {
+			this.RTC.subscribe(game.contract_id, data => {
+				if (!data || !data.action || !data.address) { return }
+				if (data.seed && data.action == 'get_random') {
+
+					this.sendRandom2Server(data.game_code, data.address, data.seed)
+				}
+			})
+		}})
+
+
+		setInterval(()=>{
+			for(let k in _games){
+				let game = _games[k]
+				this.RTC.sendMsg({
+					action:    'bankroller_active',
+					game_code: game.code,
+					address:   game.contract_id,
+				})
+			}
+		}, 3500)
 	}
 
 	// Subscribe to data changes
@@ -388,12 +416,14 @@ class Games {
 				Eth.setCurBlock(item.blockNumber)
 
 				let seed = item.data
-				if (!_seeds_list[seed]) {
-					_seeds_list[seed] = { contract:contract_id }
-				}
+				if (this.isValidSeed(seed)) {
+					if (!_seeds_list[seed]) {
+						_seeds_list[seed] = { contract:contract_id }
+					}
 
-				if (!_seeds_list[seed].confirm_sended_blockchain) {
-					this.addTaskSendRandom(game_code, contract_id, seed)
+					if (!_seeds_list[seed].confirm_sended_blockchain) {
+						this.addTaskSendRandom(game_code, contract_id, seed)
+					}
 				}
 			})
 		})
@@ -547,15 +577,25 @@ class Games {
 		this.checkPending(game_code, address, seed, ()=>{
 			this.getConfirmNumber(game_code, seed, (confirm, PwDerivedKey)=>{
 
-				Api.sendConfirm(address, seed, confirm).then(()=>{
-					_seeds_list[seed].confirm_server_time   = new Date().getTime()
-					_seeds_list[seed].confirm               = confirm
-					_seeds_list[seed].confirm_server        = confirm
-					_seeds_list[seed].confirm_sended_server = true
+				if (this.RTC) {
+					this.RTC.sendMsg({
+						action:    'send_random',
+						game_code: game_code,
+						address:   address,
+						seed:      seed,
+						random:    confirm,
+					})
+				}
 
-					DB.data.get('seeds_list').get(seed).put(_seeds_list[seed])
-					/* gunjs bugfix =) */ DB.data.get('seeds_list').map().on( (a,b)=>{ })
-				})
+				Api.sendConfirm(address, seed, confirm).then(()=>{ })
+
+				_seeds_list[seed].confirm_server_time   = new Date().getTime()
+				_seeds_list[seed].confirm               = confirm
+				_seeds_list[seed].confirm_server        = confirm
+				_seeds_list[seed].confirm_sended_server = true
+
+				DB.data.get('seeds_list').get(seed).put(_seeds_list[seed])
+				/* gunjs bugfix =) */ DB.data.get('seeds_list').map().on( (a,b)=>{ })
 			})
 		})
 	}
@@ -584,10 +624,14 @@ class Games {
 			'to':   address,
 			'data': '0x' + Eth.hashName('listGames(bytes32)') + seed.substr(2)
 		}, 'pending'], 0).then( response => {
-			if (!response.result){ return }
+			if (!response.result){
+				setTimeout(()=>{ this.checkPending(game_code, address, seed, callback) }, 1000)
+				return
+			}
 			let resdata = response.result.split('0').join('')
 
 			if (resdata.length < 5) {
+				setTimeout(()=>{ this.checkPending(game_code, address, seed, callback) }, 1000)
 				_seeds_list[seed].pending = false
 				return
 			}
@@ -596,6 +640,10 @@ class Games {
 			delete( _pendings_list[address+'_'+seed] )
 			callback()
 		})
+	}
+
+	isValidSeed(seed){
+		return (seed.length==66)
 	}
 
 

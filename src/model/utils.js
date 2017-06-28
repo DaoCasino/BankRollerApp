@@ -1,4 +1,6 @@
+const web3_sha3 = require('web3/lib/utils/sha3.js')
 
+export const sha3 = web3_sha3
 
 export const toFixed = (value, precision) => {
 	precision = Math.pow(10, precision)
@@ -42,4 +44,19 @@ export const buf2hex = buffer => {
 }
 export const buf2bytes32 = buffer => {
 	return '0x'+buf2hex(buffer)
+}
+
+export const makeSeed = () => {
+	var str = '0x'
+	var possible = 'abcdef0123456789'
+
+	for (var i = 0; i < 64; i++) {
+		if ( new Date().getTime() % 2 == 0) {
+			str += possible.charAt(Math.floor(Math.random() * possible.length))
+		} else {
+			str += possible.charAt(Math.floor(Math.random() * (possible.length - 1)))
+		}
+	}
+
+	return '0x' + web3_sha3(numToHex(str))
 }

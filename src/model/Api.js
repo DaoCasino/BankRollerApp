@@ -35,7 +35,12 @@ class Api {
 			game:    game_code,
 			version: game_version,
 		}, 'proxy.php').then(r => {
-			return r.json()
+			let res = {}
+			try {
+				res = r.json()
+			} catch(e) {
+			}
+			return res
 		})
 	}
 

@@ -143,13 +143,33 @@ module.exports = {
 			},
       // Process JS with Babel.
 			{
-				test: /\.(js|tag)$/,
+				test: /\.tag$/,
 				include: paths.appSrc,
 				loader: 'babel',
 				query: {
 					presets: ['es2015-riot'],
 				}
 			},
+			{
+				test: /\.js$/,
+				include: paths.appSrc,
+				loader: 'babel',
+				query: {
+					presets: ['es2015'],
+				}
+			},
+
+			{
+				test: /\/bufferutil\/fallback.js$/,
+				loader: 'babel-loader',
+				options: { presets: ['es2015'] }
+			},
+			{
+				test: /\/utf-8-validate\/fallback.js$/,
+				loader: 'babel-loader',
+				options: { presets: ['es2015'] }
+			},
+
       // The notation here is somewhat confusing.
       // "postcss" loader applies autoprefixer to our CSS.
       // "css" loader resolves paths in CSS and adds assets as dependencies.
@@ -236,19 +256,21 @@ module.exports = {
     // Try to dedupe duplicated modules, if any:
 		new webpack.optimize.DedupePlugin(),
     // Minify the code.
-		new webpack.optimize.UglifyJsPlugin({
-			compress: {
-				screw_ie8: true, // React doesn't support IE8
-				warnings: false
-			},
-			mangle: {
-				screw_ie8: true
-			},
-			output: {
-				comments: false,
-				screw_ie8: true
-			}
-		}),
+		// new webpack.optimize.UglifyJsPlugin({
+		// 	compress: {
+		// 		warnings: false,
+		// 		// Disabled because of an issue with Uglify breaking seemingly valid code:
+		// 		// https://github.com/facebookincubator/create-react-app/issues/2376
+		// 		// Pending further investigation:
+		// 		// https://github.com/mishoo/UglifyJS2/issues/2011
+		// 		comparisons: false,
+		// 	},
+		// 	output: {
+		// 		comments: false,
+		// 	},
+		// 	sourceMap: false,
+		// 	mangle: false
+		// }),
     // Note: this won't work without ExtractTextPlugin.extract(..) in `loaders`.
 		new ExtractTextPlugin('static/css/[name].[contenthash:8].css'),
     // Generate a manifest file which contains a mapping of all asset filenames
