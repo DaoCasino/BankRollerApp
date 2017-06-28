@@ -46,19 +46,8 @@ class Games {
 			this.RTC.subscribe(game.contract_id, data => {
 				if (!data || !data.action || !data.address) { return }
 				if (data.seed && data.action == 'get_random') {
-					// console.log('getConfirmNumber', data.game_code, data.seed)
 
 					this.sendRandom2Server(data.game_code, data.address, data.seed)
-
-					// this.getConfirmNumber(data.game_code, data.seed, (confirm, PwDerivedKey)=>{
-					// 	this.RTC.sendMsg({
-					// 		action:    'send_random',
-					// 		game_code: data.game_code,
-					// 		address:   data.address,
-					// 		seed:      data.seed,
-					// 		random:    confirm,
-					// 	})
-					// })
 				}
 			})
 		}})
