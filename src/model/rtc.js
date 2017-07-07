@@ -1,26 +1,60 @@
 import * as Utils from './utils'
 
-let MeshMsgs    = {}
+import DB         from './DB/DB'
+
+const signalserver = 'https://ws.dao.casino/mesh/'
+
 let _subscribes = {}
 
-export default class RTC {
-	constructor(user_id=false, room='daocasino-games') {
+let DB_msgs = DB.data.get('RTC').get('msgs')
+let   _msgs = []
 
+export default class RTC {
+	constructor(user_id=false, room='daocasino-games6') {
 		this.user_id = user_id || Utils.makeSeed()
 
-		const qc =  require('rtc-quickconnect')('http://46.101.244.101:8997/',{
+		this.channel = false
+		this.connect(room)
+
+		DB_msgs.val()
+		DB_msgs.map().val((time,seed)=>{
+			_msgs.push(seed)
+			if ( Math.abs(time - new Date().getTime()) > 5*60*1000 ) {
+				DB_msgs.get(seed).put(null)
+			}
+		})
+	}
+
+	connect(room){
+		const mesh = require('rtc-mesh')
+		const qc   = require('rtc-quickconnect')
+
+		this.channel = mesh( qc(signalserver, {
+			// debug:      true,
 			room:       room,
 			iceServers: require('freeice')()
-		})
+		}))
 
-		const mesh = require('rtc-mesh')
+		this.channel.on('change', (key, value) => {
+			let data = JSON.parse(value)
 
-		MeshMsgs = mesh(qc)
+			if (!data.seed || _msgs.indexOf(data.seed) > -1) { return };
+			_msgs.push(data.seed)
+			DB_msgs.get(data.seed).put( new Date().getTime() )
 
-		MeshMsgs.on('change', function(key, data) {
-			if (data.address && _subscribes[data.address]) {
+			if (data.user_id && data.user_id==this.user_id) {
+				return
+			}
+
+			if (data.address && (_subscribes[data.address])) {
 				for(let k in _subscribes[data.address]){
 					_subscribes[data.address][k](data)
+				}
+			}
+
+			if (_subscribes['all']) {
+				for(let k in _subscribes['all']){
+					_subscribes['all'][k](data)
 				}
 			}
 		})
@@ -40,6 +74,12 @@ export default class RTC {
 
 
 	sendMsg(data){
-		MeshMsgs.set(this.user_id, data)
+		if (!this.channel) {
+			setTimeout(()=>{ this.sendMsg(data) },1000)
+			return
+		}
+		data.user_id = this.user_id
+
+		this.channel.set(this.user_id, JSON.stringify(data))
 	}
 }

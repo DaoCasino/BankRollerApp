@@ -8,9 +8,56 @@ import route    from 'riot-route'
 		this.games     = {}
 		this.seeds     = []
 
+		this.bj_games   = {}
+		this.slot_games = {}
+
+		this.on('mount', ()=>{
+
+			if (Games.BJ) {
+			setInterval(()=>{
+				for(let k in Games.BJ.Games){
+					let g = Games.BJ.Games[k]
+
+					this.bj_games[k] = g
+
+					let cards_str = ''
+					let game = g.getGame()
+
+					let cards = {
+						my:    game.curGame.arMyCards,
+						split: game.curGame.arMySplitCards,
+						house: game.curGame.arHouseCards,
+					}
+
+					for(let c in cards){
+						cards_str += ' | '+c+':'
+						cards[c].forEach(num=>{
+							cards_str += ' ['+g.getValCards(num)+'] '
+						})
+					}
+
+					this.bj_games[k].cards = cards_str
+				}
+				this.update()
+			}, 3000)
+			};
+
+
+			if (Games.Slots) {
+				setInterval(()=>{
+					for(let k in Games.Slots.Games){
+						this.slot_games[k] = Games.Slots.Games[k].getResult()
+					}
+					this.update()
+				}, 300)
+			};
+
+		})
+
 		this.on('update', ()=>{
 			// console.log('list update')
 		})
+
 		this.upd = ()=>{
 			clearTimeout(this.updt)
 			this.updt = setTimeout(()=>{
@@ -158,8 +205,52 @@ import route    from 'riot-route'
 		</tbody>
 		</table>
 
+		<table if={Object.keys(bj_games).length} >
+			<caption>BJ games</caption>
+
+			<thead>
+				<tr>
+					<th>cards</th>
+					<th>end</th>
+					<th>money</th>
+					<th>win</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr each={g in bj_games}>
+					<td>{g.cards}</td>
+					<td>{g.getGame().result}</td>
+					<td>{g.getResult().profit*-1}</td>
+					<td>m:{g.getResult().main}, s:{g.getResult().split}</td>
+				</tr>
+			</tbody>
+		</table>
+
+		<table if={Object.keys(slot_games).length} >
+			<caption>SLOT games</caption>
+
+			<thead>
+				<tr>
+					<th>rnd</th>
+					<th>user bets</th>
+					<th>user win</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr each={g in slot_games}>
+					<td>{g.rnd}</td>
+					<td>{g.balance}</td>
+					<td>
+						<span if={g.result}>win</span>
+						<span if={!g.result}>loose</span>
+					</td>
+				</tr>
+			</tbody>
+
+		</table>
+
 		<table if={Object.keys(games).length && Object.keys(seeds).length} class="seeds">
-			<caption>Transactions</caption>
+			<caption>DICE Games</caption>
 			<thead>
 				<tr>
 					<th>TX</th>

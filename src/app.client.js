@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 
 	if (window.App) {
 		window.App.view = view
-
+		window.Games = Games
 		setTimeout(()=>{
 			Games.startMesh()
 		}, 500)

@@ -2,8 +2,10 @@ const _config = require('./config.electron.js')
 const http    = require('http')
 const path    = require('path')
 const fs      = require('fs')
-const Gun     = require('gun')
 
+const Gun       = require('gun')
+// const levelup   = require('levelup')
+// const leveldown = require('leveldown')
 
 /*
  * HTTP static file server
@@ -54,8 +56,10 @@ let server = http.createServer(function (request, response) {
 server.listen(_config.http_port)
 
 
-
 global.GunDB  = Gun({file: './database.json', web: server })
+// require('gun-level')
+// global.GunDB  = Gun({file: false, level:levelup('data', { db: leveldown }), web: server })
+
 global.fetch  = require('node-fetch')
 global.window = {}
 

@@ -17,6 +17,18 @@ import * as Utils from './utils'
 
 import {AsyncPriorityQueue, AsyncTask} from 'async-priority-queue'
 
+
+let BJ = false
+if (process.env.NODE_ENV !== 'server') {
+	BJ = require('./games/BJ.js')
+}
+
+let Slots = false
+if (process.env.NODE_ENV !== 'server') {
+	Slots = require('./games/slots.js')
+}
+
+
 let _games         = {}
 let _seeds_list    = {}
 let _pendings_list = {}
@@ -36,6 +48,13 @@ class Games {
 			if (!game || !game_id) { return }
 			_games[ game_id ] = game
 		})
+
+		if (BJ) {
+			this.BJ = BJ.default
+		}
+		if (Slots) {
+			this.Slots = Slots.default
+		}
 	}
 
 	startMesh(){
@@ -43,15 +62,22 @@ class Games {
 		this.RTC = new Rtc(user_id)
 
 		DB.data.get('Games').map().on((game, game_id)=>{ if (game) {
+			if (game.code=='daochannel_v1') {
+				return
+			}
+
 			this.RTC.subscribe(game.contract_id, data => {
 				if (!data || !data.action || !data.address) { return }
-				if (data.seed && data.action == 'get_random') {
+				// if (data.time && data.ttl && (data.time + data.ttl*1000) > new Date().getTime()) {
+				// 	return
+				// }
 
+
+				if (data.seed && data.action == 'get_random') {
 					this.sendRandom2Server(data.game_code, data.address, data.seed)
 				}
 			})
 		}})
-
 
 		setInterval(()=>{
 			for(let k in _games){
@@ -131,12 +157,6 @@ class Games {
 		_games[game_to_deploy_id].need_deploy = false
 		DB.data.get('Games').get(game_to_deploy_id).get('need_deploy').put(false)
 		DB.data.get('Games').get(game_to_deploy_id).get('deploying').put(true)
-
-
-		// BJ
-		// if (game_to_deploy.code.indexOf('blackjack') ) {
-			// return
-		// }
 
 		if (game_to_deploy.code.indexOf('dice') != -1) {
 			Eth.deployGameContract(
@@ -408,6 +428,10 @@ class Games {
 	}
 
 	BlockchainConfirm(contract_id, game_code){
+		if (game_code=='daochannel_v1') {
+			return
+		}
+
 		// Get wait seeds list from contract logs
 		this.getBlockchainLogs(contract_id, seeds => {
 
@@ -573,6 +597,7 @@ class Games {
 		if (_seeds_list[seed] && _seeds_list[seed].confirm_sended_server) {
 			return
 		}
+
 
 		this.checkPending(game_code, address, seed, ()=>{
 			this.getConfirmNumber(game_code, seed, (confirm, PwDerivedKey)=>{

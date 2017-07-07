@@ -70,6 +70,11 @@ const games = {
 	blackjack_v1: { code: 'blackjack_v1',
 		name: 'BlackjackGame',
 		url:  'http://blackjackgame.dao.casino/games/bj/',
+	},
+
+	daochannel_v1: { code: 'daochannel_v1',
+		name: 'BlackjackGame',
+		url:  'http://blackjackgame.dao.casino/games/bj/',
 	}
 }
 

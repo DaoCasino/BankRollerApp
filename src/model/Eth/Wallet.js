@@ -108,6 +108,11 @@ export default class Wallet {
 	}
 
 	create(callback){
+		if (this.create_proccess) {
+			return
+		};
+
+		this.create_proccess = true
 		console.log('Create Wallet')
 
 		let wallet = {}
@@ -200,9 +205,8 @@ export default class Wallet {
 			let options = {
 				to:       contract_address,
 				nonce:    nonce,
-				// gasPrice: '0x737be7600',
 				gasPrice: '0x'+Utils.numToHex(40000000000),
-				gasLimit: '0x'+Utils.numToHex(4700000),
+				gasLimit: '0x'+Utils.numToHex(600000),
 				value:    0,
 			}
 
