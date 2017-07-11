@@ -10,7 +10,9 @@ export default new class Channel {
 	}
 
 	close(contractAddress=false, playerAddress=false, deposit=false, callback, repeat=3){
-		if (!contractAddress || !playerAddress || !deposit) {
+		console.log('CLOSE', contractAddress, 'closeChannel', playerAddress, deposit)
+
+		if (!contractAddress || !playerAddress || deposit==false) {
 			return
 		}
 
@@ -18,9 +20,9 @@ export default new class Channel {
 
 		deposit = this.BETs( Math.abs(deposit) )
 
-		console.log('CLOSE', contractAddress, 'closeChannel', playerAddress, deposit, add)
 
 		this.callFunc(contractAddress, 'closeChannel', [playerAddress, deposit, add], response => {
+			console.log('response', response)
 			if (!response || !response.result) {
 				repeat--
 				if (repeat > 0) {
@@ -35,14 +37,14 @@ export default new class Channel {
 		})
 	}
 
-	isOpenChannel(contractAddress, playerAddress=false, callback, repeat=2){ setTimeout(()=>{
+	isOpenChannel(contractAddress, playerAddress=false, callback, repeat=5){ setTimeout(()=>{
 		if (!playerAddress) { return }
 		repeat--
 
 		Eth.RPC.request('call', [{
 			'to':   contractAddress,
 			'data': '0x' + Eth.hashName('getOpenChannel(address)') + Utils.pad(playerAddress.substr(2), 64)
-		}, 'pending']).then( response => {
+		}, 'latest']).then( response => {
 			let opened = true
 
 			if (response && response.result) {

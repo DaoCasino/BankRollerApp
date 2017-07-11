@@ -6,7 +6,7 @@ const signalserver = 'https://ws.dao.casino/mesh/'
 
 let _subscribes = {}
 
-let DB_msgs = DB.data.get('RTC').get('msgs')
+let DB_msgs = DB.data.get('RTC_msgs')
 let   _msgs = []
 
 export default class RTC {
@@ -16,11 +16,10 @@ export default class RTC {
 		this.channel = false
 		this.connect(room)
 
-		DB_msgs.val()
 		DB_msgs.map().val((time,seed)=>{
 			_msgs.push(seed)
 			if ( Math.abs(time - new Date().getTime()) > 5*60*1000 ) {
-				DB_msgs.get(seed).put(null)
+				setTimeout(()=>{ DB_msgs.get(seed).put(null) }, 100)
 			}
 		})
 	}
@@ -38,7 +37,11 @@ export default class RTC {
 		this.channel.on('change', (key, value) => {
 			let data = JSON.parse(value)
 
-			if (!data.seed || _msgs.indexOf(data.seed) > -1) { return };
+			if (!data.seed || _msgs.indexOf(data.seed) > -1) {
+				return
+			};
+
+
 			_msgs.push(data.seed)
 			DB_msgs.get(data.seed).put( new Date().getTime() )
 

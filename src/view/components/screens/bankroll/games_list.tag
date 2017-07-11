@@ -15,8 +15,9 @@ import route    from 'riot-route'
 
 			if (Games.BJ) {
 			setInterval(()=>{
-				for(let k in Games.BJ.Games){
-					let g = Games.BJ.Games[k]
+				for(let u in Games.BJ.Games){
+				for(let k in Games.BJ.Games[u]){
+					let g = Games.BJ.Games[u][k]
 
 					this.bj_games[k] = g
 
@@ -37,6 +38,7 @@ import route    from 'riot-route'
 					}
 
 					this.bj_games[k].cards = cards_str
+				}
 				}
 				this.update()
 			}, 3000)

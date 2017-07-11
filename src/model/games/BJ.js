@@ -1,20 +1,22 @@
 /**
  * Created by DAO.casino
  * BlackJack
- * v 1.0.2
+ * v 1.0.3
  */
-
-var LogicJS = function(params){
+const LogicJS = function(params){
 	var self = this
 
-	var BLACKJACK = 21
+	const BLACKJACK = 21
 
-	var DEAL      = 0
-	var HIT       = 1
-	var STAND     = 2
-	var SPLIT     = 3
-	var DOUBLE    = 4
-	var INSURANCE = 5
+	const DEAL      = 0
+	const HIT       = 1
+	const STAND     = 2
+	const SPLIT     = 3
+	const DOUBLE    = 4
+	const INSURANCE = 5
+
+	const COUNT_DECKS = 4
+	const COUNT_CARDS = 52
 
 	var _money       = 0
 	var _balance     = 0
@@ -29,6 +31,8 @@ var LogicJS = function(params){
 	var _arMyPoints      = []
 	var _arMySplitPoints = []
 	var _arHousePoints   = []
+	var _arDecks         = []
+	var _arCards         = []
 
 	var _bStand          = false
 	var _bStandNecessary = false
@@ -51,18 +55,22 @@ var LogicJS = function(params){
 						curGame:{},
 						betGame:0,
 						betSplitGame:0,
-						money:_money}
-	var _objResult = {main:'', split:'', betMain:0, betSplit:0, profit:0}
+						money:_money,
+						insurance:false}
+	var _objResult = {main:'', split:'', betMain:0, betSplit:0, profit:0, mixing:false}
+
+	mixDeck()
 
 	self.bjDeal = function(_s, _bet){
 		_idGame ++
-		_objResult = {main:'', split:'', betMain:0, betSplit:0, profit:-_bet}
+		_objResult = {main:'', split:'', betMain:0, betSplit:0, profit:-_bet, mixing:false}
 		_objSpeedGame.result = false
 		_objSpeedGame.curGame = {}
 		_objSpeedGame.betGame = _bet
 		_objSpeedGame.betSplitGame = 0
 		_money -= _bet
 		_objSpeedGame.money = _money
+		_objSpeedGame.insurance = false
 		_arMyCards = []
 		_arMySplitCards = []
 		_arHouseCards = []
@@ -128,6 +136,23 @@ var LogicJS = function(params){
 
 	}
 
+	self.makeID = function(){
+		var count = 64
+		var str = '0x'
+		var possible = 'abcdef0123456789'
+		var t = String(getTimer())
+		count -= t.length
+		str += t
+
+		for( var i=0; i < count; i++ ){
+			str += possible.charAt(Math.floor(Math.random() * possible.length))
+		}
+
+		str = '0x' + web3_sha3(numToHex(str))
+
+		return str
+	}
+
 	self.getGame = function(){
 		return _objSpeedGame
 	}
@@ -165,6 +190,15 @@ var LogicJS = function(params){
 		return spriteName
 	}
 
+	function mixDeck(){
+		_arCards = []
+		_objResult.mixing = true
+
+		for(var i=0; i<52; i++){
+			_arDecks[i] = 0
+		}
+	}
+
 	function refreshGame(_s){
 		checkResult(true, _s)
 		if(_arMySplitCards.length > 0){
@@ -181,7 +215,11 @@ var LogicJS = function(params){
 		}
 
 		if(_objSpeedGame.result){
-			// console.log('Game Over', _objResult.profit, _money)
+			// console.log("Game Over", _objResult.profit, _money);
+			var prcnt = Math.ceil(COUNT_DECKS*COUNT_CARDS*0.25)
+			if(_arCards.length > prcnt){
+				mixDeck()
+			}
 		}
 	}
 
@@ -325,19 +363,40 @@ var LogicJS = function(params){
 			if(isMain){
 				_objResult.main = state
 				_objResult.betMain = betWin
-				// console.log('result: Main', state, '_money = '+betWin)
+				// console.log("result: Main", state, "_money = "+betWin);
 			} else {
 				_objResult.split = state
 				_objResult.betSplit = betWin
-				// console.log('result: Split', state, '_money = '+betWin)
+				// console.log("result: Split", state, "_money = "+betWin);
 			}
 		}
+	}
+
+	function checkCard(rand){
+		if(_arCards.length > 40){
+			mixDeck()
+		}
+
+		if(_arDecks[rand] < COUNT_DECKS){
+		} else {
+			for(var i=0; i<52; i++){
+				if(_arDecks[i] < COUNT_DECKS){
+					rand = i
+					break
+				}
+			}
+		}
+
+		return rand
 	}
 
 	function createCard(cardNumber){
 		var hash = ABI.soliditySHA3(['bytes32'],[ cardNumber ]).toString('hex')
 		hash = hash.substr(hash.length-2, hash.length) // uint8
 		var rand = bigInt(hash,16).divmod(52).remainder.value
+		rand = checkCard(rand)
+		_arDecks[rand] ++
+		_arCards.push(rand)
 		return rand
 	}
 
@@ -435,9 +494,14 @@ var LogicJS = function(params){
 		return spriteName
 	}
 
+	function getTimer(){
+		var d = new Date()
+		var n = d.getTime()
+		return n
+	}
+
 	return self
 }
-
 
 
 import ABI        from 'ethereumjs-abi'
@@ -449,8 +513,10 @@ import * as Utils from '../utils'
 import Channel from '../../Channel'
 
 const contractAddress = '0x89fe5E63487b2d45959502bEB1dac4d5A150663e'
+const game_code       = 'BJ'
 
 let Games = []
+
 export default new class BJgame {
 	constructor() {
 
@@ -473,8 +539,7 @@ export default new class BJgame {
 		this.RTC = new Rtc(user_id)
 
 		this.RTC.subscribe(contractAddress, data => {
-			if (!data || !data.action || !data.game_code || data.game_code!='BJ') { return }
-			console.log(data)
+			if (!data || !data.action || !data.game_code || data.game_code!=game_code) { return }
 
 			if (data.action=='get_random') {
 				this.sendRandom(data)
@@ -487,42 +552,74 @@ export default new class BJgame {
 			}
 
 
-			if (!data.game_id) { return }
-			let game_id = data.user_id+'/'+data.game_id
+			if (!data.game_id || !data.user_id) { return }
+
 			if (data.action=='call_game_function') {
-				this.callGameFunction(game_id, data.name, data.args)
+				this.callGameFunction(data.user_id, data.game_id, data.name, data.args)
 			}
 		})
 	}
 
 	endGame(params){
 		if (!this.endGamesMsgs) { this.endGamesMsgs = {} }
+
+		console.log('this.endGamesMsgs[params.seed', this.endGamesMsgs[params.seed])
+
 		if (this.endGamesMsgs[params.seed]) { return }
 		this.endGamesMsgs[params.seed] = true
 
-		Channel.close(params.address, params.account, params.deposit, res=>{
-			params.action = 'game_channel_closed'
-			params.result = true
-			this.RTC.sendMsg(params)
-		})
-	}
+		let user_id = params.user_id
 
-	callGameFunction(game_id, function_name, function_args){
-		// console.log(game_id, function_name, function_args)
-		if (!Games[game_id]) {
-			Games[game_id] = new LogicJS()
+		console.log('endGame')
+
+		let profit = 0
+		for(let k in Games[user_id]){
+			profit += Games[user_id][k].getResult().profit
+		}
+		delete(Games[user_id])
+
+		console.log('bankroll profit', profit)
+		console.log('user profit', params.profit)
+
+		params.action = 'game_channel_closed'
+
+		if (params.profit == profit) {
+			console.log('Channel.close', params)
+			Channel.close(params.address, params.account, (params.profit/100000000), res => {
+				console.log(res)
+				params.result = true
+				console.log('sendMsg', params)
+				this.RTC.sendMsg(params)
+			})
+			return
 		}
 
-		if (!Games[game_id][function_name]) {
+		params.result = {
+			error  : 'Invalid profit',
+			profit : profit
+		}
+		this.RTC.sendMsg(params)
+	}
+
+	callGameFunction(user_id, game_id, function_name, function_args){
+		// console.log(game_id, function_name, function_args)
+		if (!Games[user_id]) {
+			Games[user_id] = {}
+		}
+		if (!Games[user_id][game_id]) {
+			Games[user_id][game_id] = new LogicJS()
+		}
+
+		if (!Games[user_id][game_id][function_name]) {
 			return
 		}
 
 		function_args = this.prepareArgs(function_args)
 
 		if (function_args) {
-			Games[game_id][function_name].apply(null, function_args)
+			Games[user_id][game_id][function_name].apply(null, function_args)
 		} else {
-			Games[game_id][function_name]()
+			Games[user_id][game_id][function_name]()
 		}
 
 	}
@@ -537,6 +634,7 @@ export default new class BJgame {
 			if (arg && (''+arg).indexOf('confirm')!=-1) {
 				let seed = arg.split('confirm(')[1].split(')')[0]
 				arg = this.confirm(seed)
+				console.log('function confirm', seed, this.confirm(seed))
 			}
 			new_args.push(arg)
 		})
@@ -546,33 +644,39 @@ export default new class BJgame {
 	sendRandom(data){
 		if (!data.seed) {
 			return
-		};
+		}
+
 		this.RTC.sendMsg({
 			action:    'send_random',
-			game_code: 'daochannel_v1',
+			game_code: game_code,
 			address:   contractAddress,
 			seed:      data.seed,
 			random:    this.confirm(data.seed),
 		})
 	}
 
-	confirm(seed=false){
-		if (!seed) {
+	confirm(rawMsg=false){
+		if (!rawMsg) {
 			return
 		}
-		let VRS = Eth.Wallet.lib.signing.signMsgHash(
+
+		// let VRS = Eth.Wallet.lib.signing.signMsgHash(
+		let VRS = Eth.Wallet.lib.signing.signMsg(
 			Eth.Wallet.getKs(),
 			this.PwDerivedKey,
-			seed,
+			rawMsg,
 			Eth.Wallet.get().openkey
 		)
 
 		let signature = Eth.Wallet.lib.signing.concatSig(VRS)
 
-		let v = Utils.hexToNum(signature.slice(130, 132)) // 27 or 28
-		let r = signature.slice(0, 66)
-		let s = '0x' + signature.slice(66, 130)
+		// let v = Utils.hexToNum(signature.slice(130, 132)) // 27 or 28
+		// let r = signature.slice(0, 66)
+		// let s = '0x' + signature.slice(66, 130)
 
-		return s
+		// let myopenkey = Eth.Wallet.lib.recoverAddress(rawMsg, v, r, s)
+
+
+		return signature
 	}
 }

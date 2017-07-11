@@ -18,6 +18,8 @@ import * as Utils from './utils'
 import {AsyncPriorityQueue, AsyncTask} from 'async-priority-queue'
 
 
+let skip_games = ['daochannel_v1', 'BJ', 'Slot']
+
 let BJ = false
 if (process.env.NODE_ENV !== 'server') {
 	BJ = require('./games/BJ.js')
@@ -29,9 +31,13 @@ if (process.env.NODE_ENV !== 'server') {
 }
 
 
+
+
+
 let _games         = {}
 let _seeds_list    = {}
 let _pendings_list = {}
+
 
 class Games {
 	constructor(){
@@ -586,6 +592,10 @@ class Games {
 	}
 
 	sendRandom2Server(game_code, address, seed){
+		if (skip_games.indexOf(game_code) > -1) {
+			return
+		}
+
 		if (!_seeds_list[seed]) {
 			_seeds_list[seed] = {
 				contract:address,

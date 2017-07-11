@@ -18,7 +18,7 @@ var LogicJS = function (params={}) {
 		_objSpeedGame.rnd = iRandSpin
 
 		var profit = -bet
-		if (iRandSpin <= 5) {
+		if (iRandSpin <= 50) {
 			_objSpeedGame.result = true
 
 			profit = bet
@@ -46,6 +46,7 @@ import * as Utils from '../utils'
 import Channel from '../../Channel'
 
 const contractAddress = '0x89fe5E63487b2d45959502bEB1dac4d5A150663e'
+const game_code       = 'Slot'
 
 let Games = []
 
@@ -73,7 +74,7 @@ export default new class SlotGame {
 		this.RTC = new Rtc(user_id)
 
 		this.RTC.subscribe(contractAddress, data => {
-			if (!data || !data.action || !data.game_code || data.game_code!='Slot') { return }
+			if (!data || !data.action || !data.game_code || data.game_code!=game_code) { return }
 			console.log(data)
 			if (seeds.indexOf(data.seed)>-1) {
 				return
@@ -104,9 +105,9 @@ export default new class SlotGame {
 		if (this.endGamesMsgs[params.seed]) { return }
 		this.endGamesMsgs[params.seed] = true
 
-		console.log('CHANNEL.CLOSE')
-		return
-		Channel.close(params.address, params.account, params.deposit, res=>{
+		console.log('SLot endGame CHANNEL.CLOSE')
+		console.log(params.address, params.account, params.profit)
+		Channel.close(params.address, params.account, params.profit, res=>{
 			params.action = 'game_channel_closed'
 			params.result = true
 			this.RTC.sendMsg(params)
@@ -160,7 +161,7 @@ export default new class SlotGame {
 	}
 
 	confirm(seed){
-		let VRS = Eth.Wallet.lib.signing.signMsgHash(
+		let VRS = Eth.Wallet.lib.signing.signMsg(
 			Eth.Wallet.getKs(),
 			this.PwDerivedKey,
 			seed,
@@ -169,10 +170,10 @@ export default new class SlotGame {
 
 		let signature = Eth.Wallet.lib.signing.concatSig(VRS)
 
-		let v = Utils.hexToNum(signature.slice(130, 132)) // 27 or 28
-		let r = signature.slice(0, 66)
-		let s = '0x' + signature.slice(66, 130)
+		// let v = Utils.hexToNum(signature.slice(130, 132)) // 27 or 28
+		// let r = signature.slice(0, 66)
+		// let s = '0x' + signature.slice(66, 130)
 
-		return s
+		return signature
 	}
 }
