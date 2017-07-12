@@ -20,21 +20,9 @@ import {AsyncPriorityQueue, AsyncTask} from 'async-priority-queue'
 
 let skip_games = ['daochannel_v1', 'BJ', 'Slot']
 
-let BJ = false
-if (process.env.NODE_ENV !== 'server') {
-	BJ = require('./games/BJ.js')
-}
-
-let Slots = false
-if (process.env.NODE_ENV !== 'server') {
-	Slots = require('./games/slots.js')
-}
-
-
-
-
 
 let _games         = {}
+let _gamesLogic    = {}
 let _seeds_list    = {}
 let _pendings_list = {}
 
@@ -54,13 +42,25 @@ class Games {
 			if (!game || !game_id) { return }
 			_games[ game_id ] = game
 		})
+	}
 
-		if (BJ) {
-			this.BJ = BJ.default
+	startChannelsGames(){
+
+
+		for(let k in _games){
+			let game = _games[k]
+			if (!_gamesLogic[game.code] && _config.games[game.code].channels) {
+				const gameLogic = require('./games/'+game.code+'.js').default
+				_gamesLogic[game.code] = new gameLogic(game.contract_id)
+			}
 		}
-		if (Slots) {
-			this.Slots = Slots.default
-		}
+
+		this.BJ    = _gamesLogic['BJ']
+		this.Slots = _gamesLogic['slot']
+
+		setTimeout(()=>{
+			this.startChannelsGames()
+		}, 10000)
 	}
 
 	startMesh(){
@@ -68,7 +68,7 @@ class Games {
 		this.RTC = new Rtc(user_id)
 
 		DB.data.get('Games').map().on((game, game_id)=>{ if (game) {
-			if (game.code=='daochannel_v1') {
+			if (_config.games[game.code] && _config.games[game.code].channels) {
 				return
 			}
 
@@ -163,6 +163,31 @@ class Games {
 		_games[game_to_deploy_id].need_deploy = false
 		DB.data.get('Games').get(game_to_deploy_id).get('need_deploy').put(false)
 		DB.data.get('Games').get(game_to_deploy_id).get('deploying').put(true)
+
+
+		// Deploy channel
+		if (_config.games[game_to_deploy.code].channels) {
+			Eth.deployChannelContract(
+				_config.contracts[game_to_deploy.code].factory,
+
+				// Deployed!
+				(address)=>{
+					this.add(game_to_deploy_id, game_to_deploy.code, address)
+
+					// add bets to contract
+					Api.addBets(address).then( result => {})
+
+					Notify.send('Contract succefull deployed!', 'Address: '+address)
+				},
+
+				// Pending
+				()=>{
+					DB.data.get('Games').get(game_to_deploy_id).get('deploying').put(false)
+				}
+			)
+
+			return
+		}
 
 		if (game_to_deploy.code.indexOf('dice') != -1) {
 			Eth.deployGameContract(
@@ -321,6 +346,7 @@ class Games {
 				}
 				if (type=='string') {
 					return web3.toAscii(response.result)
+							.replace(/\/g, '')
 							.replace(/\u0007/g, '')
 							.replace(/\u0008/g, '')
 							.replace(/\u0025/g, '')
@@ -434,7 +460,7 @@ class Games {
 	}
 
 	BlockchainConfirm(contract_id, game_code){
-		if (game_code=='daochannel_v1') {
+		if (!_config.games[game_code] || (_config.games[game_code] && _config.games[game_code].channels)) {
 			return
 		}
 
@@ -592,7 +618,10 @@ class Games {
 	}
 
 	sendRandom2Server(game_code, address, seed){
-		if (skip_games.indexOf(game_code) > -1) {
+		if (skip_games.indexOf(game_code) > -1 ) {
+			return
+		}
+		if (!_config.games[game_code] || (_config.games[game_code] && _config.games[game_code].channels)) {
 			return
 		}
 

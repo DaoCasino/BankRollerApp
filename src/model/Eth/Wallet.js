@@ -199,14 +199,14 @@ export default class Wallet {
 	}
 
 	//  Make and Sing contract function transaction
-	signedContractFuncTx(contract_address, contract_abi, function_name, function_args, callback){
+	signedContractFuncTx(contract_address, contract_abi, function_name, function_args, callback, gasLimit=600000){
 		this.getNonce( nonce => {
 
 			let options = {
 				to:       contract_address,
 				nonce:    nonce,
 				gasPrice: '0x'+Utils.numToHex(40000000000),
-				gasLimit: '0x'+Utils.numToHex(600000),
+				gasLimit: '0x'+Utils.numToHex(gasLimit),
 				value:    0,
 			}
 

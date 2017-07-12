@@ -15,6 +15,10 @@ document.addEventListener('DOMContentLoaded',()=>{
 		setTimeout(()=>{
 			Games.startMesh()
 		}, 500)
+
+		setTimeout(()=>{
+			Games.startChannelsGames()
+		}, 1500)
 	}
 })
 

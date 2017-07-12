@@ -520,7 +520,7 @@ var LogicJS = function(params){
 
 
 
-
+const game_code       = 'BJ'
 
 
 
@@ -532,14 +532,12 @@ import * as Utils from '../utils'
 
 import Channel from '../../Channel'
 
-const contractAddress = '0x89fe5E63487b2d45959502bEB1dac4d5A150663e'
-const game_code       = 'BJ'
-
 let Games = []
 let _closing_channels = []
 
-export default new class BJgame {
-	constructor() {
+export default class BJgame {
+	constructor(contractAddress) {
+		this.contractAddress = contractAddress
 
 		Eth.Wallet.getPwDerivedKey( PwDerivedKey => {
 			this.PwDerivedKey = PwDerivedKey
@@ -559,7 +557,7 @@ export default new class BJgame {
 
 		this.RTC = new Rtc(user_id)
 
-		this.RTC.subscribe(contractAddress, data => {
+		this.RTC.subscribe(this.contractAddress, data => {
 			if (!data || !data.action || !data.game_code || data.game_code!=game_code) { return }
 
 			if (data.action=='get_random') {
@@ -718,7 +716,7 @@ export default new class BJgame {
 		this.RTC.sendMsg({
 			action:    'send_random',
 			game_code: game_code,
-			address:   contractAddress,
+			address:   this.contractAddress,
 			seed:      data.seed,
 			random:    this.confirm(data.seed),
 		})
