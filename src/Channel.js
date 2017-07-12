@@ -12,16 +12,16 @@ export default new class Channel {
 	close(contractAddress=false, playerAddress=false, deposit=false, callback, repeat=3){
 		console.log('CLOSE', contractAddress, 'closeChannel', playerAddress, deposit)
 
-		if (!contractAddress || !playerAddress || deposit==false) {
+		if (!contractAddress || !playerAddress) {
 			return
 		}
 
 		let add = ( deposit > 0 )
 
-		deposit = this.BETs( Math.abs(deposit) )
+		let profit = this.BETs( Math.abs(deposit) )
 
 
-		this.callFunc(contractAddress, 'closeChannel', [playerAddress, deposit, add], response => {
+		this.callFunc(contractAddress, 'closeChannel', [playerAddress, profit, add], response => {
 			console.log('response', response)
 			if (!response || !response.result) {
 				repeat--

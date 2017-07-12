@@ -15,11 +15,12 @@ import route    from 'riot-route'
 
 			if (Games.BJ) {
 			setInterval(()=>{
+				this.bj_games = {}
 				for(let u in Games.BJ.Games){
 				for(let k in Games.BJ.Games[u]){
 					let g = Games.BJ.Games[u][k]
 
-					this.bj_games[k] = g
+					this.bj_games[u+'_'+k] = g
 
 					let cards_str = ''
 					let game = g.getGame()
@@ -31,13 +32,18 @@ import route    from 'riot-route'
 					}
 
 					for(let c in cards){
-						cards_str += ' | '+c+':'
+						if (!cards[c] || !cards[c].length) {
+							continue;
+						}
+						cards_str += c+':'
+
 						cards[c].forEach(num=>{
 							cards_str += ' ['+g.getValCards(num)+'] '
 						})
+						cards_str += ' | '
 					}
 
-					this.bj_games[k].cards = cards_str
+					this.bj_games[u+'_'+k].cards = cards_str
 				}
 				}
 				this.update()
@@ -47,12 +53,14 @@ import route    from 'riot-route'
 
 			if (Games.Slots) {
 				setInterval(()=>{
-					for(let k in Games.Slots.Games){
-						this.slot_games[k] = Games.Slots.Games[k].getResult()
+					for(let u in Games.Slots.Games){
+					for(let k in Games.Slots.Games[u]){
+						this.slot_games[u+'_'+k] = Games.Slots.Games[u][k].getResult()
+					}
 					}
 					this.update()
-				}, 300)
-			};
+				}, 2000)
+			}
 
 		})
 
@@ -68,7 +76,6 @@ import route    from 'riot-route'
 		}
 
 		this.on('mount', ()=>{
-			console.log('list mount')
 			this.subscribeGames()
 			this.subscribeSeeds()
 		})
@@ -212,18 +219,28 @@ import route    from 'riot-route'
 
 			<thead>
 				<tr>
+					<th>Channel</th>
 					<th>cards</th>
-					<th>end</th>
-					<th>money</th>
+					<th>game</th>
+					<th>deposit</th>
+					<th>profit</th>
 					<th>win</th>
 				</tr>
 			</thead>
 			<tbody>
 				<tr each={g in bj_games}>
+					<td>{g.channel}</td>
 					<td>{g.cards}</td>
-					<td>{g.getGame().result}</td>
-					<td>{g.getResult().profit*-1}</td>
-					<td>m:{g.getResult().main}, s:{g.getResult().split}</td>
+					<td>
+						<span if={!g.getGame().result}>proccess</span>
+						<span if={g.getGame().result}>end</span>
+					</td>
+					<td>{g.deposit}</td>
+					<td>{((g.getResult().profit*-1)/100000000).toFixed(2)}</td>
+					<td>
+						<span if={g.getResult().main}>{g.getResult().main}</span>
+						<span if={g.getResult().split}>, split: {g.getResult().split}</span>
+					</td>
 				</tr>
 			</tbody>
 		</table>
@@ -233,14 +250,18 @@ import route    from 'riot-route'
 
 			<thead>
 				<tr>
+					<th>Channel</th>
 					<th>rnd</th>
-					<th>user bets</th>
+					<th>deposit</th>
+					<th>profit</th>
 					<th>user win</th>
 				</tr>
 			</thead>
 			<tbody>
 				<tr each={g in slot_games}>
+					<td>{g.channel}</td>
 					<td>{g.rnd}</td>
+					<td>{g.deposit}</td>
 					<td>{g.balance}</td>
 					<td>
 						<span if={g.result}>win</span>

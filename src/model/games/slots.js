@@ -64,7 +64,7 @@ export default new class SlotGame {
 		if (process.env.NODE_ENV !== 'server') {
 			setTimeout(()=>{
 				this.startMesh()
-			}, 3000)
+			}, 2000)
 		}
 	}
 
@@ -81,8 +81,21 @@ export default new class SlotGame {
 			};
 			seeds.push(data.seed)
 
+
+			if (data.action=='open_game_channel') {
+				this.startGame(data)
+				return
+			}
+
 			if (data.action=='get_random') {
 				this.sendRandom(data)
+				return
+			}
+
+			if (!data.game_id || data.user_id) { return }
+
+			if (data.action=='call_game_function') {
+				this.callGameFunction(data.user_id, data.game_id, data.name, data.args)
 				return
 			}
 
@@ -91,13 +104,26 @@ export default new class SlotGame {
 				return
 			}
 
-
-			if (!data.game_id) { return }
-			let game_id = data.user_id+'/'+data.game_id
-			if (data.action=='call_game_function') {
-				this.callGameFunction(game_id, data.name, data.args)
-			}
 		})
+	}
+
+	startGame(params){
+		if (!params.user_id) {
+			return
+		}
+
+		let game_id = params.game_id || 'start'
+		let user_id = params.user_id
+
+		if (!Games[user_id]) {
+			Games[user_id] = {}
+		}
+		if (!Games[user_id][game_id]) {
+			Games[user_id][game_id] = new LogicJS()
+		}
+
+		Games[user_id][game_id].channel = 'opened'
+		Games[user_id][game_id].deposit = params.deposit
 	}
 
 	endGame(params){
@@ -105,31 +131,44 @@ export default new class SlotGame {
 		if (this.endGamesMsgs[params.seed]) { return }
 		this.endGamesMsgs[params.seed] = true
 
+		Games[params.user_id][params.game_id].channel = 'closing...'
+
 		console.log('SLot endGame CHANNEL.CLOSE')
 		console.log(params.address, params.account, params.profit)
+
 		Channel.close(params.address, params.account, params.profit, res=>{
 			params.action = 'game_channel_closed'
 			params.result = true
+
+			Games[params.user_id][params.game_id].channel = 'closed'
+
 			this.RTC.sendMsg(params)
 		})
 	}
 
-	callGameFunction(game_id, function_name, function_args){
+	callGameFunction(user_id, game_id, function_name, function_args){
 		console.log(game_id, function_name, function_args)
-		if (!Games[game_id]) {
-			Games[game_id] = new LogicJS()
+		if (!Games[user_id]) {
+			Games[user_id] = {}
+		}
+		if (Games[user_id]['start']) {
+			Games[user_id][game_id] = Games[user_id]['start']
+			delete(Games[user_id]['start'])
+		};
+		if (!Games[user_id][game_id]) {
+			Games[user_id][game_id] = new LogicJS()
 		}
 
-		if (!Games[game_id][function_name]) {
+		if (!Games[user_id][game_id][function_name]) {
 			return
 		}
 
 		function_args = this.prepareArgs(function_args)
 
 		if (function_args) {
-			Games[game_id][function_name].apply(null, function_args)
+			Games[user_id][game_id][function_name].apply(null, function_args)
 		} else {
-			Games[game_id][function_name]()
+			Games[user_id][game_id][function_name]()
 		}
 
 	}

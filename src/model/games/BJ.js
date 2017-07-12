@@ -1,41 +1,43 @@
 /**
  * Created by DAO.casino
  * BlackJack
- * v 1.0.3
+ * v 1.0.5
  */
-const LogicJS = function(params){
-	var self = this
 
-	const BLACKJACK = 21
+var LogicJS = function(params){
+	var _self = this
 
-	const DEAL      = 0
-	const HIT       = 1
-	const STAND     = 2
-	const SPLIT     = 3
-	const DOUBLE    = 4
-	const INSURANCE = 5
+	var BLACKJACK = 21
 
-	const COUNT_DECKS = 4
-	const COUNT_CARDS = 52
+	var DEAL = 0
+	var HIT = 1
+	var STAND = 2
+	var SPLIT = 3
+	var DOUBLE = 4
+	var INSURANCE = 5
 
-	var _money       = 0
-	var _balance     = 0
-	var _myPoints    = 0
+	var COUNT_DECKS = 4
+	var COUNT_CARDS = 52
+
+	var _money = 0
+	var _balance = 0
+	var _myPoints = 0
 	var _splitPoints = 0
 	var _housePoints = 0
-	var _idGame      = 0
+	var _idGame = 0
 
-	var _arMyCards       = []
-	var _arMySplitCards  = []
-	var _arHouseCards    = []
-	var _arMyPoints      = []
+	var _arMyCards = []
+	var _arMySplitCards = []
+	var _arHouseCards = []
+	var _arMyPoints = []
 	var _arMySplitPoints = []
-	var _arHousePoints   = []
-	var _arDecks         = []
-	var _arCards         = []
+	var _arHousePoints = []
+	var _arDecks = []
+	var _arCards = []
 
-	var _bStand          = false
+	var _bStand = false
 	var _bStandNecessary = false
+	var _bSplit = false
 
 	var _prnt
 	var _callback
@@ -61,7 +63,7 @@ const LogicJS = function(params){
 
 	mixDeck()
 
-	self.bjDeal = function(_s, _bet){
+	_self.bjDeal = function(_s, _bet){
 		_idGame ++
 		_objResult = {main:'', split:'', betMain:0, betSplit:0, profit:-_bet, mixing:false}
 		_objSpeedGame.result = false
@@ -79,6 +81,7 @@ const LogicJS = function(params){
 		_arHousePoints = []
 		_bStand = false
 		_bStandNecessary = false
+		_bSplit = false
 
 		var seedarr = ABI.rawEncode([ 'bytes32' ], [ _s ])
 		dealCard(true, true, seedarr[15])
@@ -87,18 +90,18 @@ const LogicJS = function(params){
 		refreshGame(_s)
 	}
 
-	self.bjHit = function(_s, isMain){
+	_self.bjHit = function(_s, isMain){
 		dealCard(true, isMain, _s)
 		refreshGame(_s)
 	}
 
-	self.bjStand = function(_s, isMain){
+	_self.bjStand = function(_s, isMain){
 		var seedarr = ABI.rawEncode([ 'bytes32' ], [ _s ])
 		stand(isMain, seedarr)
 		refreshGame(_s)
 	}
 
-	self.bjSplit = function(_s){
+	_self.bjSplit = function(_s){
 		var seedarr = ABI.rawEncode([ 'bytes32' ], [ _s ])
 		_arMySplitCards = [_arMyCards[1]]
 		_arMyCards = [_arMyCards[0]]
@@ -106,6 +109,7 @@ const LogicJS = function(params){
 		_arMyPoints = [_arMyPoints[0]]
 		_myPoints = getMyPoints()
 		_splitPoints = getMySplitPoints()
+		_bSplit = true
 		dealCard(true, true, seedarr[15])
 		dealCard(true, false, seedarr[16])
 		_objSpeedGame.betSplitGame = _objSpeedGame.betGame
@@ -115,7 +119,7 @@ const LogicJS = function(params){
 		refreshGame(_s)
 	}
 
-	self.bjDouble = function(_s, isMain){
+	_self.bjDouble = function(_s, isMain){
 		var seedarr = ABI.rawEncode([ 'bytes32' ], [ _s ])
 		dealCard(true, isMain, _s)
 		stand(isMain, seedarr)
@@ -132,11 +136,14 @@ const LogicJS = function(params){
 		refreshGame(_s)
 	}
 
-	self.bjInsurance = function(_s){
-
+	_self.bjInsurance = function(_bet){
+		_objSpeedGame.insurance = true
+		_money -= _bet
+		_objSpeedGame.money = _money
+		_objResult.profit -= _bet
 	}
 
-	self.makeID = function(){
+	_self.makeID = function(){
 		var count = 64
 		var str = '0x'
 		var possible = 'abcdef0123456789'
@@ -153,20 +160,20 @@ const LogicJS = function(params){
 		return str
 	}
 
-	self.getGame = function(){
+	_self.getGame = function(){
 		return _objSpeedGame
 	}
 
-	self.getResult = function(){
+	_self.getResult = function(){
 		return _objResult
 	}
 
-	self.getBalance = function(){
+	_self.getBalance = function(){
 		var balance = _balance + _money
 		return balance
 	}
 
-	self.getValCards = function(cardIndex){
+	_self.getValCards = function(cardIndex){
 		var cardType = Math.floor(cardIndex / 4)
 		var cardSymbol = String(cardType)
 		var s = cardIndex % 4 + 1
@@ -224,6 +231,7 @@ const LogicJS = function(params){
 	}
 
 	function stand(isMain, s){
+		_bSplit = false
 		if (!isMain) {
 			return
 		}
@@ -312,6 +320,9 @@ const LogicJS = function(params){
 			state = 'lose'
 			if(isMain){
 				_objSpeedGame.result = true
+				if(_objSpeedGame.insurance){
+					betWin = bet
+				}
 			}
 		}
 
@@ -321,12 +332,16 @@ const LogicJS = function(params){
 			betWin = bet
 			if(isMain){
 				_objSpeedGame.result = true
+			} else {
+				_bSplit = false
 			}
 		}
 		if (points > BLACKJACK && state=='') {
 			state = 'bust'
 			if(isMain){
 				_objSpeedGame.result = true
+			} else {
+				_bSplit = false
 			}
 		}
 		if (points == _housePoints && state=='') {
@@ -345,12 +360,12 @@ const LogicJS = function(params){
 		if(!_objSpeedGame.result){
 			if(_bStand){
 				_objSpeedGame.result = true
-			} else if(points == BLACKJACK && isMain){
+			} else if(points == BLACKJACK && isMain && !_bSplit){
 				if(_bStandNecessary){
 					_objSpeedGame.result = true
 				} else {
 					_bStandNecessary = true
-					self.bjStand(_s, isMain)
+					_self.bjStand(_s, isMain)
 					return false
 				}
 			}
@@ -500,8 +515,13 @@ const LogicJS = function(params){
 		return n
 	}
 
-	return self
+	return _self
 }
+
+
+
+
+
 
 
 import ABI        from 'ethereumjs-abi'
@@ -516,6 +536,7 @@ const contractAddress = '0x89fe5E63487b2d45959502bEB1dac4d5A150663e'
 const game_code       = 'BJ'
 
 let Games = []
+let _closing_channels = []
 
 export default new class BJgame {
 	constructor() {
@@ -546,6 +567,10 @@ export default new class BJgame {
 				return
 			}
 
+			if (data.action=='open_game_channel') {
+				this.startGame(data)
+				return
+			}
 			if (data.action=='close_game_channel') {
 				this.endGame(data)
 				return
@@ -560,23 +585,46 @@ export default new class BJgame {
 		})
 	}
 
+	startGame(params){
+		if (!params.user_id) {
+			return
+		}
+
+		let game_id = params.game_id || 'start'
+		let user_id = params.user_id
+
+		if (!Games[user_id]) {
+			Games[user_id] = {}
+		}
+		if (!Games[user_id][game_id]) {
+			Games[user_id][game_id] = new LogicJS()
+		}
+
+		Games[user_id][game_id].channel = 'opened'
+		Games[user_id][game_id].deposit = params.deposit
+	}
+
 	endGame(params){
 		if (!this.endGamesMsgs) { this.endGamesMsgs = {} }
-
-		console.log('this.endGamesMsgs[params.seed', this.endGamesMsgs[params.seed])
 
 		if (this.endGamesMsgs[params.seed]) { return }
 		this.endGamesMsgs[params.seed] = true
 
 		let user_id = params.user_id
 
-		console.log('endGame')
+
+		let close_code = ''
 
 		let profit = 0
 		for(let k in Games[user_id]){
+			if (['closing...','closed'].indexOf(Games[user_id][k].channel) > -1 ) {
+				continue
+			}
 			profit += Games[user_id][k].getResult().profit
+			Games[user_id][k].channel = 'closing...'
+			close_code += user_id+'_'+k+'_'
 		}
-		delete(Games[user_id])
+		// delete(Games[user_id])
 
 		console.log('bankroll profit', profit)
 		console.log('user profit', params.profit)
@@ -584,10 +632,26 @@ export default new class BJgame {
 		params.action = 'game_channel_closed'
 
 		if (params.profit == profit) {
-			console.log('Channel.close', params)
-			Channel.close(params.address, params.account, (params.profit/100000000), res => {
+			profit = profit/100000000
+
+
+			close_code += params.address+'_'+params.account+'_'+profit
+			if (_closing_channels.indexOf(close_code) > -1) {
+				console.log('channel allready closing ', close_code)
+				return
+			}
+			_closing_channels.push(close_code)
+
+
+			console.log('Channel.close', {profit:profit}, params)
+			Channel.close(params.address, params.account, profit, res => {
 				console.log(res)
 				params.result = true
+
+				for(let k in Games[user_id]){
+					Games[user_id][k].channel = 'closed'
+				}
+
 				console.log('sendMsg', params)
 				this.RTC.sendMsg(params)
 			})
@@ -606,6 +670,12 @@ export default new class BJgame {
 		if (!Games[user_id]) {
 			Games[user_id] = {}
 		}
+
+		if (Games[user_id]['start']) {
+			Games[user_id][game_id] = Games[user_id]['start']
+			delete(Games[user_id]['start'])
+		}
+
 		if (!Games[user_id][game_id]) {
 			Games[user_id][game_id] = new LogicJS()
 		}
@@ -634,7 +704,6 @@ export default new class BJgame {
 			if (arg && (''+arg).indexOf('confirm')!=-1) {
 				let seed = arg.split('confirm(')[1].split(')')[0]
 				arg = this.confirm(seed)
-				console.log('function confirm', seed, this.confirm(seed))
 			}
 			new_args.push(arg)
 		})
