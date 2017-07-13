@@ -35,7 +35,6 @@ class Games {
 			processingFrequency: 500,
 		})
 
-
 		this.Queue.start()
 
 		this.subscribe('Games').on( (game, game_id) => {
@@ -45,11 +44,9 @@ class Games {
 	}
 
 	startChannelsGames(){
-
-
 		for(let k in _games){
 			let game = _games[k]
-			if (!_gamesLogic[game.code] && _config.games[game.code].channels) {
+			if (!_gamesLogic[game.code] && (_config.games[game.code] && _config.games[game.code].channels)) {
 				const gameLogic = require('./games/'+game.code+'.js').default
 				_gamesLogic[game.code] = new gameLogic(game.contract_id)
 			}
@@ -346,6 +343,9 @@ class Games {
 				}
 				if (type=='string') {
 					return web3.toAscii(response.result)
+							.replace(/\)/g, '')
+							.replace(/\(/g, '')
+							.replace(/\/g, '')
 							.replace(/\/g, '')
 							.replace(/\u0007/g, '')
 							.replace(/\u0008/g, '')

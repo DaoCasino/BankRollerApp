@@ -600,6 +600,8 @@ export default class BJgame {
 
 		Games[user_id][game_id].channel = 'opened'
 		Games[user_id][game_id].deposit = params.deposit
+		Games[user_id][game_id].user_id = params.user_id
+
 	}
 
 	endGame(params){

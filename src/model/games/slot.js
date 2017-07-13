@@ -1,27 +1,49 @@
-var LogicJS = function (params={}) {
-	var self     = this
-	var _balance = params.balance || 0
+/**
+ * Created by DAO.casino
+ * Slot Macmhine
+ * v 1.0.0
+ */
+
+var LogicJS = function (params) {
+	var self = this
+	var _balance = 0
+	var _idGame = 0
+	var _prnt
+	var _callback
+
+	if (params) {
+		if (params.prnt) {
+			_prnt = params.prnt
+		}
+		if (params.callback) {
+			_callback = params.callback
+		}
+		_balance = params.balance || 0
+	}
+
 
 	var _objSpeedGame = {
-		result: false,
-		rnd:    0,
-		balance: _balance,
+		result:  '',
+		rnd:     0,
+		balance: 0,
 	}
 
 	self.spin = function (_s, bet) {
-		_objSpeedGame.result = false
+		_objSpeedGame.result = ''
 		_objSpeedGame.rnd    = 0
 
-		var hash = ABI.soliditySHA3(['bytes32'], [_s]).toString('hex')
+		var hash      = ABI.soliditySHA3(['bytes32'], [_s]).toString('hex')
 		var iRandSpin = bigInt(hash, 16).divmod(100).remainder.value
 
 		_objSpeedGame.rnd = iRandSpin
 
 		var profit = -bet
 		if (iRandSpin <= 50) {
-			_objSpeedGame.result = true
+			_objSpeedGame.result = 'win'
 
 			profit = bet
+		} else {
+			_objSpeedGame.result = 'loose'
 		}
 
 		_objSpeedGame.balance += profit
@@ -46,7 +68,7 @@ import * as Utils from '../utils'
 import Channel from '../../Channel'
 
 // const contractAddress = '0x89fe5E63487b2d45959502bEB1dac4d5A150663e'
-const game_code       = 'Slot'
+const game_code = 'slot'
 
 let Games = []
 
@@ -93,15 +115,13 @@ export default class SlotGame {
 				return
 			}
 
-			if (!data.game_id || data.user_id) { return }
-
-			if (data.action=='call_game_function') {
-				this.callGameFunction(data.user_id, data.game_id, data.name, data.args)
+			if (data.user_id && data.action=='close_game_channel') {
+				this.endGame(data)
 				return
 			}
 
-			if (data.action=='close_game_channel') {
-				this.endGame(data)
+			if (data.game_id && data.action=='call_game_function') {
+				this.callGameFunction(data.user_id, data.game_id, data.name, data.args)
 				return
 			}
 
@@ -125,6 +145,7 @@ export default class SlotGame {
 
 		Games[user_id][game_id].channel = 'opened'
 		Games[user_id][game_id].deposit = params.deposit
+		Games[user_id][game_id].user_id = params.user_id
 	}
 
 	endGame(params){
@@ -132,16 +153,33 @@ export default class SlotGame {
 		if (this.endGamesMsgs[params.seed]) { return }
 		this.endGamesMsgs[params.seed] = true
 
-		Games[params.user_id][params.game_id].channel = 'closing...'
+		let profit = 0
+		for(let k in Games[params.user_id]){
+			if (!Games[params.user_id][k]) {
+				continue
+			}
+
+			Games[params.user_id][k].channel = 'closing...'
+			profit += Games[params.user_id][k].getResult().balance
+		}
+
 
 		console.log('SLot endGame CHANNEL.CLOSE')
 		console.log(params.address, params.account, params.profit)
+		console.log('user profit', params.profit)
+		console.log('bankroll profit', profit)
 
-		Channel.close(params.address, params.account, params.profit, res=>{
+		// if (profit==params.profit) {
+
+		// }
+
+		Channel.close(params.address, params.account, profit, res=>{
 			params.action = 'game_channel_closed'
 			params.result = true
 
-			Games[params.user_id][params.game_id].channel = 'closed'
+			for(let k in Games[params.user_id]){
+				Games[params.user_id][k].channel = 'closed'
+			}
 
 			this.RTC.sendMsg(params)
 		})
@@ -172,6 +210,7 @@ export default class SlotGame {
 			Games[user_id][game_id][function_name]()
 		}
 
+		Games[user_id][game_id].user_id = user_id
 	}
 
 	prepareArgs(args){

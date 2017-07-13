@@ -31,13 +31,15 @@ let server = http.createServer(function (request, response) {
 		filePath = __dirname+'/index.html'
 	}
 
-	let contentType = filetypes[path.extname(filePath)]
+	let contentType = filetypes[path.extname(filePath)] || false
 
 	fs.readFile(filePath, function(error, content) {
 		if (error) {
 			if(error.code == 'ENOENT'){
 				fs.readFile(__dirname+'/index.html', function(error, content) {
-					response.writeHead(200, { 'Content-Type': contentType })
+					if (contentType) {
+						response.writeHead(200, { 'Content-Type': contentType })
+					}
 					response.end(content, 'utf-8')
 				})
 			} else {
@@ -46,7 +48,9 @@ let server = http.createServer(function (request, response) {
 				response.end()
 			}
 		} else {
-			response.writeHead(200, { 'Content-Type': contentType })
+			if (contentType) {
+				response.writeHead(200, { 'Content-Type': contentType })
+			}
 			response.end(content, 'utf-8')
 		}
 	})

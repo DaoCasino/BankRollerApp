@@ -13,13 +13,13 @@ import route    from 'riot-route'
 
 		this.on('mount', ()=>{
 
-			if (Games.BJ) {
 			setInterval(()=>{
+			if (Games.BJ) {
 				this.bj_games = {}
-				for(let a in Games.BJ){
-				for(let u in Games.BJ[a].Games){
-				for(let k in Games.BJ[a].Games[u]){
-					let g = Games.BJ[a].Games[u][k]
+
+				for(let u in Games.BJ.Games){
+				for(let k in Games.BJ.Games[u]){
+					let g = Games.BJ.Games[u][k]
 
 					this.bj_games[u+'_'+k] = g
 
@@ -47,24 +47,22 @@ import route    from 'riot-route'
 					this.bj_games[u+'_'+k].cards = cards_str
 				}
 				}
-				}
+
 				this.update()
-			}, 3000)
-			};
-
-
-			if (Games.Slots) {
-				setInterval(()=>{
-					for(let a in Games.Slots){
-					for(let u in Games.Slots[a].Games){
-					for(let k in Games.Slots[a].Games[u]){
-						this.slot_games[u+'_'+k] = Games.Slots.Games[u][k].getResult()
-					}
-					}
-					}
-					this.update()
-				}, 2000)
 			}
+			}, 3000)
+
+
+			setInterval(()=>{
+			if (Games.Slots && Games.Slots.Games) {
+				this.slot_games = {}
+				for(let u in Games.Slots.Games){
+				for(let k in Games.Slots.Games[u]){
+					this.slot_games[u+'_'+k] = Games.Slots.Games[u][k]
+				}}
+				this.update()
+			}
+			}, 2000)
 
 		})
 
@@ -223,6 +221,7 @@ import route    from 'riot-route'
 
 			<thead>
 				<tr>
+					<th>User</th>
 					<th>Channel</th>
 					<th>cards</th>
 					<th>game</th>
@@ -233,6 +232,7 @@ import route    from 'riot-route'
 			</thead>
 			<tbody>
 				<tr each={g in bj_games}>
+					<td><a href="https://ropsten.etherscan.io/address/{g.user_id}" target="_blank" rel="noopener">{g.user_id}</a></td>
 					<td>{g.channel}</td>
 					<td>{g.cards}</td>
 					<td>
@@ -254,6 +254,7 @@ import route    from 'riot-route'
 
 			<thead>
 				<tr>
+					<th>User</th>
 					<th>Channel</th>
 					<th>rnd</th>
 					<th>deposit</th>
@@ -263,13 +264,13 @@ import route    from 'riot-route'
 			</thead>
 			<tbody>
 				<tr each={g in slot_games}>
+					<td><a href="https://ropsten.etherscan.io/address/{g.user_id}" target="_blank" rel="noopener">{g.user_id}</a></td>
 					<td>{g.channel}</td>
-					<td>{g.rnd}</td>
+					<td>{g.getResult().rnd}</td>
 					<td>{g.deposit}</td>
-					<td>{g.balance}</td>
+					<td>{g.getResult().balance}</td>
 					<td>
-						<span if={g.result}>win</span>
-						<span if={!g.result}>loose</span>
+						<span if={g.getResult().result}>{g.getResult().result}</span>
 					</td>
 				</tr>
 			</tbody>
