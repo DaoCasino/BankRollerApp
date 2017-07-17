@@ -94,7 +94,7 @@ export default class SlotGame {
 	startMesh(){
 		let user_id = Eth.Wallet.get().openkey || false
 
-		this.RTC = new Rtc(user_id)
+		this.RTC = new Rtc(user_id, this.contractAddress)
 
 		this.RTC.subscribe(this.contractAddress, data => {
 			if (!data || !data.action || !data.game_code || data.game_code!=game_code) { return }
@@ -181,7 +181,7 @@ export default class SlotGame {
 				Games[params.user_id][k].channel = 'closed'
 			}
 
-			this.RTC.sendMsg(params)
+			this.RTC.send(params)
 		})
 	}
 
@@ -230,7 +230,7 @@ export default class SlotGame {
 	}
 
 	sendRandom(data){
-		this.RTC.sendMsg({
+		this.RTC.send({
 			action:    'send_random',
 			game_code: 'daochannel_v1',
 			address:   this.contractAddress,

@@ -2,26 +2,26 @@
 import Eth from 'Eth/Eth'
 import * as Utils from 'utils'
 
-import channel_abi from './configs/channel.abi.js'
+
+import channel_contract from './configs/channel.abi.js'
 
 export default new class Channel {
 	constructor() {
 
 	}
 
-	close(contractAddress=false, playerAddress=false, deposit=false, callback, repeat=3){
+	close(contractAddress=false, playerAddress=false, channel_id=false, deposit=false, callback, repeat=3){
 		console.log('CLOSE', contractAddress, 'closeChannel', playerAddress, deposit)
 
-		if (!contractAddress || !playerAddress) {
+		if (!contractAddress || !playerAddress || !channel_id) {
 			return
 		}
 
-		let add = ( deposit > 0 )
+		const add = ( deposit > 0 )
 
-		let profit = this.BETs( Math.abs(deposit) )
+		const profit = this.BETs( Math.abs(deposit) )
 
-
-		this.callFunc(contractAddress, 'closeChannel', [playerAddress, profit, add], response => {
+		this.callFunc(contractAddress, 'closeChannel', [playerAddress, channel_id, profit, add], response => {
 			console.log('response', response)
 			if (!response || !response.result) {
 				repeat--
@@ -31,19 +31,23 @@ export default new class Channel {
 				return
 			}
 
-			this.isOpenChannel(contractAddress, playerAddress, opened => {
+			this.isOpenChannel(contractAddress, playerAddress, channel_id, opened => {
 				callback( !opened )
 			})
 		})
 	}
 
-	isOpenChannel(contractAddress, playerAddress=false, callback, repeat=5){ setTimeout(()=>{
-		if (!playerAddress) { return }
+	isOpenChannel(contractAddress, playerAddress=false, channel_id=false, callback, repeat=5){ setTimeout(()=>{
+		if (!playerAddress || !channel_id) { return }
 		repeat--
 
 		Eth.RPC.request('call', [{
 			'to':   contractAddress,
-			'data': '0x' + Eth.hashName('getOpenChannel(address)') + Utils.pad(playerAddress.substr(2), 64)
+			'data': '0x'
+				+ Eth.hashName('getOpenChannel(address,bytes32)')
+					+ Utils.pad(playerAddress.substr(2), 64)
+					+ Utils.pad(channel_id.substr(2), 64)
+
 		}, 'latest']).then( response => {
 			let opened = true
 
@@ -52,7 +56,7 @@ export default new class Channel {
 			}
 
 			if (opened && repeat > 0) {
-				this.isOpenChannel(contractAddress, playerAddress, callback, repeat)
+				this.isOpenChannel(contractAddress, playerAddress, channel_id, callback, repeat)
 				return
 			}
 
@@ -61,7 +65,7 @@ export default new class Channel {
 	}, 3000) }
 
 	callFunc(address, name, args, callback){
-		Eth.Wallet.signedContractFuncTx( address, channel_abi, name, args,
+		Eth.Wallet.signedContractFuncTx( address, channel_contract.abi, name, args,
 			signedTx => {
 				Eth.RPC.request('sendRawTransaction', ['0x'+signedTx], 0).then( callback )
 			}

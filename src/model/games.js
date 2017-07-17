@@ -642,7 +642,7 @@ class Games {
 			this.getConfirmNumber(game_code, seed, (confirm, PwDerivedKey)=>{
 
 				if (this.RTC) {
-					this.RTC.sendMsg({
+					this.RTC.send({
 						action:    'send_random',
 						game_code: game_code,
 						address:   address,

@@ -1,7 +1,7 @@
 /**
  * Created by DAO.casino
  * BlackJack
- * v 1.0.5
+ * v 1.0.6
  */
 
 var LogicJS = function(params){
@@ -9,35 +9,35 @@ var LogicJS = function(params){
 
 	var BLACKJACK = 21
 
-	var DEAL = 0
-	var HIT = 1
-	var STAND = 2
-	var SPLIT = 3
-	var DOUBLE = 4
+	var DEAL      = 0
+	var HIT       = 1
+	var STAND     = 2
+	var SPLIT     = 3
+	var DOUBLE    = 4
 	var INSURANCE = 5
 
 	var COUNT_DECKS = 4
 	var COUNT_CARDS = 52
 
-	var _money = 0
-	var _balance = 0
-	var _myPoints = 0
+	var _money       = 0
+	var _balance     = 0
+	var _myPoints    = 0
 	var _splitPoints = 0
 	var _housePoints = 0
-	var _idGame = 0
+	var _idGame      = 0
 
-	var _arMyCards = []
-	var _arMySplitCards = []
-	var _arHouseCards = []
-	var _arMyPoints = []
+	var _arMyCards       = []
+	var _arMySplitCards  = []
+	var _arHouseCards    = []
+	var _arMyPoints      = []
 	var _arMySplitPoints = []
-	var _arHousePoints = []
-	var _arDecks = []
-	var _arCards = []
+	var _arHousePoints   = []
+	var _arDecks         = []
+	var _arCards         = []
 
-	var _bStand = false
+	var _bStand          = false
 	var _bStandNecessary = false
-	var _bSplit = false
+	var _bSplit          = false
 
 	var _prnt
 	var _callback
@@ -66,22 +66,26 @@ var LogicJS = function(params){
 	_self.bjDeal = function(_s, _bet){
 		_idGame ++
 		_objResult = {main:'', split:'', betMain:0, betSplit:0, profit:-_bet, mixing:false}
-		_objSpeedGame.result = false
-		_objSpeedGame.curGame = {}
-		_objSpeedGame.betGame = _bet
+
+		_objSpeedGame.result       = false
+		_objSpeedGame.curGame      = {}
+		_objSpeedGame.betGame      = _bet
 		_objSpeedGame.betSplitGame = 0
+
 		_money -= _bet
-		_objSpeedGame.money = _money
+
+		_objSpeedGame.money     = _money
 		_objSpeedGame.insurance = false
-		_arMyCards = []
-		_arMySplitCards = []
-		_arHouseCards = []
-		_arMyPoints = []
+
+		_arMyCards       = []
+		_arMySplitCards  = []
+		_arHouseCards    = []
+		_arMyPoints      = []
 		_arMySplitPoints = []
-		_arHousePoints = []
-		_bStand = false
+		_arHousePoints   = []
+		_bStand          = false
 		_bStandNecessary = false
-		_bSplit = false
+		_bSplit          = false
 
 		var seedarr = ABI.rawEncode([ 'bytes32' ], [ _s ])
 		dealCard(true, true, seedarr[15])
@@ -103,19 +107,22 @@ var LogicJS = function(params){
 
 	_self.bjSplit = function(_s){
 		var seedarr = ABI.rawEncode([ 'bytes32' ], [ _s ])
-		_arMySplitCards = [_arMyCards[1]]
-		_arMyCards = [_arMyCards[0]]
+
+		_arMySplitCards  = [_arMyCards[1]]
+		_arMyCards       = [_arMyCards[0]]
 		_arMySplitPoints = [_arMyPoints[0]]
-		_arMyPoints = [_arMyPoints[0]]
-		_myPoints = getMyPoints()
-		_splitPoints = getMySplitPoints()
-		_bSplit = true
+		_arMyPoints      = [_arMyPoints[0]]
+		_myPoints        = getMyPoints()
+		_splitPoints     = getMySplitPoints()
+		_bSplit          = true
+
 		dealCard(true, true, seedarr[15])
 		dealCard(true, false, seedarr[16])
+
 		_objSpeedGame.betSplitGame = _objSpeedGame.betGame
-		_money -= _objSpeedGame.betSplitGame
-		_objSpeedGame.money = _money
-		_objResult.profit -= _objSpeedGame.betSplitGame
+		_money                    -= _objSpeedGame.betSplitGame
+		_objSpeedGame.money        = _money
+		_objResult.profit         -= _objSpeedGame.betSplitGame
 		refreshGame(_s)
 	}
 
@@ -274,7 +281,7 @@ var LogicJS = function(params){
 				_myPoints = getMyPoints()
 				_arMyCards.push(newCard)
 				// console.log("dealClient: Main", newCard, getNameCard(newCard));
-				if(_myPoints >= BLACKJACK){
+				if(_myPoints >= BLACKJACK && !_bSplit){
 					var seedarr = ABI.rawEncode([ 'bytes32' ], [ seed ])
 					stand(isMain, seedarr)
 				}
@@ -415,6 +422,24 @@ var LogicJS = function(params){
 		return rand
 	}
 
+	function getPoint(id){
+		var cardType = Math.floor(id / 4)
+		var point = cardType
+
+		switch (cardType) {
+		case 0:
+		case 11:
+		case 12:
+			point = 10
+			break
+		case 1:
+			point = 11
+			break
+		}
+
+		return point
+	}
+
 	function getMyPoints(){
 		var myPoints = 0
 		var countAce = 0
@@ -515,13 +540,38 @@ var LogicJS = function(params){
 		return n
 	}
 
+	// only for client
+	_self.loadGame = function(game, result){
+		_objSpeedGame = game
+		_objResult = result
+		_money = _objSpeedGame.money
+
+		_arMyCards       = _objSpeedGame.curGame.arMyCards
+		_arMySplitCards  = _objSpeedGame.curGame.arMySplitCards
+		_arHouseCards    = _objSpeedGame.curGame.arHouseCards
+		_arMyPoints      = []
+		_arMySplitPoints = []
+		_arHousePoints   = []
+
+		for (var i = 0; i < _arMyCards.length; i++) {
+			var point = getPoint(_arMyCards[i])
+			_arMyPoints.push(point)
+		}
+		for (var i = 0; i < _arMySplitCards.length; i++) {
+			var point = getPoint(_arMySplitCards[i])
+			_arMySplitPoints.push(point)
+		}
+		for (var i = 0; i < _arHouseCards.length; i++) {
+			var point = getPoint(_arHouseCards[i])
+			_arHousePoints.push(point)
+		}
+	}
+
 	return _self
 }
 
 
-
-const game_code       = 'BJ'
-
+const game_code = 'BJ'
 
 
 import ABI        from 'ethereumjs-abi'
@@ -536,7 +586,11 @@ let Games = []
 let _closing_channels = []
 
 export default class BJgame {
-	constructor(contractAddress) {
+	constructor(contractAddress=false) {
+		if (!contractAddress) {
+			return false
+		}
+
 		this.contractAddress = contractAddress
 
 		Eth.Wallet.getPwDerivedKey( PwDerivedKey => {
@@ -555,7 +609,8 @@ export default class BJgame {
 	startMesh(){
 		let user_id = Eth.Wallet.get().openkey || false
 
-		this.RTC = new Rtc(user_id)
+		console.log('new RTC', user_id, this.contractAddress)
+		this.RTC = new Rtc(user_id, this.contractAddress)
 
 		this.RTC.subscribe(this.contractAddress, data => {
 			if (!data || !data.action || !data.game_code || data.game_code!=game_code) { return }
@@ -644,7 +699,7 @@ export default class BJgame {
 
 
 			console.log('Channel.close', {profit:profit}, params)
-			Channel.close(params.address, params.account, profit, res => {
+			Channel.close(params.address, params.account, params.channel_id, profit, res => {
 				console.log(res)
 				params.result = true
 
@@ -652,17 +707,17 @@ export default class BJgame {
 					Games[user_id][k].channel = 'closed'
 				}
 
-				console.log('sendMsg', params)
-				this.RTC.sendMsg(params)
+				console.log('rtc send', params)
+				this.RTC.send(params)
 			})
 			return
 		}
 
 		params.result = {
-			error  : 'Invalid profit',
+			error  : 'invalid_profit',
 			profit : profit
 		}
-		this.RTC.sendMsg(params)
+		this.RTC.send(params)
 	}
 
 	callGameFunction(user_id, game_id, function_name, function_args){
@@ -715,7 +770,7 @@ export default class BJgame {
 			return
 		}
 
-		this.RTC.sendMsg({
+		this.RTC.send({
 			action:    'send_random',
 			game_code: game_code,
 			address:   this.contractAddress,

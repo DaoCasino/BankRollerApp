@@ -153,7 +153,7 @@ export default class Wallet {
 			return
 		}
 
-		rpc.request('getTransactionCount', [ this.get().openkey, 'pending']).then( response => {
+		rpc.request('getTransactionCount', [ this.get().openkey, 'latest']).then( response => {
 			this.nonce = Utils.hexToNum(response.result.substr(2))
 
 			console.log('nonce:', response.result)
