@@ -53,12 +53,12 @@ var LogicJS = function(params){
 	}
 
 	var _objSpeedGame = {result:false,
-						idGame:-1,
-						curGame:{},
-						betGame:0,
-						betSplitGame:0,
-						money:_money,
-						insurance:false}
+		idGame:-1,
+		curGame:{},
+		betGame:0,
+		betSplitGame:0,
+		money:_money,
+		insurance:false}
 	var _objResult = {main:'', split:'', betMain:0, betSplit:0, profit:0, mixing:false}
 
 	mixDeck()
@@ -221,8 +221,8 @@ var LogicJS = function(params){
 
 		_objSpeedGame.money = _money
 		_objSpeedGame.curGame = {'arMyCards':_arMyCards,
-				'arMySplitCards':_arMySplitCards,
-				'arHouseCards':_arHouseCards}
+			'arMySplitCards':_arMySplitCards,
+			'arHouseCards':_arHouseCards}
 
 		if(typeof _callback === 'function'){
 			_callback(_objSpeedGame)
@@ -576,11 +576,11 @@ const game_code = 'BJ'
 
 import ABI        from 'ethereumjs-abi'
 import bigInt     from 'big-integer'
-import Eth        from '../Eth/Eth'
-import Rtc        from '../rtc'
-import * as Utils from '../utils'
+import Eth        from 'Eth/Eth'
+import Rtc        from 'rtc'
+import Channel    from 'Channel'
+import * as Utils from 'utils'
 
-import Channel from '../../Channel'
 
 let Games = []
 let _closing_channels = []

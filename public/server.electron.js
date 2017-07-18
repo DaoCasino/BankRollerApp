@@ -3,9 +3,7 @@ const http    = require('http')
 const path    = require('path')
 const fs      = require('fs')
 
-const Gun       = require('gun')
-// const levelup   = require('levelup')
-// const leveldown = require('leveldown')
+const Gun     = require('gun')
 
 /*
  * HTTP static file server
@@ -61,9 +59,6 @@ server.listen(_config.http_port)
 
 
 global.GunDB  = Gun({file: './database.json', web: server })
-// require('gun-level')
-// global.GunDB  = Gun({file: false, level:levelup('data', { db: leveldown }), web: server })
-
 global.fetch  = require('node-fetch')
 global.window = {}
 

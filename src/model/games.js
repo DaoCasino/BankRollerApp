@@ -71,10 +71,6 @@ class Games {
 
 			this.RTC.subscribe(game.contract_id, data => {
 				if (!data || !data.action || !data.address) { return }
-				// if (data.time && data.ttl && (data.time + data.ttl*1000) > new Date().getTime()) {
-				// 	return
-				// }
-
 
 				if (data.seed && data.action == 'get_random') {
 					this.sendRandom2Server(data.game_code, data.address, data.seed)
@@ -343,15 +339,15 @@ class Games {
 				}
 				if (type=='string') {
 					return web3.toAscii(response.result)
-							.replace(/\)/g, '')
-							.replace(/\(/g, '')
-							.replace(/\/g, '')
-							.replace(/\/g, '')
-							.replace(/\u0007/g, '')
-							.replace(/\u0008/g, '')
-							.replace(/\u0025/g, '')
-							.replace(/\u0000/g, '')
-							.trim()
+						.replace(/\)/g, '')
+						.replace(/\(/g, '')
+						.replace(/\/g, '')
+						.replace(/\/g, '')
+						.replace(/\u0007/g, '')
+						.replace(/\u0008/g, '')
+						.replace(/\u0025/g, '')
+						.replace(/\u0000/g, '')
+						.trim()
 				}
 				return parseInt(response.result, 16)
 			})

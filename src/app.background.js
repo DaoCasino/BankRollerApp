@@ -1,5 +1,8 @@
 import Games from 'games'
 
+if (!window) {
+	window = {}
+};
 setTimeout(()=>{
 	Games.runUpdateBalance()
 
