@@ -61,16 +61,22 @@ if (process.env.NODE_ENV === 'server' && global.network ) {
 
 
 const games = {
+	slot:{ code: 'slot',
+		channels: true,
+		name:    'Slots',
+		url:     'https://platform.dao.casino/games/SlotGame/',
+	},
+
+	BJ: { code: 'BJ',
+		channels: true,
+		name:     'Blackjack',
+		url:      'http://blackjackgame.dao.casino/games/bj/',
+	},
+
 	dice_v2:{ code: 'dice_v2',
 		name: 'DiceGame',
 		url:  'https://platform.dao.casino/games/DiceGame/',
-		img:  'https://platform.dao.casino/img/img-game2.jpg',
 	},
-
-	blackjack_v1: { code: 'blackjack_v1',
-		name: 'BlackjackGame',
-		url:  'http://blackjackgame.dao.casino/games/bj/',
-	}
 }
 
 module.exports = {
@@ -81,7 +87,7 @@ module.exports = {
 	networks:        networks,
 
 	erc20_address:   networks[current_network].erc20_address,
-	erc20_abi:       require('./configs/erc20.abi.js'),
+	erc20_abi:       require('./contracts/erc20.abi.js'),
 
 	stat_contract:   stat_contract,
 
@@ -89,9 +95,11 @@ module.exports = {
 	etherscan_url:   networks[current_network].etherscan_url,
 
 	games:           games,
-	contracts:       require('./configs/games.contracts.js'),
+	contracts:       require('./contracts/games.contracts.js'),
+	channels:        require('./contracts/channel.abi.js'),
 
-	api_url:         'https://platform.dao.casino/api/',
-	confirm_timeout: 7000,
+	rtc_signalserver: 'https://ws.dao.casino/mesh/',
+	api_url:          'https://platform.dao.casino/api/',
+	confirm_timeout:  7000,
 }
 

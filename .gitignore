@@ -5,6 +5,8 @@ publisher.json
 
 # data
 /database.json
+/data
+/tmp
 
 # dependencies
 /flow-typed

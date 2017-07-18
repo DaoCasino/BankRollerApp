@@ -17,9 +17,15 @@ import * as Utils from './utils'
 
 import {AsyncPriorityQueue, AsyncTask} from 'async-priority-queue'
 
+
+let skip_games = ['daochannel_v1', 'BJ', 'Slot']
+
+
 let _games         = {}
+let _gamesLogic    = {}
 let _seeds_list    = {}
 let _pendings_list = {}
+
 
 class Games {
 	constructor(){
@@ -29,7 +35,6 @@ class Games {
 			processingFrequency: 500,
 		})
 
-
 		this.Queue.start()
 
 		this.subscribe('Games').on( (game, game_id) => {
@@ -38,20 +43,40 @@ class Games {
 		})
 	}
 
+	startChannelsGames(){
+		for(let k in _games){
+			let game = _games[k]
+			if (!_gamesLogic[game.code] && (_config.games[game.code] && _config.games[game.code].channels)) {
+				const gameLogic = require('./games/'+game.code+'.js').default
+				_gamesLogic[game.code] = new gameLogic(game.contract_id)
+			}
+		}
+
+		this.BJ    = _gamesLogic['BJ']
+		this.Slots = _gamesLogic['slot']
+
+		setTimeout(()=>{
+			this.startChannelsGames()
+		}, 10000)
+	}
+
 	startMesh(){
 		let user_id = Eth.Wallet.get().openkey || false
 		this.RTC = new Rtc(user_id)
 
 		DB.data.get('Games').map().on((game, game_id)=>{ if (game) {
+			if (_config.games[game.code] && _config.games[game.code].channels) {
+				return
+			}
+
 			this.RTC.subscribe(game.contract_id, data => {
 				if (!data || !data.action || !data.address) { return }
-				if (data.seed && data.action == 'get_random') {
 
+				if (data.seed && data.action == 'get_random') {
 					this.sendRandom2Server(data.game_code, data.address, data.seed)
 				}
 			})
 		}})
-
 
 		setInterval(()=>{
 			for(let k in _games){
@@ -133,10 +158,29 @@ class Games {
 		DB.data.get('Games').get(game_to_deploy_id).get('deploying').put(true)
 
 
-		// BJ
-		// if (game_to_deploy.code.indexOf('blackjack') ) {
-			// return
-		// }
+		// Deploy channel
+		if (_config.games[game_to_deploy.code].channels) {
+			Eth.deployChannelContract(
+				_config.contracts[game_to_deploy.code].factory,
+
+				// Deployed!
+				(address)=>{
+					this.add(game_to_deploy_id, game_to_deploy.code, address)
+
+					// add bets to contract
+					Api.addBets(address).then( result => {})
+
+					Notify.send('Contract succefull deployed!', 'Address: '+address)
+				},
+
+				// Pending
+				()=>{
+					DB.data.get('Games').get(game_to_deploy_id).get('deploying').put(false)
+				}
+			)
+
+			return
+		}
 
 		if (game_to_deploy.code.indexOf('dice') != -1) {
 			Eth.deployGameContract(
@@ -295,11 +339,15 @@ class Games {
 				}
 				if (type=='string') {
 					return web3.toAscii(response.result)
-							.replace(/\u0007/g, '')
-							.replace(/\u0008/g, '')
-							.replace(/\u0025/g, '')
-							.replace(/\u0000/g, '')
-							.trim()
+						.replace(/\)/g, '')
+						.replace(/\(/g, '')
+						.replace(/\/g, '')
+						.replace(/\/g, '')
+						.replace(/\u0007/g, '')
+						.replace(/\u0008/g, '')
+						.replace(/\u0025/g, '')
+						.replace(/\u0000/g, '')
+						.trim()
 				}
 				return parseInt(response.result, 16)
 			})
@@ -408,6 +456,10 @@ class Games {
 	}
 
 	BlockchainConfirm(contract_id, game_code){
+		if (!_config.games[game_code] || (_config.games[game_code] && _config.games[game_code].channels)) {
+			return
+		}
+
 		// Get wait seeds list from contract logs
 		this.getBlockchainLogs(contract_id, seeds => {
 
@@ -562,6 +614,13 @@ class Games {
 	}
 
 	sendRandom2Server(game_code, address, seed){
+		if (skip_games.indexOf(game_code) > -1 ) {
+			return
+		}
+		if (!_config.games[game_code] || (_config.games[game_code] && _config.games[game_code].channels)) {
+			return
+		}
+
 		if (!_seeds_list[seed]) {
 			_seeds_list[seed] = {
 				contract:address,
@@ -574,11 +633,12 @@ class Games {
 			return
 		}
 
+
 		this.checkPending(game_code, address, seed, ()=>{
 			this.getConfirmNumber(game_code, seed, (confirm, PwDerivedKey)=>{
 
 				if (this.RTC) {
-					this.RTC.sendMsg({
+					this.RTC.send({
 						action:    'send_random',
 						game_code: game_code,
 						address:   address,

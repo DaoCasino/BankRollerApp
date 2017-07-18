@@ -8,9 +8,68 @@ import route    from 'riot-route'
 		this.games     = {}
 		this.seeds     = []
 
+		this.bj_games   = {}
+		this.slot_games = {}
+
+		this.on('mount', ()=>{
+
+			setInterval(()=>{
+			if (Games.BJ) {
+				this.bj_games = {}
+
+				for(let u in Games.BJ.Games){
+				for(let k in Games.BJ.Games[u]){
+					let g = Games.BJ.Games[u][k]
+
+					this.bj_games[u+'_'+k] = g
+
+					let cards_str = ''
+					let game = g.getGame()
+
+					let cards = {
+						my:    game.curGame.arMyCards,
+						split: game.curGame.arMySplitCards,
+						house: game.curGame.arHouseCards,
+					}
+
+					for(let c in cards){
+						if (!cards[c] || !cards[c].length) {
+							continue;
+						}
+						cards_str += c+':'
+
+						cards[c].forEach(num=>{
+							cards_str += ' ['+g.getValCards(num)+'] '
+						})
+						cards_str += ' | '
+					}
+
+					this.bj_games[u+'_'+k].cards = cards_str
+				}
+				}
+
+				this.update()
+			}
+			}, 3000)
+
+
+			setInterval(()=>{
+			if (Games.Slots && Games.Slots.Games) {
+				this.slot_games = {}
+				for(let u in Games.Slots.Games){
+				for(let k in Games.Slots.Games[u]){
+					this.slot_games[u+'_'+k] = Games.Slots.Games[u][k]
+				}}
+				this.update()
+			}
+			}, 2000)
+
+		})
+
 		this.on('update', ()=>{
 			// console.log('list update')
 		})
+
 		this.upd = ()=>{
 			clearTimeout(this.updt)
 			this.updt = setTimeout(()=>{
@@ -19,7 +78,6 @@ import route    from 'riot-route'
 		}
 
 		this.on('mount', ()=>{
-			console.log('list mount')
 			this.subscribeGames()
 			this.subscribeSeeds()
 		})
@@ -158,8 +216,69 @@ import route    from 'riot-route'
 		</tbody>
 		</table>
 
+		<table if={Object.keys(bj_games).length} >
+			<caption>BJ games</caption>
+
+			<thead>
+				<tr>
+					<th>User</th>
+					<th>Channel</th>
+					<th>cards</th>
+					<th>game</th>
+					<th>deposit</th>
+					<th>profit</th>
+					<th>win</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr each={g in bj_games}>
+					<td><a href="https://ropsten.etherscan.io/address/{g.user_id}" target="_blank" rel="noopener">{g.user_id}</a></td>
+					<td>{g.channel}</td>
+					<td>{g.cards}</td>
+					<td>
+						<span if={!g.getGame().result}>proccess</span>
+						<span if={g.getGame().result}>end</span>
+					</td>
+					<td>{g.deposit}</td>
+					<td>{((g.getResult().profit*-1)/100000000).toFixed(2)}</td>
+					<td>
+						<span if={g.getResult().main}>{g.getResult().main}</span>
+						<span if={g.getResult().split}>, split: {g.getResult().split}</span>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+
+		<table if={Object.keys(slot_games).length} >
+			<caption>SLOT games</caption>
+
+			<thead>
+				<tr>
+					<th>User</th>
+					<th>Channel</th>
+					<th>rnd</th>
+					<th>deposit</th>
+					<th>profit</th>
+					<th>user win</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr each={g in slot_games}>
+					<td><a href="https://ropsten.etherscan.io/address/{g.user_id}" target="_blank" rel="noopener">{g.user_id}</a></td>
+					<td>{g.channel}</td>
+					<td>{g.getResult().rnd}</td>
+					<td>{g.deposit}</td>
+					<td>{g.getResult().balance}</td>
+					<td>
+						<span if={g.getResult().result}>{g.getResult().result}</span>
+					</td>
+				</tr>
+			</tbody>
+
+		</table>
+
 		<table if={Object.keys(games).length && Object.keys(seeds).length} class="seeds">
-			<caption>Transactions</caption>
+			<caption>DICE Games</caption>
 			<thead>
 				<tr>
 					<th>TX</th>

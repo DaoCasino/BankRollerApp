@@ -26,6 +26,32 @@ class Eth {
 		this.getCurBlock()
 	}
 
+	deployChannelContract(factory, callback_deployed, callback_proccess){
+		// Create contract function transaction
+		this.Wallet.signedContractFuncTx(
+			factory.address, factory.abi,
+			'createGameChannel', [],
+
+			// result: signed transaction
+			signedTx => {
+				// send transacriont to RPC
+				this.RPC.request('sendRawTransaction', ['0x'+signedTx], 0).then( response => {
+					if (!response.result) {
+						console.log(response.message)
+						if (!response.message || response.message.indexOf('known transaction')==-1) {
+							return
+						}
+					}
+					this.checkContractDeployed(response.result, callback_deployed)
+					callback_proccess()
+				})
+			},
+
+			// gas limit
+			3000000
+		)
+	}
+
 	deployGameContract(factory, callback_deployed, callback_proccess){
 		// Create contract function transaction
 		this.Wallet.signedContractFuncTx(

@@ -45,7 +45,7 @@ function createWindow () {
 	mainWindow = new BrowserWindow({
 		resizable: false, width: 670, height: 530,
 
-		icon: path.join(__dirname, 'assets/icons/icon-128.png'),
+		icon: path.join(__dirname, 'static/icons/icon-128.png'),
 
 		// without frame
 		// frame: false, transparent: true,
@@ -78,7 +78,7 @@ function createWindow () {
 
 
 	// minimize to tray
-	const trayIcon = new Tray(path.join(__dirname, 'assets/icons/icon-38.png'))
+	const trayIcon = new Tray(path.join(__dirname, 'static/icons/icon-38.png'))
 	trayIcon.setToolTip('Dao.Casino')
 	trayIcon.setContextMenu(Menu.buildFromTemplate([
 		{ label: 'Show App', click:() => {
