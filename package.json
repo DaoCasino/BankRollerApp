@@ -29,7 +29,7 @@
 
 		"start"                    : "npm run webserver",
 		"webserver"                : "npm run server & npm run serve_web",
-		"server"                   : "NODE_ENV=server npm run build_server && node --inspect ./build/server.electron.js",
+		"server"                   : "NODE_ENV=server npm run build_server && node ./build/server.electron.js",
 		"serve_web"                : "node scripts/start.js",
 
 		"build"                    : "npm run build_web & npm run build_server",

@@ -29,6 +29,15 @@ let _pendings_list = {}
 
 class Games {
 	constructor(){
+		this.subscribe('Games').on( (game, game_id) => {
+			if (!game || !game_id) { return }
+			_games[ game_id ] = game
+		})
+
+		if (process.env.APP_BUILD_FOR_WINSERVER) {
+			return
+		}
+
 		this.Queue = new AsyncPriorityQueue({
 			debug:               false,
 			maxParallel:         1,
@@ -36,11 +45,6 @@ class Games {
 		})
 
 		this.Queue.start()
-
-		this.subscribe('Games').on( (game, game_id) => {
-			if (!game || !game_id) { return }
-			_games[ game_id ] = game
-		})
 	}
 
 	startChannelsGames(){
@@ -81,6 +85,7 @@ class Games {
 		setInterval(()=>{
 			for(let k in _games){
 				let game = _games[k]
+
 				this.RTC.sendMsg({
 					action:    'bankroller_active',
 					game_code: game.code,
