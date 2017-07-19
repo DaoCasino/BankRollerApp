@@ -7,14 +7,26 @@ if (window) {
 }
 
 document.addEventListener('DOMContentLoaded',()=>{
+	if (process.env.APP_BUILD_FOR_WINSERVER) {
+		setTimeout(()=>{
+			Games.startMesh()
+			Games.startChannelsGames()
+		}, 5000)
+		return
+	}
+
 	let view = new View()
 
 	if (window.App) {
 		window.App.view = view
-
+		window.Games = Games
 		setTimeout(()=>{
 			Games.startMesh()
 		}, 500)
+
+		setTimeout(()=>{
+			Games.startChannelsGames()
+		}, 1500)
 	}
 })
 

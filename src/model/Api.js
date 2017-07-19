@@ -15,11 +15,7 @@ class Api {
 
 	// call faucet
 	addBets(address){
-		return this.request({
-			a:       'faucet',
-			to:      address,
-			network: _config.network,
-		}).then( response => {
+		return fetch('https://platform.dao.casino/faucet?to=' + address).then( response => {
 			return response.text()
 		})
 	}
