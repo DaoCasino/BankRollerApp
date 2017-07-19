@@ -61,11 +61,10 @@ var LogicJS = function (params) {
 
 import ABI        from 'ethereumjs-abi'
 import bigInt     from 'big-integer'
-import Eth        from '../Eth/Eth'
-import Rtc        from '../rtc'
-import * as Utils from '../utils'
-
-import Channel from '../../Channel'
+import Eth        from 'Eth/Eth'
+import Rtc        from 'rtc'
+import Channel    from 'Channel'
+import * as Utils from 'utils'
 
 // const contractAddress = '0x89fe5E63487b2d45959502bEB1dac4d5A150663e'
 const game_code = 'slot'
