@@ -1,21 +1,10 @@
 import _config    from 'app.config'
+import ethWallet  from 'eth-lightwallet'
 import DB         from 'DB/DB'
 import * as Utils from 'utils'
 
 import RPC from './RPC'
 const rpc = new RPC( _config.rpc_url )
-
-let ethWallet = false
-
-// in browser connected as external lib
-if ( process.env.NODE_ENV !== 'server' ) {
-	ethWallet = window.lightwallet
-}
-
-// for server
-if (process.env.NODE_ENV === 'server') {
-	ethWallet = require('eth-lightwallet')
-}
 
 let _wallet = false
 
@@ -168,8 +157,8 @@ export default class Wallet {
 			options.nonce = nonce
 
 			let registerTx = ethWallet.txutils.createContractTx(
-								_wallet.openkey.substr(2),
-								options
+				_wallet.openkey.substr(2),
+				options
 							 ).tx
 
 			this.signTx(registerTx, callback)
@@ -213,11 +202,11 @@ export default class Wallet {
 			//  Make contract function transaction
 			// https://github.com/ConsenSys/eth-lightwallet#txutilsfunctiontxabi-functionname-args-txobject
 			let registerTx = ethWallet.txutils.functionTx(
-								contract_abi,
-								function_name,
-								function_args,
-								options
-							)
+				contract_abi,
+				function_name,
+				function_args,
+				options
+			)
 			console.log('registerTx', registerTx)
 
 			//  Sign transaction
@@ -231,11 +220,11 @@ export default class Wallet {
 		this.getPwDerivedKey( PwDerivedKey => {
 
 			let signedTx = ethWallet.signing.signTx(
-								this.getKs(),
-								PwDerivedKey,
-								registerTx,
-								this.get().openkey.substr(2)
-							)
+				this.getKs(),
+				PwDerivedKey,
+				registerTx,
+				this.get().openkey.substr(2)
+			)
 
 			callback(signedTx)
 		})

@@ -1,8 +1,7 @@
+import _config from 'app.config'
+import DB from './DB/DB'
 import * as Utils from './utils'
 
-import DB         from './DB/DB'
-
-const signalserver = 'https://ws.dao.casino/mesh/'
 
 const delivery_timeout = 3000
 
@@ -30,7 +29,7 @@ export default class RTC {
 		const mesh = require('rtc-mesh')
 		const qc   = require('rtc-quickconnect')
 
-		this.channel = mesh( qc(signalserver, {
+		this.channel = mesh( qc(_config.rtc_signalserver, {
 			// debug:      true,
 			room:       room,
 			iceServers: require('freeice')()

@@ -1,25 +1,10 @@
 [ignore]
-.*/node_modules/*
-./build
-./public
-./dist
-./scripts
+.*/node_modules/
 
 [include]
-src/.3*
 
 [libs]
-./flow-typed
 
 [options]
-experimental.const_params=true
-experimental.strict_type_args=true
-module.use_strict=true
-module.system=haste
-module.system.node.resolve_dirname=node_modules
-module.system.node.resolve_dirname=./src/model
-unsafe.enable_getters_and_setters=true
 esproposal.class_static_fields=enable
 esproposal.class_instance_fields=enable
-
-emoji=true

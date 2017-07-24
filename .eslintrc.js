@@ -1,43 +1,48 @@
 module.exports = {
-    "env": {
-        "browser": true,
-        "commonjs": true,
-        "es6": true
-    },
-    // "extends": "eslint:recommended",
-     // "extends": [
-        // "eslint:recommended"
-    // ],
-    "parserOptions": {
-        "ecmaFeatures": {
-            "jsx": false
-        },
-        "sourceType": "module"
-    },
-    "globals": {
-        "__dirname": true,
-        "process": true,
-        "App": true,
-        "$": true,
+	'env': {
+        'browser':  true,
+        'commonjs': true,
+        'es6':      true
     },
 
-    "plugins": ["riot","flowtype"],
-    "rules": {
-        "indent": [
-            "warn",
-            "tab"
+    'parserOptions': {
+        'ecmaFeatures': {
+            'jsx': true
+        },
+        'sourceType': 'module'
+    },
+
+    'globals': {
+        'riot':      true,
+        '__dirname': true,
+        'process':   true,
+        'App':       true,
+        '$':         true
+    },
+
+    'plugins': ['riot','flowtype'],
+
+    'rules': {
+    	// http://eslint.org/docs/rules/indent#options
+        'indent': [
+            'warn',
+            'tab' // 2
         ],
-        "linebreak-style": [
-            "warn",
-            "unix"
+        'linebreak-style': [
+            'warn',
+            'unix'
         ],
-        "quotes": [
-            "warn",
-            "single"
+
+        // http://eslint.org/docs/rules/quotes#options
+        'quotes': [
+            'warn',
+            'single' // 'double'
         ],
-        "semi": [
-            "warn",
-            "never"
+
+        // http://eslint.org/docs/2.0.0/rules/semi#options
+        'semi': [
+            'warn',
+            'never' // 'always'
         ]
     }
-};
+}

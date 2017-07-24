@@ -1,4 +1,3 @@
-import riot  from 'riot'
 import route from 'riot-route'
 import $     from 'jquery'
 <app>
@@ -18,7 +17,7 @@ import $     from 'jquery'
 
 	<header>
 		<a class="logo" title="Dao.Casino Platform" href="https://dao.casino/" target="_blank" rel="noopenr" draggable="false" >
-			<img src="./assets/img/logo.svg">
+			<img src="./static/img/logo.svg">
 		</a>
 
 		<mainmenu></mainmenu>

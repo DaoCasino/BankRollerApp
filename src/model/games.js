@@ -29,6 +29,15 @@ let _pendings_list = {}
 
 class Games {
 	constructor(){
+		this.subscribe('Games').on( (game, game_id) => {
+			if (!game || !game_id) { return }
+			_games[ game_id ] = game
+		})
+
+		if (process.env.APP_BUILD_FOR_WINSERVER) {
+			return
+		}
+
 		this.Queue = new AsyncPriorityQueue({
 			debug:               false,
 			maxParallel:         1,
@@ -36,13 +45,6 @@ class Games {
 		})
 
 		this.Queue.start()
-
-		console.log('UYTGGYGYUGUGYUUGYGuyYU!!!!!!!!!!!!')
-		this.subscribe('Games').on( (game, game_id) => {
-			console.log(game)
-			if (!game || !game_id) { return }
-			_games[ game_id ] = game
-		})
 	}
 
 	startChannelsGames(){
@@ -73,10 +75,6 @@ class Games {
 
 			this.RTC.subscribe(game.contract_id, data => {
 				if (!data || !data.action || !data.address) { return }
-				// if (data.time && data.ttl && (data.time + data.ttl*1000) > new Date().getTime()) {
-				// 	return
-				// }
-
 
 				if (data.seed && data.action == 'get_random') {
 					this.sendRandom2Server(data.game_code, data.address, data.seed)
@@ -87,7 +85,6 @@ class Games {
 		setInterval(()=>{
 			for(let k in _games){
 				let game = _games[k]
-				console.log('bankroller_active')
 
 				this.RTC.sendMsg({
 					action:    'bankroller_active',
@@ -347,15 +344,15 @@ class Games {
 				}
 				if (type=='string') {
 					return web3.toAscii(response.result)
-							.replace(/\)/g, '')
-							.replace(/\(/g, '')
-							.replace(/\/g, '')
-							.replace(/\/g, '')
-							.replace(/\u0007/g, '')
-							.replace(/\u0008/g, '')
-							.replace(/\u0025/g, '')
-							.replace(/\u0000/g, '')
-							.trim()
+						.replace(/\)/g, '')
+						.replace(/\(/g, '')
+						.replace(/\/g, '')
+						.replace(/\/g, '')
+						.replace(/\u0007/g, '')
+						.replace(/\u0008/g, '')
+						.replace(/\u0025/g, '')
+						.replace(/\u0000/g, '')
+						.trim()
 				}
 				return parseInt(response.result, 16)
 			})
