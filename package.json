@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "name": "BankRollerApp",
   "version": "0.1.2",
   "description": "Dao.Casino app for bankroller",
@@ -389,5 +388,4 @@
 		"webpack-manifest-plugin"                        : "1.1.0",
 		"whatwg-fetch"                                   : "2.0.3"
 	}
->>>>>>> 37fab9cb931424b39e2ecf1d1ca56dbb150e6896
 }
