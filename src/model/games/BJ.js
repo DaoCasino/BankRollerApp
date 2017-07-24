@@ -407,9 +407,6 @@ var LogicJS = function(params){
 		return rand
 	}
 
-	var index = 0
-	// var arCards = [40, 30, 45, 11, 44, 46];
-	var arCards = [46, 46, 46, 46, 46, 46, 46]
 	function createCard(cardNumber, val){
 		var hash = ABI.soliditySHA3(['bytes32'],[ cardNumber ])
 		if(val != undefined){
@@ -417,10 +414,6 @@ var LogicJS = function(params){
 		}
 		var rand = bigInt(hash.toString('hex'),16).divmod(52).remainder.value
 		rand = checkCard(rand)
-
-		rand = arCards[index]
-		index ++
-
 		_arCards.push(rand)
 		return rand
 	}
