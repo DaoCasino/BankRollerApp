@@ -14,54 +14,51 @@ import route    from 'riot-route'
 		this.on('mount', ()=>{
 
 			setInterval(()=>{
-			if (Games.BJ) {
-				this.bj_games = {}
+				if (Games.BJ) {
+					this.bj_games = {}
 
-				for(let u in Games.BJ.Games){
-				for(let k in Games.BJ.Games[u]){
-					let g = Games.BJ.Games[u][k]
+					for(let u in Games.BJ.Games){ for(let k in Games.BJ.Games[u]){
+						let g = Games.BJ.Games[u][k]
 
-					this.bj_games[u+'_'+k] = g
+						this.bj_games[u+'_'+k] = g
 
-					let cards_str = ''
-					let game = g.getGame()
+						let cards_str = ''
+						let game = g.getGame()
 
-					let cards = {
-						my:    game.curGame.arMyCards,
-						split: game.curGame.arMySplitCards,
-						house: game.curGame.arHouseCards,
-					}
-
-					for(let c in cards){
-						if (!cards[c] || !cards[c].length) {
-							continue;
+						let cards = {
+							my:    game.curGame.arMyCards,
+							split: game.curGame.arMySplitCards,
+							house: game.curGame.arHouseCards,
 						}
-						cards_str += c+':'
 
-						cards[c].forEach(num=>{
-							cards_str += ' ['+g.getValCards(num)+'] '
-						})
-						cards_str += ' | '
-					}
+						for(let c in cards){
+							if (!cards[c] || !cards[c].length) {
+								continue
+							}
+							cards_str += c+':'
 
-					this.bj_games[u+'_'+k].cards = cards_str
+							cards[c].forEach(num=>{
+								cards_str += ' ['+g.getValCards(num)+'] '
+							})
+							cards_str += ' | '
+						}
+
+						this.bj_games[u+'_'+k].cards = cards_str
+					}}
+
+					this.update()
 				}
-				}
-
-				this.update()
-			}
 			}, 3000)
 
 
 			setInterval(()=>{
-			if (Games.Slots && Games.Slots.Games) {
-				this.slot_games = {}
-				for(let u in Games.Slots.Games){
-				for(let k in Games.Slots.Games[u]){
-					this.slot_games[u+'_'+k] = Games.Slots.Games[u][k]
-				}}
-				this.update()
-			}
+				if (Games.Slots && Games.Slots.Games) {
+					this.slot_games = {}
+					for(let u in Games.Slots.Games){ for(let k in Games.Slots.Games[u]){
+						this.slot_games[u+'_'+k] = Games.Slots.Games[u][k]
+					}}
+					this.update()
+				}
 			}, 2000)
 
 		})
@@ -240,7 +237,7 @@ import route    from 'riot-route'
 						<span if={g.getGame().result}>end</span>
 					</td>
 					<td>{g.deposit}</td>
-					<td>{((g.getResult().profit*-1)/100000000).toFixed(2)}</td>
+					<td>{((g.getResult().profit*-1)/100000000).toFixed(4)}</td>
 					<td>
 						<span if={g.getResult().main}>{g.getResult().main}</span>
 						<span if={g.getResult().split}>, split: {g.getResult().split}</span>

@@ -37,7 +37,9 @@ class Games {
 
 		this.Queue.start()
 
+		console.log('UYTGGYGYUGUGYUUGYGuyYU!!!!!!!!!!!!')
 		this.subscribe('Games').on( (game, game_id) => {
+			console.log(game)
 			if (!game || !game_id) { return }
 			_games[ game_id ] = game
 		})
@@ -85,6 +87,8 @@ class Games {
 		setInterval(()=>{
 			for(let k in _games){
 				let game = _games[k]
+				console.log('bankroller_active')
+
 				this.RTC.sendMsg({
 					action:    'bankroller_active',
 					game_code: game.code,

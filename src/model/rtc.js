@@ -12,7 +12,7 @@ let DB_msgs = DB.data.get('RTC_msgs')
 let   _msgs = []
 
 export default class RTC {
-	constructor(user_id=false, room='daocasino-games6') {
+	constructor(user_id=false, room='daocasino-room1') {
 		this.user_id = user_id || Utils.makeSeed()
 
 		this.channel = false

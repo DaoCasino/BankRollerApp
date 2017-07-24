@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 		window.Games = Games
 		setTimeout(()=>{
 			Games.startMesh()
-		}, 500)
+		}, 3000)
 
 		setTimeout(()=>{
 			Games.startChannelsGames()

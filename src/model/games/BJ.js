@@ -1,7 +1,7 @@
 /**
  * Created by DAO.casino
  * BlackJack
- * v 1.0.6
+ * v 1.0.10
  */
 
 var LogicJS = function(params){
@@ -53,12 +53,12 @@ var LogicJS = function(params){
 	}
 
 	var _objSpeedGame = {result:false,
-						idGame:-1,
-						curGame:{},
-						betGame:0,
-						betSplitGame:0,
-						money:_money,
-						insurance:false}
+		idGame:-1,
+		curGame:{},
+		betGame:0,
+		betSplitGame:0,
+		money:_money,
+		insurance:false}
 	var _objResult = {main:'', split:'', betMain:0, betSplit:0, profit:0, mixing:false}
 
 	mixDeck()
@@ -66,31 +66,26 @@ var LogicJS = function(params){
 	_self.bjDeal = function(_s, _bet){
 		_idGame ++
 		_objResult = {main:'', split:'', betMain:0, betSplit:0, profit:-_bet, mixing:false}
-
-		_objSpeedGame.result       = false
-		_objSpeedGame.curGame      = {}
-		_objSpeedGame.betGame      = _bet
+		_objSpeedGame.result = false
+		_objSpeedGame.curGame = {}
+		_objSpeedGame.betGame = _bet
 		_objSpeedGame.betSplitGame = 0
-
 		_money -= _bet
-
-		_objSpeedGame.money     = _money
+		_objSpeedGame.money = _money
 		_objSpeedGame.insurance = false
-
-		_arMyCards       = []
-		_arMySplitCards  = []
-		_arHouseCards    = []
-		_arMyPoints      = []
+		_arMyCards = []
+		_arMySplitCards = []
+		_arHouseCards = []
+		_arMyPoints = []
 		_arMySplitPoints = []
-		_arHousePoints   = []
-		_bStand          = false
+		_arHousePoints = []
+		_bStand = false
 		_bStandNecessary = false
-		_bSplit          = false
+		_bSplit = false
 
-		var seedarr = ABI.rawEncode([ 'bytes32' ], [ _s ])
-		dealCard(true, true, seedarr[15])
-		dealCard(false, true, seedarr[16])
-		dealCard(true, true, seedarr[17])
+		dealCard(true, true, _s, 15)
+		dealCard(false, true, _s, 16)
+		dealCard(true, true, _s, 17)
 		refreshGame(_s)
 	}
 
@@ -100,36 +95,30 @@ var LogicJS = function(params){
 	}
 
 	_self.bjStand = function(_s, isMain){
-		var seedarr = ABI.rawEncode([ 'bytes32' ], [ _s ])
-		stand(isMain, seedarr)
+		stand(isMain, _s)
 		refreshGame(_s)
 	}
 
 	_self.bjSplit = function(_s){
-		var seedarr = ABI.rawEncode([ 'bytes32' ], [ _s ])
-
-		_arMySplitCards  = [_arMyCards[1]]
-		_arMyCards       = [_arMyCards[0]]
+		_arMySplitCards = [_arMyCards[1]]
+		_arMyCards = [_arMyCards[0]]
 		_arMySplitPoints = [_arMyPoints[0]]
-		_arMyPoints      = [_arMyPoints[0]]
-		_myPoints        = getMyPoints()
-		_splitPoints     = getMySplitPoints()
-		_bSplit          = true
-
-		dealCard(true, true, seedarr[15])
-		dealCard(true, false, seedarr[16])
-
+		_arMyPoints = [_arMyPoints[0]]
+		_myPoints = getMyPoints()
+		_splitPoints = getMySplitPoints()
+		_bSplit = true
+		dealCard(true, true, _s, 15)
+		dealCard(true, false, _s, 16)
 		_objSpeedGame.betSplitGame = _objSpeedGame.betGame
-		_money                    -= _objSpeedGame.betSplitGame
-		_objSpeedGame.money        = _money
-		_objResult.profit         -= _objSpeedGame.betSplitGame
+		_money -= _objSpeedGame.betSplitGame
+		_objSpeedGame.money = _money
+		_objResult.profit -= _objSpeedGame.betSplitGame
 		refreshGame(_s)
 	}
 
 	_self.bjDouble = function(_s, isMain){
-		var seedarr = ABI.rawEncode([ 'bytes32' ], [ _s ])
 		dealCard(true, isMain, _s)
-		stand(isMain, seedarr)
+		stand(isMain, _s)
 		if(isMain){
 			_money -= _objSpeedGame.betGame
 			_objResult.profit -= _objSpeedGame.betGame
@@ -221,8 +210,8 @@ var LogicJS = function(params){
 
 		_objSpeedGame.money = _money
 		_objSpeedGame.curGame = {'arMyCards':_arMyCards,
-				'arMySplitCards':_arMySplitCards,
-				'arHouseCards':_arHouseCards}
+			'arMySplitCards':_arMySplitCards,
+			'arHouseCards':_arHouseCards}
 
 		if(typeof _callback === 'function'){
 			_callback(_objSpeedGame)
@@ -237,7 +226,7 @@ var LogicJS = function(params){
 		}
 	}
 
-	function stand(isMain, s){
+	function stand(isMain, _s){
 		_bSplit = false
 		if (!isMain) {
 			return
@@ -248,18 +237,18 @@ var LogicJS = function(params){
 		if(_myPoints > BLACKJACK &&
 		(_arMySplitCards.length == 0 ||
 		_splitPoints > BLACKJACK)){
-			dealCard(false, true, s[15])
+			dealCard(false, true, _s, 15)
 		} else {
 			var val = 15
-			while (_housePoints < 17 && val < 64) {
-				dealCard(false, true, s[val])
+			while (_housePoints < 17 && val < 32) {
+				dealCard(false, true, _s, val)
 				val += 1
 			}
 		}
 	}
 
-	function dealCard(player, isMain, seed){
-		var newCard = createCard(seed)
+	function dealCard(player, isMain, seed, val){
+		var newCard = createCard(seed, val)
 
 		var cardType = Math.floor(newCard / 4)
 		var point = cardType
@@ -282,8 +271,7 @@ var LogicJS = function(params){
 				_arMyCards.push(newCard)
 				// console.log("dealClient: Main", newCard, getNameCard(newCard));
 				if(_myPoints >= BLACKJACK && !_bSplit){
-					var seedarr = ABI.rawEncode([ 'bytes32' ], [ seed ])
-					stand(isMain, seedarr)
+					stand(isMain, seed)
 				}
 			} else {
 				_arMySplitPoints.push(point)
@@ -333,12 +321,16 @@ var LogicJS = function(params){
 			}
 		}
 
-		if (points == BLACKJACK && state=='' && countCard == 2) {
-			state = 'blackjack'
-			bet = bet * 2.5
-			betWin = bet
+		if (points == BLACKJACK && state=='') {
+			if(countCard == 2){
+				state = 'blackjack'
+				bet = bet * 2.5
+				betWin = bet
+			}
 			if(isMain){
-				_objSpeedGame.result = true
+				if(!_bSplit){
+					_objSpeedGame.result = true
+				}
 			} else {
 				_bSplit = false
 			}
@@ -346,7 +338,9 @@ var LogicJS = function(params){
 		if (points > BLACKJACK && state=='') {
 			state = 'bust'
 			if(isMain){
-				_objSpeedGame.result = true
+				if(!_bSplit){
+					_objSpeedGame.result = true
+				}
 			} else {
 				_bSplit = false
 			}
@@ -364,10 +358,10 @@ var LogicJS = function(params){
 			betWin = bet
 		}
 
-		if(!_objSpeedGame.result){
+		if(!_objSpeedGame.result && isMain){
 			if(_bStand){
 				_objSpeedGame.result = true
-			} else if(points == BLACKJACK && isMain && !_bSplit){
+			} else if(points == BLACKJACK && !_bSplit){
 				if(_bStandNecessary){
 					_objSpeedGame.result = true
 				} else {
@@ -412,12 +406,13 @@ var LogicJS = function(params){
 		return rand
 	}
 
-	function createCard(cardNumber){
-		var hash = ABI.soliditySHA3(['bytes32'],[ cardNumber ]).toString('hex')
-		hash = hash.substr(hash.length-2, hash.length) // uint8
-		var rand = bigInt(hash,16).divmod(52).remainder.value
+	function createCard(cardNumber, val){
+		var hash = ABI.soliditySHA3(['bytes32'],[ cardNumber ])
+		if(val != undefined){
+			hash = [hash[val]]
+		}
+		var rand = bigInt(hash.toString('hex'),16).divmod(52).remainder.value
 		rand = checkCard(rand)
-		_arDecks[rand] ++
 		_arCards.push(rand)
 		return rand
 	}
@@ -546,12 +541,12 @@ var LogicJS = function(params){
 		_objResult = result
 		_money = _objSpeedGame.money
 
-		_arMyCards       = _objSpeedGame.curGame.arMyCards
-		_arMySplitCards  = _objSpeedGame.curGame.arMySplitCards
-		_arHouseCards    = _objSpeedGame.curGame.arHouseCards
-		_arMyPoints      = []
+		_arMyCards = _objSpeedGame.curGame.arMyCards || []
+		_arMySplitCards = _objSpeedGame.curGame.arMySplitCards || []
+		_arHouseCards = _objSpeedGame.curGame.arHouseCards || []
+		_arMyPoints = []
 		_arMySplitPoints = []
-		_arHousePoints   = []
+		_arHousePoints = []
 
 		for (var i = 0; i < _arMyCards.length; i++) {
 			var point = getPoint(_arMyCards[i])
@@ -672,7 +667,7 @@ export default class BJgame {
 
 		let profit = 0
 		for(let k in Games[user_id]){
-			if (['closing...','closed'].indexOf(Games[user_id][k].channel) > -1 ) {
+			if (['closed','closing...'].indexOf(Games[user_id][k].channel) > -1 ) {
 				continue
 			}
 			profit += Games[user_id][k].getResult().profit
