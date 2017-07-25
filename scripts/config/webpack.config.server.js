@@ -52,7 +52,7 @@ let webpack_server_config = {
 	devtool: 'source-map',
 
 	// In production, we only want to load the polyfills and the app code.
-	entry: [require.resolve('./polyfills'), paths.appBackground],
+	entry: ['babel-polyfill', require.resolve('./polyfills'), paths.appBackground],
 	output: {
 		// The build folder.
 		path: paths.appBuild,
@@ -197,7 +197,14 @@ let webpack_server_config = {
 				test:    /\.(js|tag)$/,
 				include: paths.appSrc,
 				loader:  require.resolve('babel-loader'),
-				options: { presets: 'es2015-riot' }
+				options: {
+					presets: ['es2015-riot', ['env', {
+					      'targets': {
+					        'browsers': ['last 2 versions', 'safari >= 7']
+					      }
+					    }]
+    				]
+				}
 			},
 
 			{

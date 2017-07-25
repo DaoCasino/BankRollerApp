@@ -34,31 +34,32 @@ export default new class Channel {
 		})
 	}
 
-	isOpenChannel(contractAddress, playerAddress=false, channel_id=false, callback, repeat=5){ setTimeout(()=>{
+	isOpenChannel(contractAddress, playerAddress=false, channel_id=false, callback, repeat=5){ setTimeout( async ()=>{
 		if (!playerAddress || !channel_id) { return }
 		repeat--
 
-		Eth.RPC.request('call', [{
+		const response = await Eth.RPC.request('call', [{
 			'to':   contractAddress,
 			'data': '0x'
 				+ Eth.hashName('getOpenChannel(address,bytes32)')
 					+ Utils.pad(playerAddress.substr(2), 64)
 					+ Utils.pad(channel_id.substr(2), 64)
 
-		}, 'latest']).then( response => {
-			let opened = true
+		}, 'latest'])
 
-			if (response && response.result) {
-				opened = ( Utils.hexToNum(response.result, 16) > 0)
-			}
+		let opened = true
 
-			if (opened && repeat > 0) {
-				this.isOpenChannel(contractAddress, playerAddress, channel_id, callback, repeat)
-				return
-			}
+		if (response && response.result) {
+			opened = ( Utils.hexToNum(response.result, 16) > 0)
+		}
 
-			callback( opened )
-		})
+		if (opened && repeat > 0) {
+			this.isOpenChannel(contractAddress, playerAddress, channel_id, callback, repeat)
+			return
+		}
+
+		callback( opened )
+
 	}, 3000) }
 
 	callFunc(address, name, args, callback){

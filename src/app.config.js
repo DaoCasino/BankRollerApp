@@ -80,6 +80,9 @@ const games = {
 }
 
 module.exports = {
+	db_name:        'DaoCasino',
+	rtc_room:       'daocasino-room1',
+
 	wallet_pass:     '1234',
 	server:          bankroller_server,
 

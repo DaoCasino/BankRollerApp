@@ -33,18 +33,18 @@ class Eth {
 			'createGameChannel', [],
 
 			// result: signed transaction
-			signedTx => {
+			async signedTx => {
 				// send transacriont to RPC
-				this.RPC.request('sendRawTransaction', ['0x'+signedTx], 0).then( response => {
-					if (!response.result) {
-						console.log(response.message)
-						if (!response.message || response.message.indexOf('known transaction')==-1) {
-							return
-						}
+				const response = await this.RPC.request('sendRawTransaction', ['0x'+signedTx], 0)
+
+				if (!response.result) {
+					console.log(response.message)
+					if (!response.message || response.message.indexOf('known transaction')==-1) {
+						return
 					}
-					this.checkContractDeployed(response.result, callback_deployed)
-					callback_proccess()
-				})
+				}
+				this.checkContractDeployed(response.result, callback_deployed)
+				callback_proccess()
 			},
 
 			// gas limit
@@ -59,18 +59,18 @@ class Eth {
 			'createDiceRoll', [],
 
 			// result: signed transaction
-			signedTx => {
+			async signedTx => {
 				// send transacriont to RPC
-				this.RPC.request('sendRawTransaction', ['0x'+signedTx], 0).then( response => {
-					if (!response.result) {
-						console.log(response.message)
-						if (!response.message || response.message.indexOf('known transaction')==-1) {
-							return
-						}
+				const response = await this.RPC.request('sendRawTransaction', ['0x'+signedTx], 0)
+
+				if (!response.result) {
+					console.log(response.message)
+					if (!response.message || response.message.indexOf('known transaction')==-1) {
+						return
 					}
-					this.checkContractDeployed(response.result, callback_deployed)
-					callback_proccess()
-				})
+				}
+				this.checkContractDeployed(response.result, callback_deployed)
+				callback_proccess()
 			}
 		)
 	}
@@ -81,39 +81,36 @@ class Eth {
 			gasLimit: '0x4630C0',
 			gasPrice: '0x' + Utils.numToHex(gasprice),
 			value:    0
-		}, signedTx => {
-			this.RPC.request('sendRawTransaction', ['0x' + signedTx], 0).then( response => {
-				if (!response.result) {
-					console.log(response.message)
-					if (!response.message || response.message.indexOf('known transaction')==-1) {
-						return
-					}
+		}, async signedTx => {
+			const response = await this.RPC.request('sendRawTransaction', ['0x' + signedTx], 0)
+
+			if (!response.result) {
+				console.log(response.message)
+				if (!response.message || response.message.indexOf('known transaction')==-1) {
+					return
 				}
-				this.checkContractDeployed(response.result, callback_deployed)
-				callback_proccess()
-			})
+			}
+			this.checkContractDeployed(response.result, callback_deployed)
+			callback_proccess()
 		})
 	}
 
-	checkContractDeployed(transaction_hash, callback){ setTimeout(()=>{
+	checkContractDeployed(transaction_hash, callback){ setTimeout(async ()=>{
 		console.log('checkContractDeployed', _config.etherscan_url+'/tx/'+transaction_hash)
 
-		this.RPC.request('getTransactionReceipt', [transaction_hash]).then( response => {
+		const response = await this.RPC.request('getTransactionReceipt', [transaction_hash])
 
-			if (!response || !response.result || !response.result.logs || !response.result.logs[0] || !response.result.logs[0].data) {
-				this.checkContractDeployed(transaction_hash, callback)
-				return
-			}
-
-			var contractAddress = '0x'+response.result.logs[0].data.substr(-40)
-
-			console.log('[OK] checkContractDeployed - address:', _config.etherscan_url+'/address/'+contractAddress)
-
-			callback(contractAddress)
-		}).catch( err => {
-			console.error('checkContractDeployed:', err)
+		if (!response || !response.result || !response.result.logs || !response.result.logs[0] || !response.result.logs[0].data) {
 			this.checkContractDeployed(transaction_hash, callback)
-		})
+			return
+		}
+
+		var contractAddress = '0x'+response.result.logs[0].data.substr(-40)
+
+		console.log('[OK] checkContractDeployed - address:', _config.etherscan_url+'/address/'+contractAddress)
+
+		callback(contractAddress)
+
 	}, 9000)}
 
 
@@ -174,13 +171,11 @@ class Eth {
 	sendEth(to, amount, callback){
 		amount = amount * 1000000000000000000
 
-		this.Wallet.signedEthTx(to, amount, signedEthTx=>{
+		this.Wallet.signedEthTx(to, amount, async (signedEthTx)=>{
 			console.log(signedEthTx)
-			this.RPC.request('sendRawTransaction', ['0x'+signedEthTx], 0).then( response => {
-				if (!response || !response.result) { return }
-				callback( response.result )
-			})
-
+			const response = await this.RPC.request('sendRawTransaction', ['0x'+signedEthTx], 0)
+			if (!response || !response.result) { return }
+			callback( response.result )
 		})
 	}
 

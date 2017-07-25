@@ -173,7 +173,7 @@ class Games {
 					this.add(game_to_deploy_id, game_to_deploy.code, address)
 
 					// add bets to contract
-					Api.addBets(address).then( result => {})
+					Api.addBets(address)
 
 					Notify.send('Contract succefull deployed!', 'Address: '+address)
 				},
@@ -196,7 +196,7 @@ class Games {
 					this.add(game_to_deploy_id, game_to_deploy.code, address)
 
 					// add bets to contract
-					Api.addBets(address).then( result => {})
+					Api.addBets(address)
 
 					Notify.send('Contract succefull deployed!', 'Address: '+address)
 				},
@@ -220,9 +220,7 @@ class Games {
 				this.add(game_to_deploy_id, game_to_deploy.code, address)
 
 				// add bets to contract
-				Api.addBets(address).then( result => {
-				})
-
+				Api.addBets(address)
 				Notify.send('Contract succefull deployed!', 'Address: '+address)
 			},
 
@@ -486,20 +484,18 @@ class Games {
 		})
 	}
 
-	getBlockchainLogs(contract_id, callback){
+	async getBlockchainLogs(contract_id, callback){
 		if (!contract_id) { return }
 
 		// Blockchain
-		Eth.RPC.request('getLogs',[{
+		const response = await Eth.RPC.request('getLogs',[{
 			'address':   contract_id,
 			'fromBlock': Eth.getCurBlock(),
 			'toBlock':   'latest',
-		}], 74).then( response => {
-			if(!response || !response.result){ callback([]); return }
+		}], 74)
 
-			if (callback) callback(response.result)
-		}).catch(err => {
-		})
+		if(!response || !response.result){ callback([]); return }
+		if (callback) callback(response.result)
 	}
 
 	// Add send random task to queue
@@ -606,16 +602,16 @@ class Games {
 		setTimeout(()=>{ this.runServerConfirm() }, _config.confirm_timeout/2 )
 	}
 
-	ServerConfirm(contract_id, game_code, game_version){
-		Api.getLogs(contract_id, game_code, game_version).then( seeds => {
-			if (!seeds || !seeds.length) {
-				return
-			}
+	async ServerConfirm(contract_id, game_code, game_version){
+		const seeds = await Api.getLogs(contract_id, game_code, game_version)
+		if (!seeds || !seeds.length) {
+			return
+		}
 
-			seeds.forEach( seed => {
-				this.sendRandom2Server(game_code, contract_id, seed)
-			})
+		seeds.forEach( seed => {
+			this.sendRandom2Server(game_code, contract_id, seed)
 		})
+
 	}
 
 	sendRandom2Server(game_code, address, seed){
@@ -665,7 +661,7 @@ class Games {
 		})
 	}
 
-	checkPending(game_code, address, seed, callback){
+	async checkPending(game_code, address, seed, callback){
 		if (game_code.indexOf('blackjack')!=-1) {
 			callback()
 			return
@@ -685,26 +681,26 @@ class Games {
 			return
 		}
 
-		Eth.RPC.request('call', [{
+		const response = Eth.RPC.request('call', [{
 			'to':   address,
 			'data': '0x' + Eth.hashName('listGames(bytes32)') + seed.substr(2)
-		}, 'pending'], 0).then( response => {
-			if (!response.result){
-				setTimeout(()=>{ this.checkPending(game_code, address, seed, callback) }, 1000)
-				return
-			}
-			let resdata = response.result.split('0').join('')
+		}, 'pending'], 0)
 
-			if (resdata.length < 5) {
-				setTimeout(()=>{ this.checkPending(game_code, address, seed, callback) }, 1000)
-				_seeds_list[seed].pending = false
-				return
-			}
+		if (!response.result){
+			setTimeout(()=>{ this.checkPending(game_code, address, seed, callback) }, 1000)
+			return
+		}
+		let resdata = response.result.split('0').join('')
 
-			_seeds_list[seed].pending = true
-			delete( _pendings_list[address+'_'+seed] )
-			callback()
-		})
+		if (resdata.length < 5) {
+			setTimeout(()=>{ this.checkPending(game_code, address, seed, callback) }, 1000)
+			_seeds_list[seed].pending = false
+			return
+		}
+
+		_seeds_list[seed].pending = true
+		delete( _pendings_list[address+'_'+seed] )
+		callback()
 	}
 
 	isValidSeed(seed){

@@ -59,9 +59,9 @@ const cssFilename = 'static/css/[name].[contenthash:8].css'
 // However, our output is structured with css, js and media folders.
 // To have this structure working with relative paths, we have to use custom options.
 const extractTextPluginOptions = shouldUseRelativeAssetPaths
-  ? // Making sure that the publicPath goes back to to build folder.
+	? // Making sure that the publicPath goes back to to build folder.
 	{ publicPath: Array(cssFilename.split('/').length).join('../') }
-  : {}
+	: {}
 
 // This is the production configuration.
 // It compiles slowly and is focused on producing a fast and minimal bundle.
@@ -209,8 +209,8 @@ let webpack_prod_config = {
 				  {
 					 loader: require.resolve('riot-tag-loader'),
 					 options: {
-						type: 'es6',
-						debug: false,
+							type: 'es6',
+							debug: false,
 						// add here all the other riot-compiler options
 						// http://riotjs.com/guide/compiler/
 						// template: 'pug' for example
@@ -224,7 +224,14 @@ let webpack_prod_config = {
 				test:    /\.(js|tag)$/,
 				include: paths.appSrc,
 				loader:  require.resolve('babel-loader'),
-				options: { presets: 'es2015-riot' }
+				options: {
+					presets: ['es2015-riot', ['env', {
+					      'targets': {
+					        'browsers': ['last 2 versions', 'safari >= 7']
+					      }
+					    }]
+    				]
+				}
 			},
 
 			{
