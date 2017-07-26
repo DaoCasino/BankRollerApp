@@ -5,6 +5,7 @@ import Eth        from './Eth/Eth'
 import Api        from './Api'
 import Rtc        from './rtc'
 import Notify     from './notify'
+import GamesStat  from './games.stat.js'
 
 import bigInt     from 'big-integer'
 import Web3       from 'web3'
@@ -20,6 +21,9 @@ import {AsyncPriorityQueue, AsyncTask} from 'async-priority-queue'
 
 let skip_games = ['daochannel_v1', 'BJ', 'Slot']
 
+if (window) {
+	window.GamesStat = GamesStat
+}
 
 let _games         = {}
 let _gamesLogic    = {}
@@ -69,6 +73,9 @@ class Games {
 		this.RTC = new Rtc(user_id)
 
 		DB.data.get('Games').map().on((game, game_id)=>{ if (game) {
+
+			GamesStat.add(game.contract_id, 'game', game)
+
 			if (_config.games[game.code] && _config.games[game.code].channels) {
 				return
 			}
@@ -83,15 +90,16 @@ class Games {
 		}})
 
 		setInterval(()=>{
-			for(let k in _games){
-				let game = _games[k]
-
+			Object.values(_games).forEach(game=>{
 				this.RTC.sendMsg({
-					action:    'bankroller_active',
-					game_code: game.code,
-					address:   game.contract_id,
+					action    : 'bankroller_active',
+					game_code : game.code,
+					address   : game.contract_id,
+					stat      : GamesStat.info(game.contract_id)
 				})
-			}
+			})
+
+
 		}, 3500)
 	}
 
@@ -308,9 +316,11 @@ class Games {
 			Eth.getBetsBalance(game.contract_id, (balance)=>{
 				if (_games[game.id].start_balance==0) {
 					_games[game.id].start_balance = balance
+					GamesStat.add(game.contract_id, 'start_balance', balance)
 					DB.data.get('Games').get(game.id).get('start_balance').put(balance)
 				} else {
 					_games[game.id].balance = balance
+					GamesStat.add(game.contract_id, 'balance', balance)
 					DB.data.get('Games').get(game.id).get('balance').put(balance)
 				}
 			})

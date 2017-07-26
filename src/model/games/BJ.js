@@ -1,7 +1,7 @@
 /**
  * Created by DAO.casino
  * BlackJack
- * v 1.0.11
+ * v 1.0.12
  */
 
 var LogicJS = function(params){
@@ -288,6 +288,9 @@ var LogicJS = function(params){
 	}
 
 	function checkResult(isMain, _s){
+		if(_arHouseCards.length < 2){
+			return false
+		}
 		var points = getMySplitPoints()
 		var bet = _objSpeedGame.betSplitGame
 		var betWin = 0
@@ -307,7 +310,7 @@ var LogicJS = function(params){
 		if(points == BLACKJACK && _housePoints == BLACKJACK && state==''){
 			state = 'push'
 			betWin = bet
-			if(isMain){
+			if(isMain && !_bSplit){
 				_objSpeedGame.result = true
 			}
 		}
@@ -576,7 +579,10 @@ import bigInt     from 'big-integer'
 import Eth        from 'Eth/Eth'
 import Rtc        from 'rtc'
 import Channel    from 'Channel'
+import GamesStat  from 'games.stat.js'
+
 import * as Utils from 'utils'
+
 
 
 let Games = []
@@ -654,6 +660,9 @@ export default class BJgame {
 		Games[user_id][game_id].deposit = params.deposit
 		Games[user_id][game_id].user_id = params.user_id
 
+
+		GamesStat.cnt(this.contractAddress, 'open_game')
+		GamesStat.add(this.contractAddress, 'players_now', Object.keys(Games).length)
 	}
 
 	endGame(params){
@@ -686,6 +695,15 @@ export default class BJgame {
 		if (params.profit == profit) {
 			profit = profit/100000000
 
+			if (!(profit < 0)) {
+				GamesStat.cnt(this.contractAddress, 'wins' )
+				GamesStat.cnt(this.contractAddress, 'win_bets', Math.abs(profit) )
+			}
+			if (profit < 0) {
+				GamesStat.cnt(this.contractAddress, 'lose')
+				GamesStat.cnt(this.contractAddress, 'lose_bets', Math.abs(profit) )
+			}
+
 
 			close_code += params.address+'_'+params.account+'_'+profit
 			if (_closing_channels.indexOf(close_code) > -1) {
@@ -703,6 +721,8 @@ export default class BJgame {
 				for(let k in Games[user_id]){
 					Games[user_id][k].channel = 'closed'
 				}
+
+				GamesStat.cnt(this.contractAddress, 'close_game')
 
 				console.log('rtc send', params)
 				this.RTC.send(params)
