@@ -67,6 +67,12 @@ const games = {
 		url:     'https://platform.dao.casino/games/SlotGame/',
 	},
 
+	MG: { code: 'MG',
+		channels: true,
+		name:     'MG',
+		url:      'http://blackjackgame.dao.casino/games/MG/#test_multi',
+	},
+
 	BJ: { code: 'BJ',
 		channels: true,
 		name:     'Blackjack',
