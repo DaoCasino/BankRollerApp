@@ -14,7 +14,10 @@ import route    from 'riot-route'
 		this.on('mount', ()=>{
 
 			setInterval(()=>{
-				if (Games.BJ) {
+
+				// _room.getUsersArr().forEach( function(user) { console.log(user.logic.getGame().curGame) })
+
+				if (false && Games.BJ) {
 					this.bj_games = {}
 
 					for(let u in Games.BJ.Games){ for(let k in Games.BJ.Games[u]){

@@ -77,10 +77,9 @@ export default class RTC {
 
 	async isAlreadyReceived(data){
 	// isAlreadyReceived(data){
-		if (!data.seed || data.action == 'delivery_confirmation') {
+		if (!data.seed || typeof data.seed !=='string' || data.action == 'delivery_confirmation') {
 			return false
 		}
-
 		const seed_exist = await this.DB.get(_config.rtc_store, data.seed)
 		if (seed_exist && this.isFreshSeed(seed_exist.t) ) {
 			return true

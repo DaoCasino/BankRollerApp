@@ -45,7 +45,7 @@ var GameRoom = function(user_id){
 			_self.result()
 		}
 
-		callback( playersRandoms[user_id] )
+		if(callback) callback( playersRandoms[user_id] )
 	}
 
 	_self.result = function(){

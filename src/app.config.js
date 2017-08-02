@@ -61,17 +61,17 @@ if (process.env.NODE_ENV === 'server' && global.network ) {
 
 
 const games = {
-	slot:{ code: 'slot',
-		channels: true,
-		name:    'Slots',
-		url:     'https://platform.dao.casino/games/SlotGame/',
-	},
+	// slot:{ code: 'slot',
+	// 	channels: true,
+	// 	name:    'Slots',
+	// 	url:     'https://platform.dao.casino/games/SlotGame/',
+	// },
 
-	MG: { code: 'MG',
-		channels: true,
-		name:     'MG',
-		url:      'http://blackjackgame.dao.casino/games/MG/#test_multi',
-	},
+	// MG: { code: 'MG',
+	// 	channels: true,
+	// 	name:     'MG',
+	// 	url:      'http://blackjackgame.dao.casino/games/MG/#test_multi',
+	// },
 
 	BJ: { code: 'BJ',
 		channels: true,
