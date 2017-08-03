@@ -614,6 +614,7 @@ class Games {
 
 	async ServerConfirm(contract_id, game_code, game_version){
 		const seeds = await Api.getLogs(contract_id, game_code, game_version)
+		console.log('seeds', seeds)
 		if (!seeds || !seeds.length) {
 			return
 		}
@@ -645,30 +646,30 @@ class Games {
 		}
 
 
-		this.checkPending(game_code, address, seed, ()=>{
-			this.getConfirmNumber(game_code, seed, (confirm, PwDerivedKey)=>{
+		// this.checkPending(game_code, address, seed, ()=>{
+		this.getConfirmNumber(game_code, seed, (confirm, PwDerivedKey)=>{
 
-				if (this.RTC) {
-					this.RTC.send({
-						action:    'send_random',
-						game_code: game_code,
-						address:   address,
-						seed:      seed,
-						random:    confirm,
-					})
-				}
+			if (this.RTC) {
+				this.RTC.send({
+					action:    'send_random',
+					game_code: game_code,
+					address:   address,
+					seed:      seed,
+					random:    confirm,
+				})
+			}
+			console.log('sendConfirm', confirm)
+			Api.sendConfirm(address, seed, confirm).then( console.log )
 
-				Api.sendConfirm(address, seed, confirm).then(()=>{ })
+			_seeds_list[seed].confirm_server_time   = new Date().getTime()
+			_seeds_list[seed].confirm               = confirm
+			_seeds_list[seed].confirm_server        = confirm
+			_seeds_list[seed].confirm_sended_server = true
 
-				_seeds_list[seed].confirm_server_time   = new Date().getTime()
-				_seeds_list[seed].confirm               = confirm
-				_seeds_list[seed].confirm_server        = confirm
-				_seeds_list[seed].confirm_sended_server = true
-
-				DB.data.get('seeds_list').get(seed).put(_seeds_list[seed])
-				/* gunjs bugfix =) */ DB.data.get('seeds_list').map().on( (a,b)=>{ })
-			})
+			DB.data.get('seeds_list').get(seed).put(_seeds_list[seed])
+			/* gunjs bugfix =) */ DB.data.get('seeds_list').map().on( (a,b)=>{ })
 		})
+		// })
 	}
 
 	async checkPending(game_code, address, seed, callback){

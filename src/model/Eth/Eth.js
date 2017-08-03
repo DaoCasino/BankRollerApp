@@ -71,8 +71,8 @@ class Eth {
 				}
 				this.checkContractDeployed(response.result, callback_deployed)
 				callback_proccess()
-			}
-		)
+			},
+			(5*600000) )
 	}
 
 	deployContract(contract_bytecode, gasprice=151000000000, callback_deployed, callback_proccess){
