@@ -59,11 +59,10 @@ var RoomJS = function(){
 
 
 
-
 /**
  * Created by DAO.casino
  * BlackJack
- * v 1.0.0
+ * v 1.0.2
  */
 
 var LogicMultJS = function(params){
@@ -132,25 +131,30 @@ var LogicMultJS = function(params){
 	mixDeck()
 
 	_self.bjBet = function(_bet){
-		_idGame++
+		_idGame ++
 		_objResult = {main:'', split:'', betMain:0, betSplit:0, profit:-_bet, mixing:false}
-		_objSpeedGame.method = 'bjBet'
-		_objSpeedGame.result = false
-		_objSpeedGame.curGame = {}
-		_objSpeedGame.betGame = _bet
+
+		_objSpeedGame.method       = 'bjBet'
+		_objSpeedGame.result       = false
+		_objSpeedGame.curGame      = {}
+		_objSpeedGame.betGame      = _bet
 		_objSpeedGame.betSplitGame = 0
+
 		_money -= _bet
-		_objSpeedGame.money = _money
+
+		_objSpeedGame.money     = _money
 		_objSpeedGame.insurance = false
-		_arMyCards = []
-		_arMySplitCards = []
-		_arHouseCards = []
-		_arMyPoints = []
+
+		_arMyCards       = []
+		_arMySplitCards  = []
+		_arHouseCards    = []
+		_arMyPoints      = []
 		_arMySplitPoints = []
-		_arHousePoints = []
-		_bStand = false
+		_arHousePoints   = []
+
+		_bStand          = false
 		_bStandNecessary = false
-		_bSplit = false
+		_bSplit          = false
 
 		if(typeof _callback === 'function'){
 			_callback(_address, _objSpeedGame)
@@ -164,11 +168,26 @@ var LogicMultJS = function(params){
 		_objSpeedGame.method = 'bjDealer'
 		dealCard(false, true, _s)
 		refreshGame(_s)
+		if(typeof _callback === 'function'){
+			_callback(_address, _objSpeedGame)
+		}
+	}
+
+	_self.bjGeneralStand = function(_s, isMain){
+		_objSpeedGame.method = 'bjGeneralStand'
+		_bStand = true
+
+		var val = 15
+		while (_housePoints < 17 && val < 32) {
+			dealCard(false, true, _s, val)
+			val += 1
+		}
+		refreshGame(_s)
 	}
 
 	_self.bjDeal = function(_s, _bet){
 		_objSpeedGame.method = 'bjDeal'
-		_idGame++
+		_idGame ++
 		_objResult = {main:'', split:'', betMain:0, betSplit:0, profit:-_bet, mixing:false}
 		_objSpeedGame.result = false
 		_objSpeedGame.curGame = {}
@@ -302,6 +321,10 @@ var LogicMultJS = function(params){
 		return spriteName
 	}
 
+	_self.refreshGame = function(_s){
+		refreshGame(_s)
+	}
+
 	function mixDeck(){
 		_arCards = []
 		_objResult.mixing = true
@@ -340,7 +363,6 @@ var LogicMultJS = function(params){
 		if (!isMain) {
 			return
 		}
-
 		_bStand = true
 
 		if(_myPoints > BLACKJACK &&
@@ -555,7 +577,7 @@ var LogicMultJS = function(params){
 			var curPoint = _arMyPoints[i]
 			myPoints += curPoint
 			if(curPoint == 11){
-				countAce++
+				countAce ++
 			}
 		}
 		while(myPoints > 21 && countAce > 0){
@@ -573,7 +595,7 @@ var LogicMultJS = function(params){
 			var curPoint = _arMySplitPoints[i]
 			mySplitPoints += curPoint
 			if(curPoint == 11){
-				countAce++
+				countAce ++
 			}
 		}
 
@@ -592,7 +614,7 @@ var LogicMultJS = function(params){
 			var curPoint = _arHousePoints[i]
 			housePoints += curPoint
 			if(curPoint == 11){
-				countAce++
+				countAce ++
 			}
 		}
 
@@ -675,11 +697,26 @@ var LogicMultJS = function(params){
 		}
 	}
 
+	_self.setDealerCards  = function(arHouseCards, value){
+		_arHouseCards = arHouseCards || []
+		_objSpeedGame.curGame.arHouseCards = _arHouseCards
+		_arHousePoints = []
+		for (var i = 0; i < _arHouseCards.length; i++) {
+			var point = getPoint(_arHouseCards[i])
+			_arHousePoints.push(point)
+		}
+		_housePoints = getHousePoints()
+
+		if(value){
+			_bStand = true
+		}
+	}
+
 	return _self
 }
 
-const game_code = 'BJ'
 
+const game_code = 'BJ'
 
 import ABI        from 'ethereumjs-abi'
 import bigInt     from 'big-integer'

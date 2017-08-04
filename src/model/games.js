@@ -614,10 +614,10 @@ class Games {
 
 	async ServerConfirm(contract_id, game_code, game_version){
 		const seeds = await Api.getLogs(contract_id, game_code, game_version)
-		console.log('seeds', seeds)
 		if (!seeds || !seeds.length) {
 			return
 		}
+		console.log('seeds', seeds)
 
 		seeds.forEach( seed => {
 			this.sendRandom2Server(game_code, contract_id, seed)
