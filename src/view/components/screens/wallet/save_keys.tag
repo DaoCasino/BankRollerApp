@@ -1,5 +1,5 @@
 import _config  from 'app.config'
-
+import route from 'riot-route'
 import Api from 'Api'
 import Eth from 'Eth/Eth'
 
@@ -121,7 +121,7 @@ import './wallet.less'
 		this.ok = (e)=>{
 			e.preventDefault()
 			localStorage.keysSaved = true
-			window.location='/'
+			route('/wallet')
 		}
 
 	</script>
