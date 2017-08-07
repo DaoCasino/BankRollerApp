@@ -8,6 +8,11 @@ import $     from 'jquery'
 					screen = 'wallet'
 				}
 
+				if (!localStorage.keysSaved) {
+					screen = 'save_keys'
+				}
+
+
 				$('html,body').scrollTop(0)
 				riot.mount(this.refs.mount_point, screen)
 			})

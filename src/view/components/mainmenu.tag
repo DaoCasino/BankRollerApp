@@ -25,6 +25,12 @@ import route from 'riot-route'
 				if (!screen) {
 					screen = 'wallet'
 				}
+
+				if (!localStorage.keysSaved) {
+					screen='save_keys'
+					return
+				}
+
 				for(let k in this.menuitems){
 					if (k==screen) {
 						this.menuitems[k].active = true
