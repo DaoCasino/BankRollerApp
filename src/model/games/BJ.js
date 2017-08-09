@@ -60,7 +60,6 @@ var RoomJS = function(){
 }
 
 
-
 /**
  * Created by DAO.casino
  * BlackJack
@@ -120,9 +119,9 @@ var LogicMultJS = function(params){
 		if(params.callback){
 			_callback = params.callback
 		}
-		if(params.callback){
-			_bMultiplayer = params.bMultiplayer || false
-		}
+
+		_bMultiplayer = params.bMultiplayer || false
+
 		_balance = params.balance || 0
 	}
 
@@ -274,6 +273,7 @@ var LogicMultJS = function(params){
 		var val = 15
 		while (_housePoints < 17 && val < 32) {
 			dealCard(false, true, _s, val)
+			console.log('bjDealerStand - dealCard', _housePoints)
 			val += 1
 		}
 		refreshGame(_s)
@@ -642,6 +642,8 @@ var LogicMultJS = function(params){
 		return myPoints
 	}
 
+	_self.getMyPoints = getMyPoints
+
 	function getMySplitPoints(){
 		var mySplitPoints = 0
 		var countAce = 0
@@ -770,6 +772,7 @@ var LogicMultJS = function(params){
 }
 
 
+
 const game_code = 'BJ'
 
 import ABI        from 'ethereumjs-abi'
@@ -888,6 +891,12 @@ export default class BJgame {
 			users:     send_users,
 		})
 
+
+		Games[room_hash].state = 'wait_players'
+		if (Games[room_hash].getUsersArr().length >= max_players) {
+			Games[room_hash].state = 'wait_players_bets'
+		}
+
 		GamesStat.cnt(this.contractAddress, 'open_game')
 		GamesStat.add(this.contractAddress, 'players_now', Games[room_hash].getUsersArr().length)
 		// GamesStat.add(this.contractAddress, 'players', send_users)
@@ -909,7 +918,6 @@ export default class BJgame {
 	}
 
 	callGameFunction(user_id, game_id, function_name, function_args){
-		let room = this.getUserRoom(user_id)
 		let user = this.getUser(user_id)
 		if (!user) {
 			return
@@ -917,11 +925,26 @@ export default class BJgame {
 
 		function_args = this.prepareArgs(function_args)
 
+		if (!user.logic[function_name]) {
+			return
+		}
+
 		if (function_args) {
 			user.logic[function_name].apply(null, function_args)
 		} else {
 			user.logic[function_name]()
 		}
+
+
+		if (['bjDealer', 'bjDealerStand'].indexOf(function_name)!=-1) {
+			console.log(function_name, ' - setDealerCards')
+			let room = Games[ this.getUserRoom(user_id) ]
+			room.getUsersArr().forEach( function(u) {
+				u.logic.setDealerCards( user.logic.getGame().curGame.arHouseCards , (function_name=='bjDealerStand'))
+			})
+		}
+
+		Games[this.getUserRoom(user_id)].state = ''+function_name
 	}
 
 	prepareArgs(args){
@@ -979,6 +1002,40 @@ export default class BJgame {
 		return signature
 	}
 
+	getViewData(){
+		let data = {}
+
+		for(let room_hash in Games){
+			data[room_hash] = {
+				state:     Games[room_hash].state,
+				room_hash: room_hash,
+				users:     {}
+			}
+
+			let users = Games[room_hash].getUsers()
+			for(let id in users){
+				let g = users[id].logic.getGame().curGame
+				let house = '', my = ''
+				if (g && g.arHouseCards) {
+					house = g.arHouseCards.join('|')
+				}
+				if (g && g.arMyCards) {
+					my = g.arMyCards.join('|')
+				}
+
+				data[room_hash].users[id] = {
+					balance: users[id].logic.getBalance(),
+					deposit: users[id].deposit,
+					points:    users[id].logic.getMyPoints(),
+
+					house: house,
+					my:    my,
+				}
+			}
+		}
+
+		return data
+	}
 
 	endGame(params){
 		if (!this.endGamesMsgs) { this.endGamesMsgs = {} }
@@ -990,15 +1047,24 @@ export default class BJgame {
 
 		let room = this.getUserRoom(user_id)
 		let user = this.getUser(user_id)
+		if (!user || !user.logic) {
+			console.error('Cant find user', user_id)
+			console.log(user)
+		}
 
 		let close_code = ''
 
-		let profit = user.logic.getBalance()*1 - user.deposit*1
+		if (!user) {
+			return
+		}
+
+		let profit = (user.logic.getBalance() - user.deposit)
 
 		console.log('bankroll profit', profit)
 		console.log('user profit', params.profit)
 
 		params.action = 'game_channel_closed'
+
 
 		if (params.profit == profit) {
 			profit = profit/100000000

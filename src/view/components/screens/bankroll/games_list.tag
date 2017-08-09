@@ -14,43 +14,8 @@ import route    from 'riot-route'
 		this.on('mount', ()=>{
 
 			setInterval(()=>{
-
-				// _room.getUsersArr().forEach( function(user) { console.log(user.logic.getGame().curGame) })
-
-				if (false && Games.BJ) {
-					this.bj_games = {}
-
-					for(let u in Games.BJ.Games){ for(let k in Games.BJ.Games[u]){
-						let g = Games.BJ.Games[u][k]
-
-						this.bj_games[u+'_'+k] = g
-
-						let cards_str = ''
-						let game = g.getGame()
-
-						let cards = {
-							my:    game.curGame.arMyCards,
-							split: game.curGame.arMySplitCards,
-							house: game.curGame.arHouseCards,
-						}
-
-						for(let c in cards){
-							if (!cards[c] || !cards[c].length) {
-								continue
-							}
-							cards_str += c+':'
-
-							cards[c].forEach(num=>{
-								cards_str += ' ['+g.getValCards(num)+'] '
-							})
-							cards_str += ' | '
-						}
-
-						this.bj_games[u+'_'+k].cards = cards_str
-					}}
-
-					this.update()
-				}
+				this.bj_games = Games.BJ.getViewData()
+				this.update()
 			}, 3000)
 
 
@@ -221,29 +186,27 @@ import route    from 'riot-route'
 
 			<thead>
 				<tr>
-					<th>User</th>
-					<th>Channel</th>
-					<th>cards</th>
-					<th>game</th>
-					<th>deposit</th>
-					<th>profit</th>
-					<th>win</th>
+					<th>Room</th>
+					<th>State</th>
+					<th>PLayer 1</th>
+					<th>PLayer 2</th>
+					<th>PLayer 3</th>
 				</tr>
 			</thead>
 			<tbody>
-				<tr each={g in bj_games}>
-					<td><a href="https://ropsten.etherscan.io/address/{g.user_id}" target="_blank" rel="noopener">{g.user_id}</a></td>
-					<td>{g.channel}</td>
-					<td>{g.cards}</td>
-					<td>
-						<span if={!g.getGame().result}>proccess</span>
-						<span if={g.getGame().result}>end</span>
-					</td>
-					<td>{g.deposit}</td>
-					<td>{((g.getResult().profit*-1)/100000000).toFixed(4)}</td>
-					<td>
-						<span if={g.getResult().main}>{g.getResult().main}</span>
-						<span if={g.getResult().split}>, split: {g.getResult().split}</span>
+				<tr each={room in bj_games}>
+					<td><span style="max-width: 100px; text-overflow: ellipsis">{room.room_hash}</span></td>
+					<td>{room.state}</td>
+					<td each={user in room.users}>
+						deposit:{(user.deposit/100000000).toFixed(2)}
+						<br>
+						balance:{(user.balance/100000000).toFixed(2)}
+						<br>
+						points:{user.points}
+						<br>
+						house:{user.house}
+						<br>
+						my:{user.my}
 					</td>
 				</tr>
 			</tbody>
