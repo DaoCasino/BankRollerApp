@@ -19,7 +19,7 @@ import * as Utils from './utils'
 import {AsyncPriorityQueue, AsyncTask} from 'async-priority-queue'
 
 
-let skip_games = ['daochannel_v1', 'BJ', 'Slot']
+let skip_games = ['daochannel_v1', 'BJ', 'BJ_m', 'Slot']
 
 if (window) {
 	window.GamesStat = GamesStat
@@ -61,6 +61,7 @@ class Games {
 		}
 
 		this.BJ    = _gamesLogic['BJ']
+		this.BJ_m  = _gamesLogic['BJ_m']
 		this.Slots = _gamesLogic['slot']
 
 		setTimeout(()=>{
