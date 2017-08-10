@@ -1,72 +1,10 @@
 /**
  * Created by DAO.casino
  * BlackJack
- * v 1.0.0
+ * v 1.0.12
  */
 
-var RoomJS = function(){
-	var _self     = this
-	var _Users    = {}
-	var _maxUsers = 3
-
-	_self.addUser = function(address, deposit, id, callback){
-		var params = {prnt:_self, balance:deposit, address:address, callback:callback, bMultiplayer:true}
-
-		var logic = new LogicMultJS(params)
-
-		if (!id) {
-			id = Object.keys(_Users).length
-		}
-
-		var user = {
-			address: address,
-			deposit: deposit,
-			logic:   logic,
-			id:      id
-		}
-
-		if (!_Users[address]) {
-			_Users[address] = user
-		}
-
-		_Users[address].callback = callback
-
-		return user
-	}
-
-	_self.callFunction = function(address, name, params){
-		_Users[address].logic[name].apply(null, params)
-	}
-
-	_self.getUsers = function(){
-		return _Users
-	}
-	_self.getUsersArr = function(){
-		return Object.values( _Users )
-	}
-
-	_self.getTagUser = function(address){
-		return _Users[address]
-	}
-
-	_self.getMaxUsers = function(){
-		return _maxUsers
-	}
-	_self.full = function(){
-		return (Object.values( _Users ).length >= _maxUsers)
-	}
-
-	return _self
-}
-
-
-/**
- * Created by DAO.casino
- * BlackJack
- * v 1.0.7
- */
-
-var LogicMultJS = function(params){
+var LogicJS = function(params){
 	var _self = this
 
 	var BLACKJACK = 21
@@ -80,8 +18,6 @@ var LogicMultJS = function(params){
 
 	var COUNT_DECKS = 4
 	var COUNT_CARDS = 52
-
-	var _address = '0x'
 
 	var _money = 0
 	var _balance = 0
@@ -102,9 +38,6 @@ var LogicMultJS = function(params){
 	var _bStand = false
 	var _bStandNecessary = false
 	var _bSplit = false
-	var _bMultiplayer = false
-	var _bDealerStart = false
-	var _bDealerEnd = false
 
 	var _prnt
 	var _callback
@@ -113,20 +46,13 @@ var LogicMultJS = function(params){
 		if(params.prnt){
 			_prnt = params.prnt
 		}
-		if(params.address){
-			_address = params.address
-		}
 		if(params.callback){
 			_callback = params.callback
 		}
-
-		_bMultiplayer = params.bMultiplayer || false
-
 		_balance = params.balance || 0
 	}
 
-	var _objSpeedGame = {method:'',
-		result:false,
+	var _objSpeedGame = {result:false,
 		idGame:-1,
 		curGame:{},
 		betGame:0,
@@ -137,9 +63,7 @@ var LogicMultJS = function(params){
 
 	mixDeck()
 
-	// single methods
 	_self.bjDeal = function(_s, _bet){
-		_objSpeedGame.method = 'bjDeal'
 		_idGame ++
 		_objResult = {main:'', split:'', betMain:0, betSplit:0, profit:-_bet, mixing:false}
 		_objSpeedGame.result = false
@@ -166,19 +90,16 @@ var LogicMultJS = function(params){
 	}
 
 	_self.bjHit = function(_s, isMain){
-		_objSpeedGame.method = 'bjHit'
 		dealCard(true, isMain, _s)
 		refreshGame(_s)
 	}
 
 	_self.bjStand = function(_s, isMain){
-		_objSpeedGame.method = 'bjStand'
 		stand(isMain, _s)
 		refreshGame(_s)
 	}
 
 	_self.bjSplit = function(_s){
-		_objSpeedGame.method = 'bjSplit'
 		_arMySplitCards = [_arMyCards[1]]
 		_arMyCards = [_arMyCards[0]]
 		_arMySplitPoints = [_arMyPoints[0]]
@@ -196,7 +117,6 @@ var LogicMultJS = function(params){
 	}
 
 	_self.bjDouble = function(_s, isMain){
-		_objSpeedGame.method = 'bjDouble'
 		dealCard(true, isMain, _s)
 		stand(isMain, _s)
 		if(isMain){
@@ -213,106 +133,12 @@ var LogicMultJS = function(params){
 	}
 
 	_self.bjInsurance = function(_bet){
-		_objSpeedGame.method = 'bjInsurance'
 		_objSpeedGame.insurance = true
 		_money -= _bet
 		_objSpeedGame.money = _money
 		_objResult.profit -= _bet
 	}
 
-	// multiplayer methods
-	_self.bjBet = function(_bet){
-		_idGame ++
-		_objResult = {main:'', split:'', betMain:0, betSplit:0, profit:-_bet, mixing:false}
-
-		_objSpeedGame.method       = 'bjBet'
-		_objSpeedGame.result       = false
-		_objSpeedGame.curGame      = {}
-		_objSpeedGame.betGame      = _bet
-		_objSpeedGame.betSplitGame = 0
-
-		_money -= _bet
-
-		_objSpeedGame.money     = _money
-		_objSpeedGame.insurance = false
-
-		_arMyCards       = []
-		_arMySplitCards  = []
-		_arHouseCards    = []
-		_arMyPoints      = []
-		_arMySplitPoints = []
-		_arHousePoints   = []
-
-		_bStand          = false
-		_bStandNecessary = false
-		_bSplit          = false
-
-		if(typeof _callback === 'function'){
-			_callback(_address, _objSpeedGame)
-		}
-	}
-
-	_self.bjDealer = function(_s){
-		if (_bDealerStart) return
-		_bDealerStart = true
-		_bDealerEnd = false
-
-		_objSpeedGame.method = 'bjDealer'
-		dealCard(false, true, _s)
-		refreshGame(_s)
-	}
-
-	_self.bjDealerStand = function(_s, isMain){
-		if (_bDealerEnd) return
-		_bDealerStart = false
-		_bDealerEnd = true
-
-		_objSpeedGame.method = 'bjDealerStand'
-		_bStand = true
-
-		var val = 15
-		while (_housePoints < 17 && val < 32) {
-			dealCard(false, true, _s, val)
-			console.log('bjDealerStand - dealCard', _housePoints)
-			val += 1
-		}
-		refreshGame(_s)
-	}
-
-	_self.bjMultStand = function(_s, isMain){
-		_objSpeedGame.method = 'bjMultStand'
-
-		_bSplit = false
-		if (!isMain) {
-			return
-		}
-		_bStand = true
-
-		if(typeof _callback === 'function'){
-			_callback(_address, _objSpeedGame)
-		}
-	}
-
-	_self.bjMultDouble = function(_s, isMain){
-		_objSpeedGame.method = 'bjMultDouble'
-		dealCard(true, isMain, _s)
-
-		if(isMain){
-			_bStand = true
-			_money -= _objSpeedGame.betGame
-			_objResult.profit -= _objSpeedGame.betGame
-			_objSpeedGame.betGame *= 2
-		} else {
-			_bSplit = false
-			_money -= _objSpeedGame.betSplitGame
-			_objResult.profit -= _objSpeedGame.betSplitGame
-			_objSpeedGame.betSplitGame *= 2
-		}
-		_objSpeedGame.money = _money
-		refreshGame(_s)
-	}
-
-	// get methods
 	_self.makeID = function(){
 		var count = 64
 		var str = '0x'
@@ -367,10 +193,6 @@ var LogicMultJS = function(params){
 		return spriteName
 	}
 
-	_self.refreshGame = function(_s){
-		refreshGame(_s)
-	}
-
 	function mixDeck(){
 		_arCards = []
 		_objResult.mixing = true
@@ -392,7 +214,7 @@ var LogicMultJS = function(params){
 			'arHouseCards':_arHouseCards}
 
 		if(typeof _callback === 'function'){
-			_callback(_address, _objSpeedGame)
+			_callback(_objSpeedGame)
 		}
 
 		if(_objSpeedGame.result){
@@ -409,6 +231,7 @@ var LogicMultJS = function(params){
 		if (!isMain) {
 			return
 		}
+
 		_bStand = true
 
 		if(_myPoints > BLACKJACK &&
@@ -448,11 +271,7 @@ var LogicMultJS = function(params){
 				_arMyCards.push(newCard)
 				// console.log("dealClient: Main", newCard, getNameCard(newCard));
 				if(_myPoints >= BLACKJACK && !_bSplit){
-					if(_bMultiplayer){
-						_bStand = true
-					} else {
-						stand(isMain, seed)
-					}
+					stand(isMain, seed)
 				}
 			} else {
 				_arMySplitPoints.push(point)
@@ -551,11 +370,7 @@ var LogicMultJS = function(params){
 					_objSpeedGame.result = true
 				} else {
 					_bStandNecessary = true
-					if(_bMultiplayer){
-						_self.bjMultStand(_s, isMain)
-					} else {
-						_self.bjStand(_s, isMain)
-					}
+					_self.bjStand(_s, isMain)
 					return false
 				}
 			}
@@ -641,8 +456,6 @@ var LogicMultJS = function(params){
 
 		return myPoints
 	}
-
-	_self.getMyPoints = getMyPoints
 
 	function getMySplitPoints(){
 		var mySplitPoints = 0
@@ -753,27 +566,13 @@ var LogicMultJS = function(params){
 		}
 	}
 
-	_self.setDealerCards  = function(arHouseCards, value){
-		_arHouseCards = arHouseCards || []
-		_objSpeedGame.curGame.arHouseCards = _arHouseCards
-		_arHousePoints = []
-		for (var i = 0; i < _arHouseCards.length; i++) {
-			var point = getPoint(_arHouseCards[i])
-			_arHousePoints.push(point)
-		}
-		_housePoints = getHousePoints()
-
-		if(value){
-			_bStand = true
-		}
-	}
-
 	return _self
 }
 
 
 
 const game_code = 'BJ'
+
 
 import ABI        from 'ethereumjs-abi'
 import bigInt     from 'big-integer'
@@ -785,7 +584,7 @@ import GamesStat  from 'games.stat.js'
 import * as Utils from 'utils'
 
 
-const max_players = 3
+
 let Games = []
 let _closing_channels = []
 
@@ -847,104 +646,124 @@ export default class BJgame {
 			return
 		}
 
-		let room_hash = false
-		for(let k in Games){
-			if (Games[k].getUsersArr().length < max_players) {
-				room_hash = k
-				break
-			}
+		let game_id = params.game_id || 'start'
+		let user_id = params.user_id
+
+		if (!Games[user_id]) {
+			Games[user_id] = {}
+		}
+		if (!Games[user_id][game_id]) {
+			Games[user_id][game_id] = new LogicJS()
 		}
 
-		console.log('startGame')
-		console.log('room_hash', room_hash)
+		Games[user_id][game_id].channel = 'opened'
+		Games[user_id][game_id].deposit = params.deposit
+		Games[user_id][game_id].user_id = params.user_id
 
-		if (!room_hash) {
-			room_hash = Utils.makeSeed()
-			Games[room_hash] = new RoomJS()
-		}
-
-		console.log('addUser', params)
-		Games[room_hash].addUser(
-			params.user_id,
-			params.deposit,
-		)
-
-		this.RTC.send({
-			action:    'user_connected',
-			game_code: game_code,
-			room_hash: room_hash,
-			address:   this.contractAddress,
-			user:      {address:params.user_id, deposit:params.deposit},
-		})
-
-		let users = Games[room_hash].getUsersArr()
-		let send_users = []
-		for(let k in users){
-			send_users.push({address:users[k].address, deposit:users[k].deposit, id:users[k].id})
-		}
-
-		this.RTC.send({
-			action:    'room_users',
-			game_code: game_code,
-			room_hash: room_hash,
-			address:   this.contractAddress,
-			users:     send_users,
-		})
-
-
-		Games[room_hash].state = 'wait_players'
-		if (Games[room_hash].getUsersArr().length >= max_players) {
-			Games[room_hash].state = 'wait_players_bets'
-		}
 
 		GamesStat.cnt(this.contractAddress, 'open_game')
-		GamesStat.add(this.contractAddress, 'players_now', Games[room_hash].getUsersArr().length)
-		// GamesStat.add(this.contractAddress, 'players', send_users)
+		GamesStat.add(this.contractAddress, 'players_now', Object.keys(Games).length)
 	}
 
-	getUserRoom(user_id){
-		for(let room_hash in Games){
-			if (Games[room_hash].getUsers()[user_id]) {
-				return room_hash
+	endGame(params){
+		if (!this.endGamesMsgs) { this.endGamesMsgs = {} }
+
+		if (this.endGamesMsgs[params.seed]) { return }
+		this.endGamesMsgs[params.seed] = true
+
+		let user_id = params.user_id
+
+
+		let close_code = ''
+
+		let profit = 0
+		for(let k in Games[user_id]){
+			if (['closed','closing...'].indexOf(Games[user_id][k].channel) > -1 ) {
+				continue
 			}
+			profit += Games[user_id][k].getResult().profit
+			Games[user_id][k].channel = 'closing...'
+			close_code += user_id+'_'+k+'_'
 		}
-	}
-	getUser(user_id){
-		for(let room_hash in Games){
-			if (Games[room_hash].getUsers()[user_id]) {
-				return Games[room_hash].getUsers()[user_id]
+		// delete(Games[user_id])
+
+		console.log('bankroll profit', profit)
+		console.log('user profit', params.profit)
+
+		params.action = 'game_channel_closed'
+
+		if (params.profit == profit) {
+			profit = profit/100000000
+
+			if (!(profit < 0)) {
+				GamesStat.cnt(this.contractAddress, 'wins' )
+				GamesStat.cnt(this.contractAddress, 'win_bets', Math.abs(profit) )
 			}
+			if (profit < 0) {
+				GamesStat.cnt(this.contractAddress, 'lose')
+				GamesStat.cnt(this.contractAddress, 'lose_bets', Math.abs(profit) )
+			}
+
+
+			close_code += params.address+'_'+params.account+'_'+profit
+			if (_closing_channels.indexOf(close_code) > -1) {
+				console.log('channel allready closing ', close_code)
+				return
+			}
+			_closing_channels.push(close_code)
+
+
+			console.log('Channel.close', {profit:profit}, params)
+			Channel.close(params.address, params.account, params.channel_id, profit, res => {
+				console.log(res)
+				params.result = true
+
+				for(let k in Games[user_id]){
+					Games[user_id][k].channel = 'closed'
+				}
+
+				GamesStat.cnt(this.contractAddress, 'close_game')
+
+				console.log('rtc send', params)
+				this.RTC.send(params)
+			})
+			return
 		}
+
+		params.result = {
+			error  : 'invalid_profit',
+			profit : profit
+		}
+		this.RTC.send(params)
 	}
 
 	callGameFunction(user_id, game_id, function_name, function_args){
-		let user = this.getUser(user_id)
-		if (!user) {
+		// console.log(game_id, function_name, function_args)
+		if (!Games[user_id]) {
+			Games[user_id] = {}
+		}
+
+		if (Games[user_id]['start']) {
+			Games[user_id][game_id] = Games[user_id]['start']
+			delete(Games[user_id]['start'])
+		}
+
+		if (!Games[user_id][game_id]) {
+			Games[user_id][game_id] = new LogicJS()
+		}
+
+		if (!Games[user_id][game_id][function_name]) {
 			return
 		}
 
 		function_args = this.prepareArgs(function_args)
 
-		if (!user.logic[function_name]) {
-			return
-		}
-
 		if (function_args) {
-			user.logic[function_name].apply(null, function_args)
+			Games[user_id][game_id][function_name].apply(null, function_args)
 		} else {
-			user.logic[function_name]()
+			Games[user_id][game_id][function_name]()
 		}
 
-
-		if (['bjDealer', 'bjDealerStand'].indexOf(function_name)!=-1) {
-			console.log(function_name, ' - setDealerCards')
-			let room = Games[ this.getUserRoom(user_id) ]
-			room.getUsersArr().forEach( function(u) {
-				u.logic.setDealerCards( user.logic.getGame().curGame.arHouseCards , (function_name=='bjDealerStand'))
-			})
-		}
-
-		Games[this.getUserRoom(user_id)].state = ''+function_name
 	}
 
 	prepareArgs(args){
@@ -1001,115 +820,4 @@ export default class BJgame {
 
 		return signature
 	}
-
-	getViewData(){
-		let data = {}
-
-		for(let room_hash in Games){
-			data[room_hash] = {
-				state:     Games[room_hash].state,
-				room_hash: room_hash,
-				users:     {}
-			}
-
-			let users = Games[room_hash].getUsers()
-			for(let id in users){
-				let g = users[id].logic.getGame().curGame
-				let house = '', my = ''
-				if (g && g.arHouseCards) {
-					house = g.arHouseCards.join('|')
-				}
-				if (g && g.arMyCards) {
-					my = g.arMyCards.join('|')
-				}
-
-				data[room_hash].users[id] = {
-					balance: users[id].logic.getBalance(),
-					deposit: users[id].deposit,
-					points:    users[id].logic.getMyPoints(),
-
-					house: house,
-					my:    my,
-				}
-			}
-		}
-
-		return data
-	}
-
-	endGame(params){
-		if (!this.endGamesMsgs) { this.endGamesMsgs = {} }
-
-		if (this.endGamesMsgs[params.seed]) { return }
-		this.endGamesMsgs[params.seed] = true
-
-		let user_id = params.user_id
-
-		let room = this.getUserRoom(user_id)
-		let user = this.getUser(user_id)
-		if (!user || !user.logic) {
-			console.error('Cant find user', user_id)
-			console.log(user)
-		}
-
-		let close_code = ''
-
-		if (!user) {
-			return
-		}
-
-		let profit = (user.logic.getBalance() - user.deposit)
-
-		console.log('bankroll profit', profit)
-		console.log('user profit', params.profit)
-
-		params.action = 'game_channel_closed'
-
-
-		if (params.profit == profit) {
-			profit = profit/100000000
-
-			if (!(profit < 0)) {
-				GamesStat.cnt(this.contractAddress, 'wins' )
-				GamesStat.cnt(this.contractAddress, 'win_bets', Math.abs(profit) )
-			}
-			if (profit < 0) {
-				GamesStat.cnt(this.contractAddress, 'lose')
-				GamesStat.cnt(this.contractAddress, 'lose_bets', Math.abs(profit) )
-			}
-
-
-			close_code += params.address+'_'+params.account+'_'+profit
-			if (_closing_channels.indexOf(close_code) > -1) {
-				console.log('channel allready closing ', close_code)
-				return
-			}
-			_closing_channels.push(close_code)
-
-
-			console.log('Channel.close', {profit:profit}, params)
-
-			// DEBUG !!!
-			return
-
-			Channel.close(params.address, params.account, params.channel_id, profit, res => {
-				console.log(res)
-				params.result = true
-
-				GamesStat.cnt(this.contractAddress, 'close_game')
-
-				console.log('rtc send', params)
-				this.RTC.send(params)
-			})
-			return
-		}
-
-		params.result = {
-			error  : 'invalid_profit',
-			profit : profit
-		}
-		this.RTC.send(params)
-	}
-
-
 }

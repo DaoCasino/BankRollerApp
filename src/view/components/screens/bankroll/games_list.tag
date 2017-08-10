@@ -14,8 +14,10 @@ import route    from 'riot-route'
 		this.on('mount', ()=>{
 
 			setInterval(()=>{
-				this.bj_games = Games.BJ.getViewData()
-				this.update()
+				if (Games.BJ_m) {
+					this.bj_games = Games.BJ_m.getViewData()
+					this.update()
+				}
 			}, 3000)
 
 

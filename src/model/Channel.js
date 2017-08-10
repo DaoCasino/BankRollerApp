@@ -8,6 +8,7 @@ export default new class Channel {
 	}
 
 	close(contractAddress=false, playerAddress=false, channel_id=false, deposit=false, callback, repeat=3){
+		console.log('')
 		console.log('CLOSE', contractAddress, 'closeChannel', playerAddress, deposit)
 
 		if (!contractAddress || !playerAddress || !channel_id) {
@@ -17,13 +18,27 @@ export default new class Channel {
 		const add = ( deposit > 0 )
 
 		const profit = this.BETs( Math.abs(deposit) )
+		console.log('closeChannel', {
+			contractAddress: contractAddress,
+			playerAddress:   playerAddress,
+			channel_id:      channel_id,
+			profit:          profit,
+			deposit:         deposit,
+			add:             add,
+		})
+
+		if (isNaN(profit)) {
+			console.error('ERR:', 'profit is NaN')
+			return
+		}
 
 		this.callFunc(contractAddress, 'closeChannel', [playerAddress, channel_id, profit, add], response => {
-			console.log('response', response)
+			console.log('this.callFunc(contractAddress, closeChanne response', response)
+			console.log('repeat', repeat)
 			if (!response || !response.result) {
 				repeat--
 				if (repeat > 0) {
-					this.close(contractAddress, playerAddress, deposit, callback, repeat)
+					this.close(contractAddress, playerAddress, channel_id, deposit, callback, repeat)
 				}
 				return
 			}

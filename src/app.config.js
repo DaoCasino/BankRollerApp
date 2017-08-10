@@ -73,6 +73,12 @@ const games = {
 	// 	url:      'http://blackjackgame.dao.casino/games/MG/#test_multi',
 	// },
 
+	BJ_m: { code: 'BJ_m',
+		channels: true,
+		name:     'Blackjack Multiplayer',
+		url:      'http://blackjackgame.dao.casino/games/bj/',
+	},
+
 	BJ: { code: 'BJ',
 		channels: true,
 		name:     'Blackjack',
