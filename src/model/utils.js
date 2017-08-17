@@ -1,4 +1,4 @@
-const web3_sha3 = require('web3/lib/utils/sha3.js')
+const web3_sha3 = require('web3').utils.sha3
 
 export const sha3 = web3_sha3
 

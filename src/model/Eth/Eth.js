@@ -12,7 +12,7 @@ import ABI     from 'ethereumjs-abi'
 import * as Utils from 'utils'
 
 // Web3 utils
-const web3_sha3 = require('web3/lib/utils/sha3.js')
+const web3_sha3 = require('web3').utils.sha3
 
 const rpc    = new RPC( _config.rpc_url )
 const wallet = new Wallet()

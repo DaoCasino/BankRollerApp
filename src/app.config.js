@@ -88,7 +88,7 @@ const games = {
 	dice_v2:{ code: 'dice_v2',
 		name: 'DiceGame',
 		url:  'https://platform.dao.casino/games/DiceGame/',
-	},
+	}
 }
 
 module.exports = {

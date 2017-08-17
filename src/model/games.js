@@ -8,11 +8,8 @@ import Notify     from './notify'
 import GamesStat  from './games.stat.js'
 
 import bigInt     from 'big-integer'
-import Web3       from 'web3'
 
-const web3 = new Web3()
-
-const web3_sha3 = require('web3/lib/utils/sha3.js')
+const web3Utils = require('web3').utils
 
 import * as Utils from './utils'
 
@@ -352,7 +349,7 @@ class Games {
 					return
 				}
 				if (type=='string') {
-					return web3.toAscii(response.result)
+					return web3Utils.toAscii(response.result)
 						.replace(/\)/g, '')
 						.replace(/\(/g, '')
 						.replace(/\/g, '')
@@ -392,7 +389,6 @@ class Games {
 	getConfirmNumber(game_code, seed, callback){
 		Eth.Wallet.getPwDerivedKey( PwDerivedKey => {
 			let msg = seed
-			// let msg = '0x'+web3_sha3(seed)
 
 			let VRS = Eth.Wallet.lib.signing.signMsgHash(
 				Eth.Wallet.getKs(),
