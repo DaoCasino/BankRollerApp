@@ -75,8 +75,8 @@ export default class Wallet {
 
 	getPwDerivedKey(callback, limit=5){
 		if (this.pwDerivedKey) {
-			callback(this.pwDerivedKey)
-			return
+			if(callback) callback(this.pwDerivedKey)
+			return this.pwDerivedKey
 		}
 
 		if (!this.getKs()) { return }
@@ -87,7 +87,7 @@ export default class Wallet {
 			if (pwDerivedKey) {
 				this.pwDerivedKey = pwDerivedKey
 			}
-			callback(pwDerivedKey)
+			if(callback) callback(pwDerivedKey)
 		})
 	}
 
@@ -201,7 +201,7 @@ export default class Wallet {
 			function_args,
 			options
 		)
-
+		console.log('registerTx', registerTx)
 		//  Sign transaction
 		return this.signTx(registerTx, callback)
 	}

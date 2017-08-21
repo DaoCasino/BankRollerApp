@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 		return
 	}
 
-	console.log(DiceGameChannel)
+	window.DiceGameChannel = DiceGameChannel
 
 	let view = new View()
 

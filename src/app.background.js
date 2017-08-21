@@ -1,6 +1,3 @@
-let XMLHttpRequest = require('xmlhttprequest').XMLHttpRequest
-let xhr = new XMLHttpRequest()
-
 import Games from 'games'
 
 if (!window) {

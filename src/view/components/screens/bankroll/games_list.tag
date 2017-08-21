@@ -10,8 +10,25 @@ import route    from 'riot-route'
 
 		this.bj_games   = {}
 		this.slot_games = {}
+		this.dd_games   = []
 
 		this.on('mount', ()=>{
+
+			setInterval(()=>{
+				if (DiceGameChannel.Games) {
+					this.dd_games = []
+					for(let k in DiceGameChannel.Games){
+						for(let j in DiceGameChannel.Games[k].history){
+							var s = Object.assign({channel:k}, DiceGameChannel.Games[k].history[j])
+							s.user_bet = (s.user_bet/100000000).toFixed(2)
+							s.profit   = (s.profit/100000000).toFixed(2)
+							s.balance  = (s.balance/100000000).toFixed(2)
+							this.dd_games.push(s)
+						}
+					}
+					this.update()
+				}
+			}, 3000)
 
 			setInterval(()=>{
 				if (Games.BJ_m) {
@@ -270,6 +287,33 @@ import route    from 'riot-route'
 						<span if={s.confirm_sended_blockchain}>[in blockhain]</span>
 					</td>
 					<td><span class="confirm">{s.confirm}</span></td>
+					<td></td>
+				</tr>
+			</tbody>
+		</table>
+
+		<table if={dd_games} class="seeds">
+			<caption>DICE GameChannels Games</caption>
+			<thead>
+				<tr>
+					<th>Channel</th>
+					<th>bet</th>
+					<th>num</th>
+					<th>rnd_seed</th>
+					<th>random</th>
+					<th>profit</th>
+					<th>balance</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr each={s in dd_games}>
+					<td><span class="address">{s.channel}</a></td>
+					<td><span class="address">{s.user_bet}</a></td>
+					<td><span class="address">{s.user_num}</a></td>
+					<td><span class="address">{s.random_hash}</a></td>
+					<td><span class="address">{s.random_num}</a></td>
+					<td><span class="confirm">{s.profit}</span></td>
+					<td><span class="confirm">{s.balance}</span></td>
 					<td></td>
 				</tr>
 			</tbody>

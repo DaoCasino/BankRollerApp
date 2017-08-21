@@ -11,8 +11,7 @@ import ABI     from 'ethereumjs-abi'
 
 import * as Utils from 'utils'
 
-// Web3 utils
-const web3_sha3 = require('web3').utils.sha3
+const web3_sha3 = require('web3/packages/web3-utils').sha3
 
 const rpc    = new RPC( _config.rpc_url )
 const wallet = new Wallet()
@@ -119,7 +118,7 @@ class Eth {
 	// function hashname is first 4 bytes of sha3 of string with function name with params types
 	//  web3.sha3('balanceOf(address)').substring(0, 8)
 	hashName(name){
-		return web3_sha3(name).substr(0,8)
+		return web3_sha3(name).substr(2,8)
 	}
 
 	getEthBalance(address, callback){

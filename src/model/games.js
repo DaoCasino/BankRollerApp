@@ -9,7 +9,7 @@ import GamesStat  from './games.stat.js'
 
 import bigInt     from 'big-integer'
 
-const web3Utils = require('web3').utils
+const web3Utils = require('web3/packages/web3-utils')
 
 import * as Utils from './utils'
 
