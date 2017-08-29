@@ -25,9 +25,9 @@ document.addEventListener('DOMContentLoaded',()=>{
 		window.App.view = view
 		window.Games = Games
 
-		if (process.env.APP_DICE_GAMECHANNEL) {
-			return
-		}
+		// if (process.env.APP_DICE_GAMECHANNEL) {
+		// 	return
+		// }
 
 		setTimeout(()=>{
 			Games.startMesh()

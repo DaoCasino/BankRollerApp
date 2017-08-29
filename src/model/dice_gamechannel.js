@@ -57,8 +57,8 @@ import * as Utils from './utils'
 import {AsyncPriorityQueue, AsyncTask} from 'async-priority-queue'
 
 const contract = {
-	address: '0xd7aa363a70866e6cf1f82089e4e2ec9a83c51c6a',
-	abi:     JSON.parse('[{"constant":true,"inputs":[{"name":"","type":"bytes32"}],"name":"disputes","outputs":[{"name":"seed","type":"bytes32"},{"name":"chance","type":"uint256"},{"name":"bet","type":"uint256"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"id","type":"bytes32"},{"name":"playerBalance","type":"uint256"},{"name":"bankrollBalance","type":"uint256"},{"name":"nonce","type":"uint256"},{"name":"sig","type":"bytes"}],"name":"closeByConsent","outputs":[],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"id","type":"bytes32"},{"name":"sigseed","type":"bytes"}],"name":"closeDispute","outputs":[],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"id","type":"bytes32"},{"name":"seed","type":"bytes32"},{"name":"nonce","type":"uint256"},{"name":"bet","type":"uint256"},{"name":"chance","type":"uint256"}],"name":"openDispute","outputs":[],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"id","type":"bytes32"},{"name":"player","type":"address"},{"name":"playerDeposit","type":"uint256"},{"name":"bankrollDeposit","type":"uint256"},{"name":"nonce","type":"uint256"},{"name":"time","type":"uint256"},{"name":"sig","type":"bytes"}],"name":"open","outputs":[],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"id","type":"bytes32"},{"name":"playerBalance","type":"uint256"},{"name":"bankrollBalance","type":"uint256"},{"name":"nonce","type":"uint256"},{"name":"sig","type":"bytes"}],"name":"update","outputs":[],"payable":false,"type":"function"},{"constant":true,"inputs":[{"name":"","type":"bytes32"}],"name":"channels","outputs":[{"name":"player","type":"address"},{"name":"bankroller","type":"address"},{"name":"playerBalance","type":"uint256"},{"name":"bankrollBalance","type":"uint256"},{"name":"nonce","type":"uint256"},{"name":"endBlock","type":"uint256"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"h","type":"bytes32"},{"name":"signature","type":"bytes"}],"name":"recoverSigner","outputs":[{"name":"","type":"address"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"id","type":"bytes32"},{"name":"seed","type":"bytes32"},{"name":"nonce","type":"uint256"},{"name":"bet","type":"uint256"},{"name":"chance","type":"uint256"},{"name":"sig","type":"bytes"},{"name":"sigseed","type":"bytes"}],"name":"updateGameState","outputs":[],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"id","type":"bytes32"}],"name":"closeByTime","outputs":[],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"signature","type":"bytes"}],"name":"signatureSplit","outputs":[{"name":"r","type":"bytes32"},{"name":"s","type":"bytes32"},{"name":"v","type":"uint8"}],"payable":false,"type":"function"}]')
+	address : '0xd7aa363a70866e6cf1f82089e4e2ec9a83c51c6a',
+	abi     :  JSON.parse('[{"constant":true,"inputs":[{"name":"","type":"bytes32"}],"name":"disputes","outputs":[{"name":"seed","type":"bytes32"},{"name":"chance","type":"uint256"},{"name":"bet","type":"uint256"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"id","type":"bytes32"},{"name":"playerBalance","type":"uint256"},{"name":"bankrollBalance","type":"uint256"},{"name":"nonce","type":"uint256"},{"name":"sig","type":"bytes"}],"name":"closeByConsent","outputs":[],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"id","type":"bytes32"},{"name":"sigseed","type":"bytes"}],"name":"closeDispute","outputs":[],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"id","type":"bytes32"},{"name":"seed","type":"bytes32"},{"name":"nonce","type":"uint256"},{"name":"bet","type":"uint256"},{"name":"chance","type":"uint256"}],"name":"openDispute","outputs":[],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"id","type":"bytes32"},{"name":"player","type":"address"},{"name":"playerDeposit","type":"uint256"},{"name":"bankrollDeposit","type":"uint256"},{"name":"nonce","type":"uint256"},{"name":"time","type":"uint256"},{"name":"sig","type":"bytes"}],"name":"open","outputs":[],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"id","type":"bytes32"},{"name":"playerBalance","type":"uint256"},{"name":"bankrollBalance","type":"uint256"},{"name":"nonce","type":"uint256"},{"name":"sig","type":"bytes"}],"name":"update","outputs":[],"payable":false,"type":"function"},{"constant":true,"inputs":[{"name":"","type":"bytes32"}],"name":"channels","outputs":[{"name":"player","type":"address"},{"name":"bankroller","type":"address"},{"name":"playerBalance","type":"uint256"},{"name":"bankrollBalance","type":"uint256"},{"name":"nonce","type":"uint256"},{"name":"endBlock","type":"uint256"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"id","type":"bytes32"},{"name":"seed","type":"bytes32"},{"name":"nonce","type":"uint256"},{"name":"bet","type":"uint256"},{"name":"chance","type":"uint256"},{"name":"sig","type":"bytes"},{"name":"sigseed","type":"bytes"}],"name":"updateGameState","outputs":[],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"id","type":"bytes32"}],"name":"closeByTime","outputs":[],"payable":false,"type":"function"}]')
 }
 const game_code        = 'dice_gamechannel'
 const rtc_room         = 'game_channel_'+game_code
@@ -146,11 +146,15 @@ class DiceGameChannel {
 			data.args.time,
 		]
 
+		try {
+			const msgHash = web3.utils.soliditySha3.apply(this, args)
+			const recover = web3.eth.accounts.recover(msgHash, data.sig)
 
-		const msgHash = web3.utils.soliditySha3.apply(this, args)
-		const recover = web3.eth.accounts.recover(msgHash, data.sig)
-
-		if (recover.toLowerCase() != data.user_id.toLowerCase()) {
+			if (recover.toLowerCase() != data.user_id.toLowerCase()) {
+				return
+			}
+		} catch(e) {
+			console.error('Recover error', e)
 			return
 		}
 
