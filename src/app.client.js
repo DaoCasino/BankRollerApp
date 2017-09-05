@@ -9,6 +9,8 @@ if (window) {
 }
 
 document.addEventListener('DOMContentLoaded',()=>{
+	window.DiceGameChannel = DiceGameChannel
+
 	if (process.env.APP_BUILD_FOR_WINSERVER) {
 		setTimeout(()=>{
 			Games.startMesh()
@@ -17,7 +19,6 @@ document.addEventListener('DOMContentLoaded',()=>{
 		return
 	}
 
-	window.DiceGameChannel = DiceGameChannel
 
 	let view = new View()
 
