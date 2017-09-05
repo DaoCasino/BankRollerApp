@@ -75,8 +75,8 @@ export default class Wallet {
 
 	getPwDerivedKey(callback, limit=5){
 		if (this.pwDerivedKey) {
-			callback(this.pwDerivedKey)
-			return
+			if(callback) callback(this.pwDerivedKey)
+			return this.pwDerivedKey
 		}
 
 		if (!this.getKs()) { return }
@@ -87,7 +87,7 @@ export default class Wallet {
 			if (pwDerivedKey) {
 				this.pwDerivedKey = pwDerivedKey
 			}
-			callback(pwDerivedKey)
+			if(callback) callback(pwDerivedKey)
 		})
 	}
 
@@ -183,9 +183,11 @@ export default class Wallet {
 
 	//  Make and Sing contract function transaction
 	async signedContractFuncTx(contract_address, contract_abi, function_name, function_args, callback, gasLimit=600000){
+		const nonce = await this.getNonce()
+		console.log('signedContractFuncTx nonce', nonce)
 		let options = {
 			to:       contract_address,
-			nonce:    await this.getNonce(),
+			nonce:    nonce,
 			gasPrice: '0x'+Utils.numToHex(40000000000),
 			gasLimit: '0x'+Utils.numToHex(gasLimit),
 			value:    0,
@@ -199,14 +201,14 @@ export default class Wallet {
 			function_args,
 			options
 		)
-
+		console.log('registerTx', registerTx)
 		//  Sign transaction
-		this.signTx(registerTx, callback)
+		return this.signTx(registerTx, callback)
 	}
 
 	// Sing transaction
 	// https://github.com/ConsenSys/eth-lightwallet#signingsigntxkeystore-pwderivedkey-rawtx-signingaddress-hdpathstring
-	signTx(registerTx, callback){
+	signTx(registerTx, callback=false){
 		this.getPwDerivedKey( PwDerivedKey => {
 
 			let signedTx = ethWallet.signing.signTx(
@@ -215,8 +217,8 @@ export default class Wallet {
 				registerTx,
 				this.get().openkey.substr(2)
 			)
-
-			callback(signedTx)
+			if(callback) callback(signedTx)
+			return signedTx
 		})
 	}
 }
