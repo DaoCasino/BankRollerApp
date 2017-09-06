@@ -34,6 +34,11 @@ var RoomJS = function(){
 		return user
 	}
 
+	_self.editUser = function(address, key, val){
+		_Users[address][key] = val
+	}
+
+
 	_self.callFunction = function(address, name, params){
 		_Users[address].logic[name].apply(null, params)
 	}
@@ -127,6 +132,7 @@ var LogicMultJS = function(params){
 
 	var _objSpeedGame = {method:'',
 		result:false,
+		play:false,
 		idGame:-1,
 		curGame:{},
 		betGame:0,
@@ -143,6 +149,7 @@ var LogicMultJS = function(params){
 		_idGame ++
 		_objResult = {main:'', split:'', betMain:0, betSplit:0, profit:-_bet, mixing:false}
 		_objSpeedGame.result = false
+		_objSpeedGame.play   = true
 		_objSpeedGame.curGame = {}
 		_objSpeedGame.betGame = _bet
 		_objSpeedGame.betSplitGame = 0
@@ -256,7 +263,7 @@ var LogicMultJS = function(params){
 		if (_bDealerStart) return
 		_bDealerStart = true
 		_bDealerEnd = false
-
+		_objSpeedGame.play   = true
 		_objSpeedGame.method = 'bjDealer'
 		dealCard(false, true, _s)
 		refreshGame(_s)
@@ -562,6 +569,8 @@ var LogicMultJS = function(params){
 		}
 
 		if(_objSpeedGame.result){
+			_objSpeedGame.play = false
+
 			_money += betWin
 			_objSpeedGame.money = _money
 			_objResult.profit += betWin
@@ -891,19 +900,7 @@ export default class BJgame {
 			user:      {address:params.user_id, deposit:params.deposit},
 		})
 
-		let users = Games[room_hash].getUsersArr()
-		let send_users = []
-		for(let k in users){
-			send_users.push({address:users[k].address, deposit:users[k].deposit, id:users[k].id})
-		}
-
-		this.RTC.send({
-			action:    'room_users',
-			game_code: game_code,
-			room_hash: room_hash,
-			address:   this.contractAddress,
-			users:     send_users,
-		})
+		this.sendRoomUsers(room_hash)
 
 
 		Games[room_hash].state = 'wait_players'
@@ -914,6 +911,35 @@ export default class BJgame {
 		GamesStat.cnt(this.contractAddress, 'open_game')
 		GamesStat.add(this.contractAddress, 'players_now', Games[room_hash].getUsersArr().length)
 		// GamesStat.add(this.contractAddress, 'players', send_users)
+	}
+
+	sendRoomUsers(room_hash, t=100){
+
+		clearTimeout(this.sendRoomUsersT)
+		this.sendRoomUsersT = setTimeout(()=>{
+			let users = Games[room_hash].getUsersArr()
+			let send_users = []
+			for(let k in users){
+				send_users.push({
+					address   : users[k].address,
+					deposit   : users[k].deposit,
+					id        : users[k].id,
+
+					// игрок начал играть
+					play      : users[k].logic.getGame().play,
+				})
+			}
+
+			this.RTC.send({
+				action:    'room_users',
+				game_code: game_code,
+				room_hash: room_hash,
+				address:   this.contractAddress,
+				users:     send_users,
+			})
+			this.sendRoomUsers(room_hash, 2500)
+		}, t)
+
 	}
 
 	getUserRoom(user_id){
