@@ -907,7 +907,7 @@ export default class BJgame {
 
 
 		Games[room_hash].state = 'wait_players'
-		if (Games[room_hash].getUsersArr().length >= max_players) {
+		if (Games[room_hash].getUsersArr().length >= 0) {
 			Games[room_hash].state = 'wait_players_bets'
 		}
 
