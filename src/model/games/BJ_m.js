@@ -1169,12 +1169,15 @@ export default class BJgame {
 				console.log(res)
 				params.result = true
 
+				Games[room_hash].removeUser(user_id)
+
 				GamesStat.cnt(this.contractAddress, 'close_game')
 
 				console.log('rtc send', params)
 				this.RTC.send(params)
 
 				Games[room_hash].channels[user_id].open = false
+
 
 				// Destroy room when all channels close
 				let all_channels_close = true
