@@ -34,10 +34,28 @@ var RoomJS = function(){
 		return user
 	}
 
-	_self.editUser = function(address, key, val){
-		_Users[address][key] = val
+	_self.disableUser = function(address){
+		_Users[address].id = -1
+		_Users[address].disabled = true
+		_self.refreshIDs()
 	}
 
+	_self.removeUser = function(address){
+		delete(_Users[address])
+		_self.refreshIDs()
+	}
+
+	_self.refreshIDs = function(){
+		var num = 0
+		for(var addr in _Users){
+			if (_Users[addr].disabled) {
+				continue
+			}
+
+			_Users[addr].id = num
+			num++
+		}
+	}
 
 	_self.callFunction = function(address, name, params){
 		_Users[address].logic[name].apply(null, params)
@@ -914,12 +932,16 @@ export default class BJgame {
 	}
 
 	sendRoomUsers(room_hash, t=100){
-
 		clearTimeout(this.sendRoomUsersT)
 		this.sendRoomUsersT = setTimeout(()=>{
 			let users = Games[room_hash].getUsersArr()
 			let send_users = []
 			for(let k in users){
+
+				if (users[k].disabled){
+					continue
+				}
+
 				send_users.push({
 					address   : users[k].address,
 					deposit   : users[k].deposit,
@@ -927,6 +949,7 @@ export default class BJgame {
 
 					// игрок начал играть
 					play      : users[k].logic.getGame().play,
+					betGame   : users[k].logic.getGame().betGame,
 				})
 			}
 
@@ -939,7 +962,6 @@ export default class BJgame {
 			})
 			this.sendRoomUsers(room_hash, 2500)
 		}, t)
-
 	}
 
 	getUserRoom(user_id){
@@ -949,6 +971,7 @@ export default class BJgame {
 			}
 		}
 	}
+
 	getUser(user_id){
 		for(let room_hash in Games){
 			if (Games[room_hash].getUsers()[user_id]) {
@@ -1104,6 +1127,7 @@ export default class BJgame {
 			return
 		}
 
+		Games[room_hash].disableUser(user_id)
 
 		let profit = (user.logic.getBalance() - user.deposit)
 
