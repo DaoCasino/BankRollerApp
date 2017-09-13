@@ -18,7 +18,7 @@ var RoomJS = function(){
 
 		var logic = new LogicMultJS(params)
 
-		if (!id) {
+		if (typeof id === 'undefined') {
 			id = Object.keys(_Users).length
 		}
 
@@ -34,6 +34,7 @@ var RoomJS = function(){
 		}
 
 		_Users[address].callback = callback
+		_self.refreshIDs()
 		_self.mixDeck()
 
 		return user
@@ -1137,8 +1138,6 @@ export default class BJgame {
 			console.log(user)
 		}
 
-		let close_code = ''
-
 		if (!user) {
 			return
 		}
@@ -1165,8 +1164,7 @@ export default class BJgame {
 				GamesStat.cnt(this.contractAddress, 'lose_bets', Math.abs(profit) )
 			}
 
-
-			close_code += params.address+'_'+user_id+'_'+profit
+			let close_code = [params.address, user_channel.id, user_id, profit].join('_')
 			if (_closing_channels.indexOf(close_code) > -1) {
 				console.log('channel allready closing ', close_code)
 				return

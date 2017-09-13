@@ -58,7 +58,7 @@ let server = http.createServer(function (request, response) {
 server.listen(_config.http_port)
 
 
-global.GunDB  = Gun({file: _config.database || './database.json', web: server })
+global.GunDB  = Gun({file: _config.database, web: server })
 global.fetch  = require('node-fetch')
 global.window = {}
 
