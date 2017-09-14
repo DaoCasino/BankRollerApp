@@ -951,6 +951,10 @@ export default class BJgame {
 	sendRoomUsers(room_hash, t=100){
 		clearTimeout(this.sendRoomUsersT)
 		this.sendRoomUsersT = setTimeout(()=>{
+			if (!Games[room_hash]) {
+				return
+			}
+
 			let users = Games[room_hash].getUsersArr()
 			let send_users = []
 			for(let k in users){
