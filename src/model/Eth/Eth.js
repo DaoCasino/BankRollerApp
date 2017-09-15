@@ -74,10 +74,11 @@ class Eth {
 			(5*600000) )
 	}
 
-	deployContract(contract_bytecode, gasprice=151000000000, callback_deployed, callback_proccess){
+	deployContract(contract_bytecode, gasprice=400000000000, callback_deployed, callback_proccess){
 		this.Wallet.signedCreateContractTx({
 			data:     contract_bytecode,
 			gasLimit: '0x4630C0',
+			gasPrice: '0x'+Utils.numToHex(400000000000),
 			gasPrice: '0x' + Utils.numToHex(gasprice),
 			value:    0
 		}, async signedTx => {

@@ -13,7 +13,7 @@ var RoomJS = function(){
 		if (_Users[address]) {
 			return _Users[address]
 		}
-		console.log('addUser: id=', id)
+
 		var params = {prnt:_self, balance:deposit, address:address, callback:callback, bMultiplayer:true}
 
 		var logic = new LogicMultJS(params)
@@ -832,6 +832,7 @@ import * as Utils from 'utils'
 const max_players = 3
 let Games = []
 let _closing_channels = []
+let _active_users = {}
 
 export default class BJgame {
 	constructor(contractAddress=false) {
@@ -852,6 +853,7 @@ export default class BJgame {
 				this.startMesh()
 			}, 3000)
 		}
+
 	}
 
 	startMesh(){
@@ -862,6 +864,8 @@ export default class BJgame {
 
 		this.RTC.subscribe(this.contractAddress, data => {
 			if (!data || !data.action || !data.game_code || data.game_code!=game_code) { return }
+
+			_active_users[data.user_id] = new Date().getTime()
 
 			if (data.action=='get_random') {
 				this.sendRandom(data)
@@ -888,6 +892,10 @@ export default class BJgame {
 				this.callGameFunction(data.user_id, data.game_id, data.name, data.args)
 			}
 		})
+
+		setInterval(()=>{
+			this.cleanRooms()
+		}, 3000)
 	}
 
 	startGame(params){
@@ -946,6 +954,32 @@ export default class BJgame {
 		GamesStat.cnt(this.contractAddress, 'open_game')
 		GamesStat.add(this.contractAddress, 'players_now', Games[room_hash].getUsersArr().length)
 		// GamesStat.add(this.contractAddress, 'players', send_users)
+	}
+
+	cleanRooms(){
+		let now = new Date().getTime()
+		for(let user_id in _active_users){
+			if (now - _active_users[user_id] > 60*1000) {
+				console.log('inactive user', user_id)
+				this.cleanInactiveUser(user_id)
+				delete(_active_users[user_id])
+			}
+		}
+	}
+
+	cleanInactiveUser(user_id){
+		let room_hash = this.getUserRoom(user_id)
+		let room      = Games[room_hash]
+		if (room) {
+			room.removeUser(user_id)
+
+			this.RTC.send({
+				action:  'user_disconnected_by_timeout',
+				user_id: user_id,
+				address: this.contractAddress,
+			})
+			// room.getUsersArr().
+		}
 	}
 
 	sendRoomUsers(room_hash, t=100){
@@ -1049,6 +1083,10 @@ export default class BJgame {
 
 	sendRandom(data){
 		if (!data.seed) {
+			return
+		}
+		let user = this.getUser(data.user_id)
+		if (!user) {
 			return
 		}
 
@@ -1184,8 +1222,14 @@ export default class BJgame {
 			Games[room_hash].channels[user_id].close_proccess = true
 
 			Channel.close(params.address, user_id, user_channel.id, profit, res => {
-				console.log(res)
+				console.log('Channel.close res', res)
+
 				params.result = true
+				if (res && res.err) {
+					params.result = {error:res.err}
+				}
+
+
 
 				Games[room_hash].removeUser(user_id)
 

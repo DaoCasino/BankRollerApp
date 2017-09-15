@@ -35,16 +35,23 @@ export default new class Channel {
 		this.callFunc(contractAddress, 'closeChannel', [playerAddress, channel_id, profit, add], response => {
 			console.log('this.callFunc(contractAddress, closeChanne response', response)
 			console.log('repeat', repeat)
-			if (!response || !response.result) {
+			if (!response || !response.result || (response && response.error) ) {
+				if (response.error) {
+					callback({err:response.error, response:response}); return
+				}
+
 				repeat--
 				if (repeat > 0) {
 					this.close(contractAddress, playerAddress, channel_id, deposit, callback, repeat)
+					return
 				}
+
+				callback({err:'timeout'})
 				return
 			}
 
 			this.isOpenChannel(contractAddress, playerAddress, channel_id, opened => {
-				callback( !opened )
+				callback({err:null})
 			})
 		})
 	}
