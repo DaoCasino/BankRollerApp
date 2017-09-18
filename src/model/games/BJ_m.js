@@ -5,9 +5,12 @@
  */
 
 var RoomJS = function(){
-	var _self     = this
-	var _Users    = {}
-	var _maxUsers = 3
+	var _self       = this
+	var _Users      = {}
+	var _maxUsers   = 3
+	var _arCards    = []
+	var COUNT_DECKS = 4
+	var COUNT_CARDS = 52
 
 	_self.addUser = function(address, deposit, id, callback){
 		if (_Users[address]) {
@@ -15,7 +18,6 @@ var RoomJS = function(){
 		}
 
 		var params = {prnt:_self, balance:deposit, address:address, callback:callback, bMultiplayer:true}
-
 		var logic = new LogicMultJS(params)
 
 		if (typeof id === 'undefined') {
@@ -34,7 +36,6 @@ var RoomJS = function(){
 		}
 
 		_Users[address].callback = callback
-		_self.refreshIDs()
 		_self.mixDeck()
 
 		return user
@@ -43,6 +44,27 @@ var RoomJS = function(){
 	_self.callFunction = function(address, name, params){
 		if(_Users[address].logic[name]){
 			_Users[address].logic[name].apply(null, params)
+		}
+
+		// check result game
+		var gameOver = false
+		for(var addr in _Users){
+			if (_Users[addr].disabled) {
+				continue
+			}
+
+			if(_Users[addr].logic.getGame().result){
+				gameOver = true
+			}
+		}
+
+		if(gameOver){
+			console.log('Game Over')
+			var prcnt = Math.ceil(COUNT_DECKS*COUNT_CARDS*0.75)
+			if(_arCards.length < prcnt){
+				console.log('Mix deck')
+				_self.mixDeck()
+			}
 		}
 	}
 
@@ -68,15 +90,41 @@ var RoomJS = function(){
 			num++
 		}
 	}
+
+	_self.createCard = function(cardNumber, val){
+		var hash = ABI.soliditySHA3(['bytes32'],[ cardNumber ])
+		if(val != undefined){
+			hash = [hash[val]]
+		}
+
+		var rand = bigInt(hash.toString('hex'),16).divmod(_arCards.length).remainder.value
+		var id = _arCards[rand]
+		_arCards.splice(rand, 1)
+		console.log('createCard:', _arCards.length)
+		return id
+	}
+
 	_self.mixDeck = function(){
-		var num = 0
+		_arCards = []
+		var count = COUNT_CARDS*COUNT_DECKS
+		var id = 0
+
+		for(var i=0; i<count; i++){
+			_arCards.push(id)
+			id ++
+			if(id > COUNT_CARDS-1){
+				id = 0
+			}
+		}
+
+		// old
 		for(var addr in _Users){
 			if (_Users[addr].disabled) {
 				continue
 			}
 
-			_Users[addr].logic.mixDeck()
-			num++
+			// _Users[addr].logic.mixDeck();
+			_Users[addr].logic.getResult().mixing = true
 		}
 	}
 
@@ -89,7 +137,9 @@ var RoomJS = function(){
 	_self.getTagUser = function(address){
 		return _Users[address]
 	}
-
+	_self.getDeck = function(){
+		return _arCards
+	}
 	_self.getMaxUsers = function(){
 		return _maxUsers
 	}
@@ -99,6 +149,7 @@ var RoomJS = function(){
 
 	return _self
 }
+
 
 
 /**
@@ -294,7 +345,6 @@ var LogicMultJS = function(params){
 	}
 
 	_self.bjDealer = function(_s){
-		console.log('LOGIC bjDealer:', _s)
 		if (_bDealerStart) return
 		_bDealerStart = true
 		_bDealerEnd = false
@@ -413,8 +463,6 @@ var LogicMultJS = function(params){
 		refreshGame(_s)
 	}
 
-	_self.mixDeck = mixDeck
-
 	function mixDeck(){
 		_arCards = []
 		_objResult.mixing = true
@@ -440,7 +488,7 @@ var LogicMultJS = function(params){
 		_objSpeedGame.curGame = {'arMyCards':_arMyCards,
 			'arMySplitCards':_arMySplitCards,
 			'arHouseCards':_arHouseCards}
-		console.log('LOGIC refreshGame', _arHouseCards)
+
 		if(typeof _callback === 'function'){
 			_callback(_address, _objSpeedGame)
 		}
@@ -514,7 +562,7 @@ var LogicMultJS = function(params){
 			_arHousePoints.push(point)
 			_housePoints = getHousePoints()
 			_arHouseCards.push(newCard)
-			console.log('dealClient: House', newCard, getNameCard(newCard))
+			// console.log("dealClient: House", newCard, getNameCard(newCard));
 		}
 	}
 
@@ -630,20 +678,17 @@ var LogicMultJS = function(params){
 	}
 
 	function createCard(cardNumber, val){
-		var hash = ABI.soliditySHA3(['bytes32'],[ cardNumber ])
+		/*var hash = ABI.soliditySHA3(['bytes32'],[ cardNumber ]);
 		if(val != undefined){
-			hash = [hash[val]]
+			hash = [hash[val]];
 		}
-		if(_objSpeedGame.method == 'bjDealer'){
-			console.log('LOGIC _arCards.length:', _arCards.length)
-		}
-		var rand = bigInt(hash.toString('hex'),16).divmod(_arCards.length).remainder.value
-		var id = _arCards[rand]
-		_arCards.splice(rand, 1)
 
-		if(_objSpeedGame.method == 'bjDealer'){
-			console.log('LOGIC createCard:', cardNumber, rand, id)
-		}
+		var rand = bigInt(hash.toString('hex'),16).divmod(_arCards.length).remainder.value;
+		var id = _arCards[rand];
+		_arCards.splice(rand, 1);
+		console.log("createCard:", _arCards.length, _address);*/
+
+		var id = _prnt.createCard(cardNumber, val)
 		return id
 	}
 
@@ -682,11 +727,6 @@ var LogicMultJS = function(params){
 
 		return myPoints
 	}
-
-	_self.getMyPoints      = getMyPoints
-	_self.getPoint         = getPoint
-	_self.getMySplitPoints = getMySplitPoints
-	_self.getHousePoints   = getHousePoints
 
 	function getMySplitPoints(){
 		var mySplitPoints = 0
@@ -798,7 +838,6 @@ var LogicMultJS = function(params){
 	}
 
 	_self.setDealerCards  = function(arHouseCards, value){
-		console.log('LOGIC setDealerCards:', arHouseCards)
 		_arHouseCards = arHouseCards || []
 		_objSpeedGame.curGame.arHouseCards = _arHouseCards
 		_arHousePoints = []
@@ -813,6 +852,12 @@ var LogicMultJS = function(params){
 		}
 	}
 
+	_self.getMyPoints      = getMyPoints
+	_self.getPoint         = getPoint
+	_self.getMySplitPoints = getMySplitPoints
+	_self.getHousePoints   = getHousePoints
+	_self.mixDeck = mixDeck
+
 	return _self
 }
 
@@ -825,6 +870,8 @@ import Eth        from 'Eth/Eth'
 import Rtc        from 'rtc'
 import Channel    from 'Channel'
 import GamesStat  from 'games.stat.js'
+
+import {AsyncPriorityQueue, AsyncTask} from 'async-priority-queue'
 
 import * as Utils from 'utils'
 
@@ -854,6 +901,14 @@ export default class BJgame {
 			}, 3000)
 		}
 
+
+		this.Queue = new AsyncPriorityQueue({
+			debug:               false,
+			maxParallel:         1,
+			processingFrequency: 500,
+		})
+
+		this.Queue.start()
 	}
 
 	startMesh(){
@@ -1085,18 +1140,44 @@ export default class BJgame {
 		if (!data.seed) {
 			return
 		}
-		let user = this.getUser(data.user_id)
-		if (!user) {
-			return
-		}
 
-		this.RTC.send({
-			action:    'send_random',
-			game_code: game_code,
-			address:   this.contractAddress,
-			seed:      data.seed,
-			random:    this.confirm(data.seed),
+		// let user = this.getUser(data.user_id)
+		// if (!user) {
+		// 	return
+		// }
+
+		let task = new AsyncTask({ priority: 'low',
+			callback:()=>{
+				return new Promise((resolve, reject) => {
+					this.RTC.send({
+						action:    'send_random',
+						game_code: game_code,
+						address:   this.contractAddress,
+						seed:      data.seed,
+						random:    this.confirm(data.seed),
+					}, delivered =>{
+						if (delivered) {
+							resolve()
+							return
+						}
+						reject()
+					})
+				})
+			},
 		})
+
+		task.promise.then(
+			result => {
+
+			},
+			// Ошибка
+			e => {
+
+			}
+		)
+
+
+		this.Queue.enqueue(task)
 	}
 
 	confirm(rawMsg=false){
@@ -1166,8 +1247,13 @@ export default class BJgame {
 		this.endGamesMsgs[params.seed] = true
 
 		const user_id      = params.account || params.user_id
-		const room_hash    = this.getUserRoom(user_id)
 		const user         = this.getUser(user_id)
+		const room_hash    = this.getUserRoom(user_id)
+
+		if (!Games[room_hash]) {
+			return
+		}
+
 		const user_channel = Games[room_hash].channels[user_id]
 
 		if (!user_channel || user_channel.close_proccess || !user_channel.open) {
