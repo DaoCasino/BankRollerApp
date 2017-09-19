@@ -75,8 +75,8 @@ export default class Wallet {
 
 	getPwDerivedKey(callback, limit=5){
 		if (this.pwDerivedKey) {
-			callback(this.pwDerivedKey)
-			return
+			if(callback) callback(this.pwDerivedKey)
+			return this.pwDerivedKey
 		}
 
 		if (!this.getKs()) { return }
@@ -87,7 +87,7 @@ export default class Wallet {
 			if (pwDerivedKey) {
 				this.pwDerivedKey = pwDerivedKey
 			}
-			callback(pwDerivedKey)
+			if(callback) callback(pwDerivedKey)
 		})
 	}
 
@@ -135,88 +135,80 @@ export default class Wallet {
 		})
 	}
 
-	getNonce(callback){
+	async getNonce(callback=false){
 		if (this.nonce) {
 			this.nonce++
-			callback('0x'+Utils.numToHex(this.nonce))
-			return
+			let hexstr = '0x'+Utils.numToHex(this.nonce)
+			if(callback) callback(hexstr)
+			return hexstr
 		}
 
-		rpc.request('getTransactionCount', [ this.get().openkey, 'latest']).then( response => {
-			this.nonce = Utils.hexToNum(response.result.substr(2))
+		const response = await rpc.request('getTransactionCount', [ this.get().openkey, 'latest'])
+		this.nonce = Utils.hexToNum(response.result.substr(2))
 
-			console.log('nonce:', response.result)
-			callback( response.result )
-		})
+		if(callback) callback(response.result)
+		return response.result
 	}
 
 	// Make and Sing contract creation transaction
-	signedCreateContractTx(options, callback){
-		this.getNonce( nonce => {
+	async signedCreateContractTx(options, callback){
+		options.nonce = await this.getNonce()
 
-			options.nonce = nonce
+		let registerTx = ethWallet.txutils.createContractTx(
+			_wallet.openkey.substr(2),
+			options
+						 ).tx
 
-			let registerTx = ethWallet.txutils.createContractTx(
-				_wallet.openkey.substr(2),
-				options
-							 ).tx
-
-			this.signTx(registerTx, callback)
-		})
+		this.signTx(registerTx, callback)
 	}
 
 	// Make and Sing eth send transaction
-	signedEthTx(to_address, value, callback){
-		this.getNonce( nonce => {
+	async signedEthTx(to_address, value, callback){
+		// https://github.com/ConsenSys/eth-lightwallet#txutilsvaluetxtxobject
+		let options = {
+			from:     this.get().openkey,
+			to:       to_address,
+			value:    value,
+			nonce:    await this.getNonce(),
+			gasPrice: '0x737be7600',
+			gasLimit: '0x927c0',
+		}
 
-			// https://github.com/ConsenSys/eth-lightwallet#txutilsvaluetxtxobject
-			let options = {
-				from:     this.get().openkey,
-				to:       to_address,
-				value:    value,
-				nonce:    nonce,
-				gasPrice: '0x737be7600',
-				gasLimit: '0x927c0',
-			}
+		// Make transaction
+		let registerTx = ethWallet.txutils.valueTx(options)
 
-			// Make transaction
-			let registerTx = ethWallet.txutils.valueTx(options)
-
-			//  Sign transaction
-			this.signTx(registerTx, callback)
-		})
+		//  Sign transaction
+		this.signTx(registerTx, callback)
 	}
 
 	//  Make and Sing contract function transaction
-	signedContractFuncTx(contract_address, contract_abi, function_name, function_args, callback, gasLimit=600000){
-		this.getNonce( nonce => {
+	async signedContractFuncTx(contract_address, contract_abi, function_name, function_args, callback, gasLimit=700000){
+		const nonce = await this.getNonce()
+		console.log('signedContractFuncTx nonce', nonce)
+		let options = {
+			to:       contract_address,
+			nonce:    nonce,
+			gasPrice: '0x'+Utils.numToHex(61000000000),
+			gasLimit: '0x'+Utils.numToHex(gasLimit),
+			value:    0,
+		}
 
-			let options = {
-				to:       contract_address,
-				nonce:    nonce,
-				gasPrice: '0x'+Utils.numToHex(40000000000),
-				gasLimit: '0x'+Utils.numToHex(gasLimit),
-				value:    0,
-			}
-
-			//  Make contract function transaction
-			// https://github.com/ConsenSys/eth-lightwallet#txutilsfunctiontxabi-functionname-args-txobject
-			let registerTx = ethWallet.txutils.functionTx(
-				contract_abi,
-				function_name,
-				function_args,
-				options
-			)
-			console.log('registerTx', registerTx)
-
-			//  Sign transaction
-			this.signTx(registerTx, callback)
-		})
+		//  Make contract function transaction
+		// https://github.com/ConsenSys/eth-lightwallet#txutilsfunctiontxabi-functionname-args-txobject
+		let registerTx = ethWallet.txutils.functionTx(
+			contract_abi,
+			function_name,
+			function_args,
+			options
+		)
+		console.log('registerTx', registerTx)
+		//  Sign transaction
+		return this.signTx(registerTx, callback)
 	}
 
 	// Sing transaction
 	// https://github.com/ConsenSys/eth-lightwallet#signingsigntxkeystore-pwderivedkey-rawtx-signingaddress-hdpathstring
-	signTx(registerTx, callback){
+	signTx(registerTx, callback=false){
 		this.getPwDerivedKey( PwDerivedKey => {
 
 			let signedTx = ethWallet.signing.signTx(
@@ -225,8 +217,8 @@ export default class Wallet {
 				registerTx,
 				this.get().openkey.substr(2)
 			)
-
-			callback(signedTx)
+			if(callback) callback(signedTx)
+			return signedTx
 		})
 	}
 }

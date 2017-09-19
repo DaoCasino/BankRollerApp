@@ -1,90 +1,75 @@
 {
-	"name"        : "BankRollerApp",
-	"version"     : "0.1.2",
-	"description" : "Dao.Casino app for bankroller",
-	"author"      : "Dao Casino <team@dao.casino>",
-
+	"name": "BankRollerApp",
+	"version": "0.1.2",
+	"description": "Dao.Casino app for bankroller",
+	"author": "Dao Casino <team@dao.casino>",
 	"repository": {
-		"type" : "git",
-		"url"  : "git+https : //github.com/DaoCasino/BankRollerApp.git"
+		"type": "git",
+		"url": "git+https : //github.com/DaoCasino/BankRollerApp.git"
 	},
 	"private": false,
-
-	"main"     : "./build/index.electron.js",
-	"homepage" : "./",
-
-	"meta": { "_": "It used for generate manifest.json in ./scripts/favicons.js",
-
-		"start_url"      : "/",
-		"appName"        : "BankRollerApp App",
-		"appDescription" : "Dao.Casino app for bankroller",
-		"background"     : "#1c2026",
-		"theme_color"    : "#1c2026",
-		"display"        : "standalone",
-		"orientation"    : "portrait"
+	"main": "./build/index.electron.js",
+	"homepage": "./",
+	"meta": {
+		"_": "It used for generate manifest.json in ./scripts/favicons.js",
+		"start_url": "/",
+		"appName": "BankRollerApp App",
+		"appDescription": "Dao.Casino app for bankroller",
+		"background": "#1c2026",
+		"theme_color": "#1c2026",
+		"display": "standalone",
+		"orientation": "portrait"
 	},
-
-	"scripts"     : {
-		"postinstall"              : "npm run favicons && npm run build && npm start",
-
-		"start"                    : "npm run webserver",
-		"webserver"                : "npm run server & npm run serve_web",
-		"server"                   : "NODE_ENV=server npm run build_server && node ./build/server.electron.js",
-		"serve_web"                : "node scripts/start.js",
-
-		"build"                    : "npm run build_web & npm run build_server",
-		"build_web"                : "node scripts/build.js",
-		"build_server"             : "npm run cp_electron & node scripts/build_server.js",
-		"cp_electron"              : "cp ./src/index.electron.js ./public/index.electron.js & cp ./src/index.electron.js ./build/index.electron.js & cp ./src/server.electron.js ./public/server.electron.js & cp ./src/server.electron.js ./build/server.electron.js & cp ./src/config.electron.js ./build/config.electron.js ",
-
-		"run_electron"             : "npm run cp_electron; electron .",
-
-		"build_electron"           : "build -mwl --x64 --ia32",
-		"build_electron_windows"   : "build -w --x64",
-		"build_electron_linux"     : "build -l --x64",
-		"build_electron_mac"       : "build -m --x64",
-
-		"favicons"    : "node scripts/favicons.js",
-
-		"lesslint"    : "lessc --lint src/view/styles/index.less ",
-		"eslint_fix"  : "eslint --fix --ext=.js,.tag ./src",
-		"eslint"      : "eslint --ext=.js,.tag ./src",
-		"test"        : "node scripts/test.js --env=jsdom",
-		"coverage"    : "npm test -- --coverage",
-		"flow"        : "flow",
-		"lint-staged" : "lint-staged",
-
-		"check_build" : "serve -s build -p 9000"
+	"scripts": {
+		"postinstall": "npm run favicons && npm run build && npm start",
+		"start": "npm run webserver",
+		"webserver": "npm run server & npm run serve_web",
+		"server": "NODE_ENV=server npm run build_server && node ./build/server.electron.js",
+		"serve_web": "node scripts/start.js",
+		"build": "npm run build_web & npm run build_server",
+		"build_web": "node scripts/build.js",
+		"build_server": "npm run cp_electron & node scripts/build_server.js",
+		"cp_electron": "cp ./src/index.electron.js ./public/index.electron.js & cp ./src/index.electron.js ./build/index.electron.js & cp ./src/server.electron.js ./public/server.electron.js & cp ./src/server.electron.js ./build/server.electron.js & cp ./src/config.electron.js ./build/config.electron.js ",
+		"run_electron": "npm run cp_electron; electron .",
+		"build_electron": "build -mwl --x64 --ia32",
+		"build_electron_windows": "build -w --x64",
+		"build_electron_linux": "build -l --x64",
+		"build_electron_mac": "build -m --x64",
+		"favicons": "node scripts/favicons.js",
+		"lesslint": "lessc --lint src/view/styles/index.less ",
+		"eslint_fix": "eslint --fix --ext=.js,.tag ./src",
+		"eslint": "eslint --ext=.js,.tag ./src",
+		"test": "node scripts/test.js --env=jsdom",
+		"coverage": "npm test -- --coverage",
+		"flow": "flow",
+		"lint-staged": "lint-staged",
+		"check_build": "serve -s build -p 9000"
 	},
-
-
 	"build": {
 		"appId": "com.daocasino.bankroller",
 		"files": [
-		  "build/**/*",
-		  "node_modules/**/*",
-		  "!config/**/*",
-		  "!scripts/**/*",
-		  "!src/**/*",
-		  "!builds/**/*",
-		  "package.json"
+			"build/**/*",
+			"node_modules/**/*",
+			"!config/**/*",
+			"!scripts/**/*",
+			"!src/**/*",
+			"!builds/**/*",
+			"package.json"
 		],
 		"publish": null,
 		"win": {
-		  "icon": "public/windows-icon.ico"
+			"icon": "public/windows-icon.ico"
 		},
 		"squirrelWindows": {
-		  "iconUrl": "https://raw.githubusercontent.com/DaoCasino/BankRollerApp/master/public/windows-icon.ico"
+			"iconUrl": "https://raw.githubusercontent.com/DaoCasino/BankRollerApp/master/public/windows-icon.ico"
 		},
 		"mac": {
-		  "category": "public.app-category.developer-tools"
+			"category": "public.app-category.developer-tools"
 		}
 	},
-
 	"pre-commit": [
 		"lint-staged"
 	],
-
 	"lint-staged": {
 		"*.js": [
 			"eslint"
@@ -103,7 +88,6 @@
 			"stylelint"
 		]
 	},
-
 	"jest": {
 		"collectCoverageFrom": [
 			"src/**/*.{js,tag}"
@@ -127,79 +111,80 @@
 			"[/\\\\]node_modules[/\\\\].+\\.(js|jsx)$"
 		]
 	},
-
 	"dependencies": {
-		"async-priority-queue" : "^0.1.2",
-		"big-integer"          : "^1.6.23",
-		"eth-lightwallet"      : "^2.5.6",
-		"ethereumjs-abi"       : "^0.6.4",
-		"gun"                  : "^0.8.1",
-		"highcharts"           : "^5.0.12",
-		"jquery"               : "^3.2.1",
-		"qrcode-svg"           : "^0.9.0",
-		"node-fetch"           : "^1.7.1",
-		"riot"                 : "^3.6.1",
-		"riot-route"           : "^3.1.1",
-		"rtc-mesh"             : "^1.0.0",
-		"rtc-quickconnect"     : "^5.8.0",
-		"freeice"              : "^2.2.0",
-		"bufferutil"           : "^3.0.2",
-		"utf-8-validate"       : "^3.0.3",
-		"solidity-sha3"        : "^0.4.1",
-		"toastr"               : "^2.1.2",
-		"web3"                 : "^0.20.1"
+		"async-priority-queue": "^0.1.2",
+		"big-integer": "^1.6.25",
+		"bufferutil": "^3.0.2",
+		"eth-lightwallet": "^2.5.6",
+		"ethereumjs-abi": "^0.6.4",
+		"freeice": "^2.2.0",
+		"gun": "^0.8.4",
+		"highcharts": "^5.0.14",
+		"jquery": "^3.2.1",
+		"node-fetch": "^1.7.3",
+		"qrcode-svg": "^0.9.0",
+		"riot": "^3.7.0",
+		"riot-route": "^3.1.2",
+		"rtc-mesh": "^1.0.0",
+		"rtc-quickconnect": "^5.8.0",
+		"solidity-sha3": "^0.4.1",
+		"toastr": "^2.1.2",
+		"utf-8-validate": "^3.0.3",
+		"web3": "github:ethereum/web3.js#1.0",
+		"ydn.db": "^1.3.0"
 	},
-
 	"devDependencies": {
+		"autoprefixer": "^7.1.4",
+		"babel-core": "^6.26.0",
+		"babel-eslint": "7.2.3",
+		"babel-jest": "20.0.3",
+		"babel-loader": "^7.1.2",
+		"babel-plugin-transform-es2015-modules-commonjs": "^6.26.0",
+		"babel-polyfill": "^6.26.0",
+		"babel-preset-env": "^1.6.0",
+		"babel-preset-es2015": "^6.24.1",
+		"babel-preset-es2015-riot": "^1.1.0",
+		"babel-runtime": "^6.26.0",
+		"case-sensitive-paths-webpack-plugin": "^2.1.1",
+		"chalk": "^2.1.0",
+		"css-loader": "^0.28.7",
+		"dotenv": "^4.0.0",
 		"electron": "^1.6.11",
 		"electron-builder": "^19.16.0",
-
-		"autoprefixer"                                   : "7.1.1",
-		"babel-core"                                     : "6.25.0",
-		"babel-eslint"                                   : "7.2.3",
-		"babel-jest"                                     : "20.0.3",
-		"babel-loader"                                   : "7.1.1",
-		"babel-plugin-transform-es2015-modules-commonjs" : "^6.24.1",
-		"babel-preset-es2015"                            : "^6.24.1",
-		"babel-preset-es2015-riot"                       : "^1.1.0",
-		"babel-runtime"                                  : "6.23.0",
-		"case-sensitive-paths-webpack-plugin"            : "2.1.1",
-		"chalk"                                          : "2.0.1",
-		"css-loader"                                     : "^0.28.4",
-		"dotenv"                                         : "4.0.0",
-		"eslint"                                         : "4.1.1",
-		"eslint-loader"                                  : "1.8.0",
-		"eslint-plugin-flowtype"                         : "2.34.1",
-		"eslint-plugin-import"                           : "2.6.1",
-		"eslint-plugin-jsx-a11y"                         : "6.0.2",
-		"eslint-plugin-riot"                             : "^0.1.7",
-		"extract-text-webpack-plugin"                    : "2.1.2",
-		"favicons"                                       : "^4.8.6",
-		"file-loader"                                    : "0.11.2",
-		"fs-extra"                                       : "3.0.1",
-		"html-webpack-plugin"                            : "2.29.0",
-		"jest"                                           : "20.0.4",
-		"less"                                           : "^2.7.2",
-		"less-loader"                                    : "^4.0.4",
-		"lint-staged"                                    : "^4.0.0",
-		"object-assign"                                  : "4.1.1",
-		"postcss-flexbugs-fixes"                         : "3.0.0",
-		"postcss-loader"                                 : "2.0.6",
-		"pre-commit"                                     : "^1.2.2",
-		"promise"                                        : "8.0.0",
-		"react-dev-utils"                                : "^3.0.2",
-		"riot-hot-reload"                                : "^1.0.0",
-		"riot-jest-transformer"                          : "^1.0.10",
-		"riot-tag-loader"                                : "^1.0.0",
-		"serve"                                          : "^6.0.0",
-		"style-loader"                                   : "^0.18.1",
-		"stylelint"                                      : "^7.12.0",
-		"svg-inline-loader"                              : "^0.7.1",
-		"sw-precache-webpack-plugin"                     : "0.11.3",
-		"url-loader"                                     : "0.5.9",
-		"webpack"                                        : "^3.0.0",
-		"webpack-dev-server"                             : "^2.5.0",
-		"webpack-manifest-plugin"                        : "1.1.0",
-		"whatwg-fetch"                                   : "2.0.3"
+		"eslint": "^4.6.1",
+		"eslint-loader": "^1.9.0",
+		"eslint-plugin-flowtype": "^2.35.1",
+		"eslint-plugin-import": "2.6.1",
+		"eslint-plugin-jsx-a11y": "6.0.2",
+		"eslint-plugin-riot": "^0.1.7",
+		"extract-text-webpack-plugin": "^2.1.2",
+		"favicons": "^4.8.6",
+		"file-loader": "^0.11.2",
+		"fs-extra": "^3.0.1",
+		"html-webpack-plugin": "^2.30.1",
+		"jest": "20.0.4",
+		"lerna": "^2.2.0",
+		"less": "^2.7.2",
+		"less-loader": "^4.0.5",
+		"lint-staged": "^4.0.0",
+		"object-assign": "4.1.1",
+		"postcss-flexbugs-fixes": "3.0.0",
+		"postcss-loader": "^2.0.6",
+		"pre-commit": "^1.2.2",
+		"promise": "^8.0.1",
+		"react-dev-utils": "^3.1.1",
+		"riot-hot-reload": "^1.0.0",
+		"riot-jest-transformer": "^1.0.10",
+		"riot-tag-loader": "^1.0.0",
+		"serve": "^6.0.0",
+		"style-loader": "^0.18.2",
+		"stylelint": "^7.12.0",
+		"svg-inline-loader": "^0.7.1",
+		"sw-precache-webpack-plugin": "^0.11.4",
+		"url-loader": "^0.5.9",
+		"webpack": "^3.5.6",
+		"webpack-dev-server": "^2.7.1",
+		"webpack-manifest-plugin": "^1.3.1",
+		"whatwg-fetch": "^2.0.3"
 	}
 }

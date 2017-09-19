@@ -59,9 +59,9 @@ const cssFilename = 'static/css/[name].[contenthash:8].css'
 // However, our output is structured with css, js and media folders.
 // To have this structure working with relative paths, we have to use custom options.
 const extractTextPluginOptions = shouldUseRelativeAssetPaths
-  ? // Making sure that the publicPath goes back to to build folder.
+	? // Making sure that the publicPath goes back to to build folder.
 	{ publicPath: Array(cssFilename.split('/').length).join('../') }
-  : {}
+	: {}
 
 // This is the production configuration.
 // It compiles slowly and is focused on producing a fast and minimal bundle.
@@ -75,7 +75,7 @@ let webpack_prod_config = {
 	devtool: 'source-map',
 
 	// In production, we only want to load the polyfills and the app code.
-	entry: [require.resolve('./polyfills'), paths.appIndexJs],
+	entry: ['babel-polyfill', require.resolve('./polyfills'), paths.appIndexJs],
 	output: {
 		// The build folder.
 		path: paths.appBuild,
@@ -209,8 +209,8 @@ let webpack_prod_config = {
 				  {
 					 loader: require.resolve('riot-tag-loader'),
 					 options: {
-						type: 'es6',
-						debug: false,
+							type: 'es6',
+							debug: false,
 						// add here all the other riot-compiler options
 						// http://riotjs.com/guide/compiler/
 						// template: 'pug' for example
@@ -224,7 +224,14 @@ let webpack_prod_config = {
 				test:    /\.(js|tag)$/,
 				include: paths.appSrc,
 				loader:  require.resolve('babel-loader'),
-				options: { presets: 'es2015-riot' }
+				options: {
+					presets: ['es2015-riot', ['env', {
+					      'targets': {
+					        'browsers': ['last 2 versions', 'safari >= 7']
+					      }
+					    }]
+    				]
+				}
 			},
 
 			{
@@ -337,20 +344,20 @@ let webpack_prod_config = {
 		new webpack.DefinePlugin(env.stringified),
 
 		// Minify the code.
-		new webpack.optimize.UglifyJsPlugin({
-			compress: {
-				warnings: false,
-				// Disabled because of an issue with Uglify breaking seemingly valid code:
-				// https://github.com/facebookincubator/create-react-app/issues/2376
-				// Pending further investigation:
-				// https://github.com/mishoo/UglifyJS2/issues/2011
-				comparisons: false,
-			},
-			output: {
-				comments: false,
-			},
-			sourceMap: true,
-		}),
+		// new webpack.optimize.UglifyJsPlugin({
+		// 	compress: {
+		// 		warnings: false,
+		// 		// Disabled because of an issue with Uglify breaking seemingly valid code:
+		// 		// https://github.com/facebookincubator/create-react-app/issues/2376
+		// 		// Pending further investigation:
+		// 		// https://github.com/mishoo/UglifyJS2/issues/2011
+		// 		comparisons: false,
+		// 	},
+		// 	output: {
+		// 		comments: false,
+		// 	},
+		// 	sourceMap: true,
+		// }),
 
 		// Note: this won't work without ExtractTextPlugin.extract(..) in `loaders`.
 		new ExtractTextPlugin({

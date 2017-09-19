@@ -5,21 +5,22 @@ import Eth        from './Eth/Eth'
 import Api        from './Api'
 import Rtc        from './rtc'
 import Notify     from './notify'
+import GamesStat  from './games.stat.js'
 
 import bigInt     from 'big-integer'
-import Web3       from 'web3'
 
-const web3 = new Web3()
-
-const web3_sha3 = require('web3/lib/utils/sha3.js')
+const web3Utils = require('web3/packages/web3-utils')
 
 import * as Utils from './utils'
 
 import {AsyncPriorityQueue, AsyncTask} from 'async-priority-queue'
 
 
-let skip_games = ['daochannel_v1', 'BJ', 'Slot']
+let skip_games = ['daochannel_v1', 'BJ', 'BJ_m', 'Slot']
 
+if (window) {
+	window.GamesStat = GamesStat
+}
 
 let _games         = {}
 let _gamesLogic    = {}
@@ -57,6 +58,7 @@ class Games {
 		}
 
 		this.BJ    = _gamesLogic['BJ']
+		this.BJ_m  = _gamesLogic['BJ_m']
 		this.Slots = _gamesLogic['slot']
 
 		setTimeout(()=>{
@@ -69,6 +71,9 @@ class Games {
 		this.RTC = new Rtc(user_id)
 
 		DB.data.get('Games').map().on((game, game_id)=>{ if (game) {
+
+			GamesStat.add(game.contract_id, 'game', game)
+
 			if (_config.games[game.code] && _config.games[game.code].channels) {
 				return
 			}
@@ -83,15 +88,16 @@ class Games {
 		}})
 
 		setInterval(()=>{
-			for(let k in _games){
-				let game = _games[k]
-
+			Object.values(_games).forEach(game=>{
 				this.RTC.sendMsg({
-					action:    'bankroller_active',
-					game_code: game.code,
-					address:   game.contract_id,
+					action    : 'bankroller_active',
+					game_code : game.code,
+					address   : game.contract_id,
+					stat      : GamesStat.info(game.contract_id)
 				})
-			}
+			})
+
+
 		}, 3500)
 	}
 
@@ -173,7 +179,7 @@ class Games {
 					this.add(game_to_deploy_id, game_to_deploy.code, address)
 
 					// add bets to contract
-					Api.addBets(address).then( result => {})
+					Api.addBets(address)
 
 					Notify.send('Contract succefull deployed!', 'Address: '+address)
 				},
@@ -196,7 +202,7 @@ class Games {
 					this.add(game_to_deploy_id, game_to_deploy.code, address)
 
 					// add bets to contract
-					Api.addBets(address).then( result => {})
+					Api.addBets(address)
 
 					Notify.send('Contract succefull deployed!', 'Address: '+address)
 				},
@@ -220,9 +226,7 @@ class Games {
 				this.add(game_to_deploy_id, game_to_deploy.code, address)
 
 				// add bets to contract
-				Api.addBets(address).then( result => {
-				})
-
+				Api.addBets(address)
 				Notify.send('Contract succefull deployed!', 'Address: '+address)
 			},
 
@@ -310,9 +314,11 @@ class Games {
 			Eth.getBetsBalance(game.contract_id, (balance)=>{
 				if (_games[game.id].start_balance==0) {
 					_games[game.id].start_balance = balance
+					GamesStat.add(game.contract_id, 'start_balance', balance)
 					DB.data.get('Games').get(game.id).get('start_balance').put(balance)
 				} else {
 					_games[game.id].balance = balance
+					GamesStat.add(game.contract_id, 'balance', balance)
 					DB.data.get('Games').get(game.id).get('balance').put(balance)
 				}
 			})
@@ -343,7 +349,7 @@ class Games {
 					return
 				}
 				if (type=='string') {
-					return web3.toAscii(response.result)
+					return web3Utils.toAscii(response.result)
 						.replace(/\)/g, '')
 						.replace(/\(/g, '')
 						.replace(/\/g, '')
@@ -383,7 +389,6 @@ class Games {
 	getConfirmNumber(game_code, seed, callback){
 		Eth.Wallet.getPwDerivedKey( PwDerivedKey => {
 			let msg = seed
-			// let msg = '0x'+web3_sha3(seed)
 
 			let VRS = Eth.Wallet.lib.signing.signMsgHash(
 				Eth.Wallet.getKs(),
@@ -486,20 +491,18 @@ class Games {
 		})
 	}
 
-	getBlockchainLogs(contract_id, callback){
+	async getBlockchainLogs(contract_id, callback){
 		if (!contract_id) { return }
 
 		// Blockchain
-		Eth.RPC.request('getLogs',[{
+		const response = await Eth.RPC.request('getLogs',[{
 			'address':   contract_id,
 			'fromBlock': Eth.getCurBlock(),
 			'toBlock':   'latest',
-		}], 74).then( response => {
-			if(!response || !response.result){ callback([]); return }
+		}], 74)
 
-			if (callback) callback(response.result)
-		}).catch(err => {
-		})
+		if(!response || !response.result){ callback([]); return }
+		if (callback) callback(response.result)
 	}
 
 	// Add send random task to queue
@@ -606,16 +609,17 @@ class Games {
 		setTimeout(()=>{ this.runServerConfirm() }, _config.confirm_timeout/2 )
 	}
 
-	ServerConfirm(contract_id, game_code, game_version){
-		Api.getLogs(contract_id, game_code, game_version).then( seeds => {
-			if (!seeds || !seeds.length) {
-				return
-			}
+	async ServerConfirm(contract_id, game_code, game_version){
+		const seeds = await Api.getLogs(contract_id, game_code, game_version)
+		if (!seeds || !seeds.length) {
+			return
+		}
+		console.log('seeds', seeds)
 
-			seeds.forEach( seed => {
-				this.sendRandom2Server(game_code, contract_id, seed)
-			})
+		seeds.forEach( seed => {
+			this.sendRandom2Server(game_code, contract_id, seed)
 		})
+
 	}
 
 	sendRandom2Server(game_code, address, seed){
@@ -639,33 +643,33 @@ class Games {
 		}
 
 
-		this.checkPending(game_code, address, seed, ()=>{
-			this.getConfirmNumber(game_code, seed, (confirm, PwDerivedKey)=>{
+		// this.checkPending(game_code, address, seed, ()=>{
+		this.getConfirmNumber(game_code, seed, (confirm, PwDerivedKey)=>{
 
-				if (this.RTC) {
-					this.RTC.send({
-						action:    'send_random',
-						game_code: game_code,
-						address:   address,
-						seed:      seed,
-						random:    confirm,
-					})
-				}
+			if (this.RTC) {
+				this.RTC.send({
+					action:    'send_random',
+					game_code: game_code,
+					address:   address,
+					seed:      seed,
+					random:    confirm,
+				})
+			}
+			console.log('sendConfirm', confirm)
+			Api.sendConfirm(address, seed, confirm).then( console.log )
 
-				Api.sendConfirm(address, seed, confirm).then(()=>{ })
+			_seeds_list[seed].confirm_server_time   = new Date().getTime()
+			_seeds_list[seed].confirm               = confirm
+			_seeds_list[seed].confirm_server        = confirm
+			_seeds_list[seed].confirm_sended_server = true
 
-				_seeds_list[seed].confirm_server_time   = new Date().getTime()
-				_seeds_list[seed].confirm               = confirm
-				_seeds_list[seed].confirm_server        = confirm
-				_seeds_list[seed].confirm_sended_server = true
-
-				DB.data.get('seeds_list').get(seed).put(_seeds_list[seed])
-				/* gunjs bugfix =) */ DB.data.get('seeds_list').map().on( (a,b)=>{ })
-			})
+			DB.data.get('seeds_list').get(seed).put(_seeds_list[seed])
+			/* gunjs bugfix =) */ DB.data.get('seeds_list').map().on( (a,b)=>{ })
 		})
+		// })
 	}
 
-	checkPending(game_code, address, seed, callback){
+	async checkPending(game_code, address, seed, callback){
 		if (game_code.indexOf('blackjack')!=-1) {
 			callback()
 			return
@@ -685,26 +689,26 @@ class Games {
 			return
 		}
 
-		Eth.RPC.request('call', [{
+		const response = Eth.RPC.request('call', [{
 			'to':   address,
 			'data': '0x' + Eth.hashName('listGames(bytes32)') + seed.substr(2)
-		}, 'pending'], 0).then( response => {
-			if (!response.result){
-				setTimeout(()=>{ this.checkPending(game_code, address, seed, callback) }, 1000)
-				return
-			}
-			let resdata = response.result.split('0').join('')
+		}, 'pending'], 0)
 
-			if (resdata.length < 5) {
-				setTimeout(()=>{ this.checkPending(game_code, address, seed, callback) }, 1000)
-				_seeds_list[seed].pending = false
-				return
-			}
+		if (!response.result){
+			setTimeout(()=>{ this.checkPending(game_code, address, seed, callback) }, 1000)
+			return
+		}
+		let resdata = response.result.split('0').join('')
 
-			_seeds_list[seed].pending = true
-			delete( _pendings_list[address+'_'+seed] )
-			callback()
-		})
+		if (resdata.length < 5) {
+			setTimeout(()=>{ this.checkPending(game_code, address, seed, callback) }, 1000)
+			_seeds_list[seed].pending = false
+			return
+		}
+
+		_seeds_list[seed].pending = true
+		delete( _pendings_list[address+'_'+seed] )
+		callback()
 	}
 
 	isValidSeed(seed){

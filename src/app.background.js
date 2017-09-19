@@ -8,6 +8,10 @@ setTimeout(()=>{
 		return
 	}
 
+	// if (process.env.APP_DICE_GAMECHANNEL) {
+	// 	return
+	// }
+
 	Games.runUpdateBalance()
 
 	Games.checkDeployTasks()

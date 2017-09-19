@@ -8,6 +8,7 @@ export default new class Channel {
 	}
 
 	close(contractAddress=false, playerAddress=false, channel_id=false, deposit=false, callback, repeat=3){
+		console.log('')
 		console.log('CLOSE', contractAddress, 'closeChannel', playerAddress, deposit)
 
 		if (!contractAddress || !playerAddress || !channel_id) {
@@ -17,48 +18,70 @@ export default new class Channel {
 		const add = ( deposit > 0 )
 
 		const profit = this.BETs( Math.abs(deposit) )
+		console.log('closeChannel', {
+			contractAddress: contractAddress,
+			playerAddress:   playerAddress,
+			channel_id:      channel_id,
+			profit:          profit,
+			deposit:         deposit,
+			add:             add,
+		})
+
+		if (isNaN(profit)) {
+			console.error('ERR:', 'profit is NaN')
+			return
+		}
 
 		this.callFunc(contractAddress, 'closeChannel', [playerAddress, channel_id, profit, add], response => {
-			console.log('response', response)
-			if (!response || !response.result) {
+			console.log('this.callFunc(contractAddress, closeChanne response', response)
+			console.log('repeat', repeat)
+			if (!response || !response.result || (response && response.error) ) {
+				if (response.error) {
+					callback({err:response.error, response:response}); return
+				}
+
 				repeat--
 				if (repeat > 0) {
-					this.close(contractAddress, playerAddress, deposit, callback, repeat)
+					this.close(contractAddress, playerAddress, channel_id, deposit, callback, repeat)
+					return
 				}
+
+				callback({err:'timeout'})
 				return
 			}
 
 			this.isOpenChannel(contractAddress, playerAddress, channel_id, opened => {
-				callback( !opened )
+				callback({err:null})
 			})
 		})
 	}
 
-	isOpenChannel(contractAddress, playerAddress=false, channel_id=false, callback, repeat=5){ setTimeout(()=>{
+	isOpenChannel(contractAddress, playerAddress=false, channel_id=false, callback, repeat=5){ setTimeout( async ()=>{
 		if (!playerAddress || !channel_id) { return }
 		repeat--
 
-		Eth.RPC.request('call', [{
+		const response = await Eth.RPC.request('call', [{
 			'to':   contractAddress,
 			'data': '0x'
 				+ Eth.hashName('getOpenChannel(address,bytes32)')
 					+ Utils.pad(playerAddress.substr(2), 64)
 					+ Utils.pad(channel_id.substr(2), 64)
 
-		}, 'latest']).then( response => {
-			let opened = true
+		}, 'latest'])
 
-			if (response && response.result) {
-				opened = ( Utils.hexToNum(response.result, 16) > 0)
-			}
+		let opened = true
 
-			if (opened && repeat > 0) {
-				this.isOpenChannel(contractAddress, playerAddress, channel_id, callback, repeat)
-				return
-			}
+		if (response && response.result) {
+			opened = ( Utils.hexToNum(response.result, 16) > 0)
+		}
 
-			callback( opened )
-		})
+		if (opened && repeat > 0) {
+			this.isOpenChannel(contractAddress, playerAddress, channel_id, callback, repeat)
+			return
+		}
+
+		callback( opened )
+
 	}, 3000) }
 
 	callFunc(address, name, args, callback){

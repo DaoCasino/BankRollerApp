@@ -61,10 +61,22 @@ if (process.env.NODE_ENV === 'server' && global.network ) {
 
 
 const games = {
-	slot:{ code: 'slot',
+	// slot:{ code: 'slot',
+	// 	channels: true,
+	// 	name:    'Slots',
+	// 	url:     'https://platform.dao.casino/games/SlotGame/',
+	// },
+
+	// MG: { code: 'MG',
+	// 	channels: true,
+	// 	name:     'MG',
+	// 	url:      'http://blackjackgame.dao.casino/games/MG/#test_multi',
+	// },
+
+	BJ_m: { code: 'BJ_m',
 		channels: true,
-		name:    'Slots',
-		url:     'https://platform.dao.casino/games/SlotGame/',
+		name:     'Blackjack Multiplayer',
+		url:      'http://blackjackgame.dao.casino/games/bj/',
 	},
 
 	BJ: { code: 'BJ',
@@ -76,10 +88,13 @@ const games = {
 	dice_v2:{ code: 'dice_v2',
 		name: 'DiceGame',
 		url:  'https://platform.dao.casino/games/DiceGame/',
-	},
+	}
 }
 
 module.exports = {
+	db_name:        'DaoCasino',
+	rtc_room:       'daocasino-room1',
+
 	wallet_pass:     '1234',
 	server:          bankroller_server,
 

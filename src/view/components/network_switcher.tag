@@ -37,6 +37,11 @@ import DB      from 'DB/DB'
 				return
 			}
 
+			if (e.item.network.code=='mainnet') {
+				alert(`In this moment we don't have any games, that works on mainnet - so there it makes no sense to use bankroller app on mainnet, thats why we turned it off. Once the new games on mainnet would appear - we will turn on mainnet on bankroller app`)
+				return
+			}
+
 			if (!confirm('After change network, app will be restarted')) {
 				return
 			}

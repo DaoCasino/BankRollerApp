@@ -1,7 +1,7 @@
 /**
  * Created by DAO.casino
  * BlackJack
- * v 1.0.7
+ * v 1.0.12
  */
 
 var LogicJS = function(params){
@@ -83,10 +83,9 @@ var LogicJS = function(params){
 		_bStandNecessary = false
 		_bSplit = false
 
-		var seedarr = ABI.rawEncode([ 'bytes32' ], [ _s ])
-		dealCard(true, true, seedarr[15])
-		dealCard(false, true, seedarr[16])
-		dealCard(true, true, seedarr[17])
+		dealCard(true, true, _s, 15)
+		dealCard(false, true, _s, 16)
+		dealCard(true, true, _s, 17)
 		refreshGame(_s)
 	}
 
@@ -96,13 +95,11 @@ var LogicJS = function(params){
 	}
 
 	_self.bjStand = function(_s, isMain){
-		var seedarr = ABI.rawEncode([ 'bytes32' ], [ _s ])
-		stand(isMain, seedarr)
+		stand(isMain, _s)
 		refreshGame(_s)
 	}
 
 	_self.bjSplit = function(_s){
-		var seedarr = ABI.rawEncode([ 'bytes32' ], [ _s ])
 		_arMySplitCards = [_arMyCards[1]]
 		_arMyCards = [_arMyCards[0]]
 		_arMySplitPoints = [_arMyPoints[0]]
@@ -110,8 +107,8 @@ var LogicJS = function(params){
 		_myPoints = getMyPoints()
 		_splitPoints = getMySplitPoints()
 		_bSplit = true
-		dealCard(true, true, seedarr[15])
-		dealCard(true, false, seedarr[16])
+		dealCard(true, true, _s, 15)
+		dealCard(true, false, _s, 16)
 		_objSpeedGame.betSplitGame = _objSpeedGame.betGame
 		_money -= _objSpeedGame.betSplitGame
 		_objSpeedGame.money = _money
@@ -120,9 +117,8 @@ var LogicJS = function(params){
 	}
 
 	_self.bjDouble = function(_s, isMain){
-		var seedarr = ABI.rawEncode([ 'bytes32' ], [ _s ])
 		dealCard(true, isMain, _s)
-		stand(isMain, seedarr)
+		stand(isMain, _s)
 		if(isMain){
 			_money -= _objSpeedGame.betGame
 			_objResult.profit -= _objSpeedGame.betGame
@@ -230,7 +226,7 @@ var LogicJS = function(params){
 		}
 	}
 
-	function stand(isMain, s){
+	function stand(isMain, _s){
 		_bSplit = false
 		if (!isMain) {
 			return
@@ -241,18 +237,18 @@ var LogicJS = function(params){
 		if(_myPoints > BLACKJACK &&
 		(_arMySplitCards.length == 0 ||
 		_splitPoints > BLACKJACK)){
-			dealCard(false, true, s[15])
+			dealCard(false, true, _s, 15)
 		} else {
 			var val = 15
-			while (_housePoints < 17 && val < 64) {
-				dealCard(false, true, s[val])
+			while (_housePoints < 17 && val < 32) {
+				dealCard(false, true, _s, val)
 				val += 1
 			}
 		}
 	}
 
-	function dealCard(player, isMain, seed){
-		var newCard = createCard(seed)
+	function dealCard(player, isMain, seed, val){
+		var newCard = createCard(seed, val)
 
 		var cardType = Math.floor(newCard / 4)
 		var point = cardType
@@ -275,8 +271,7 @@ var LogicJS = function(params){
 				_arMyCards.push(newCard)
 				// console.log("dealClient: Main", newCard, getNameCard(newCard));
 				if(_myPoints >= BLACKJACK && !_bSplit){
-					var seedarr = ABI.rawEncode([ 'bytes32' ], [ seed ])
-					stand(isMain, seedarr)
+					stand(isMain, seed)
 				}
 			} else {
 				_arMySplitPoints.push(point)
@@ -293,7 +288,10 @@ var LogicJS = function(params){
 	}
 
 	function checkResult(isMain, _s){
-		var points = _splitPoints
+		if(_arHouseCards.length < 2){
+			return false
+		}
+		var points = getMySplitPoints()
 		var bet = _objSpeedGame.betSplitGame
 		var betWin = 0
 		var countCard = _arMySplitCards.length
@@ -301,7 +299,7 @@ var LogicJS = function(params){
 
 		if(isMain){
 			countCard = _arMyCards.length
-			points = _myPoints
+			points = getMyPoints()
 			bet = _objSpeedGame.betGame
 
 			if(_objSpeedGame.result){
@@ -312,7 +310,7 @@ var LogicJS = function(params){
 		if(points == BLACKJACK && _housePoints == BLACKJACK && state==''){
 			state = 'push'
 			betWin = bet
-			if(isMain){
+			if(isMain && !_bSplit){
 				_objSpeedGame.result = true
 			}
 		}
@@ -326,10 +324,12 @@ var LogicJS = function(params){
 			}
 		}
 
-		if (points == BLACKJACK && state=='' && countCard == 2) {
-			state = 'blackjack'
-			bet = bet * 2.5
-			betWin = bet
+		if (points == BLACKJACK && state=='') {
+			if(countCard == 2){
+				state = 'blackjack'
+				bet = bet * 2.5
+				betWin = bet
+			}
 			if(isMain){
 				if(!_bSplit){
 					_objSpeedGame.result = true
@@ -355,16 +355,17 @@ var LogicJS = function(params){
 		if (points < _housePoints && _housePoints <= BLACKJACK && state=='') {
 			state = 'lose'
 		}
+
 		if (state=='') {
 			state = 'win'
 			bet = bet * 2
 			betWin = bet
 		}
 
-		if(!_objSpeedGame.result){
+		if(!_objSpeedGame.result && isMain){
 			if(_bStand){
 				_objSpeedGame.result = true
-			} else if(points == BLACKJACK && isMain && !_bSplit){
+			} else if(points == BLACKJACK && !_bSplit){
 				if(_bStandNecessary){
 					_objSpeedGame.result = true
 				} else {
@@ -409,10 +410,12 @@ var LogicJS = function(params){
 		return rand
 	}
 
-	function createCard(cardNumber){
-		var hash = ABI.soliditySHA3(['bytes32'],[ cardNumber ]).toString('hex')
-		hash = hash.substr(hash.length-2, hash.length) // uint8
-		var rand = bigInt(hash,16).divmod(52).remainder.value
+	function createCard(cardNumber, val){
+		var hash = ABI.soliditySHA3(['bytes32'],[ cardNumber ])
+		if(val != undefined){
+			hash = [hash[val]]
+		}
+		var rand = bigInt(hash.toString('hex'),16).divmod(52).remainder.value
 		rand = checkCard(rand)
 		_arCards.push(rand)
 		return rand
@@ -568,7 +571,6 @@ var LogicJS = function(params){
 
 
 
-
 const game_code = 'BJ'
 
 
@@ -577,7 +579,10 @@ import bigInt     from 'big-integer'
 import Eth        from 'Eth/Eth'
 import Rtc        from 'rtc'
 import Channel    from 'Channel'
+import GamesStat  from 'games.stat.js'
+
 import * as Utils from 'utils'
+
 
 
 let Games = []
@@ -655,6 +660,9 @@ export default class BJgame {
 		Games[user_id][game_id].deposit = params.deposit
 		Games[user_id][game_id].user_id = params.user_id
 
+
+		GamesStat.cnt(this.contractAddress, 'open_game')
+		GamesStat.add(this.contractAddress, 'players_now', Object.keys(Games).length)
 	}
 
 	endGame(params){
@@ -670,7 +678,7 @@ export default class BJgame {
 
 		let profit = 0
 		for(let k in Games[user_id]){
-			if (['closing...','closed'].indexOf(Games[user_id][k].channel) > -1 ) {
+			if (['closed','closing...'].indexOf(Games[user_id][k].channel) > -1 ) {
 				continue
 			}
 			profit += Games[user_id][k].getResult().profit
@@ -686,6 +694,15 @@ export default class BJgame {
 
 		if (params.profit == profit) {
 			profit = profit/100000000
+
+			if (!(profit < 0)) {
+				GamesStat.cnt(this.contractAddress, 'wins' )
+				GamesStat.cnt(this.contractAddress, 'win_bets', Math.abs(profit) )
+			}
+			if (profit < 0) {
+				GamesStat.cnt(this.contractAddress, 'lose')
+				GamesStat.cnt(this.contractAddress, 'lose_bets', Math.abs(profit) )
+			}
 
 
 			close_code += params.address+'_'+params.account+'_'+profit
@@ -704,6 +721,8 @@ export default class BJgame {
 				for(let k in Games[user_id]){
 					Games[user_id][k].channel = 'closed'
 				}
+
+				GamesStat.cnt(this.contractAddress, 'close_game')
 
 				console.log('rtc send', params)
 				this.RTC.send(params)

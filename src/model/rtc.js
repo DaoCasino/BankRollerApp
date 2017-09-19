@@ -1,28 +1,28 @@
 import _config from 'app.config'
-import DB from './DB/DB'
 import * as Utils from './utils'
-
 
 const delivery_timeout = 3000
 
 let _subscribes = {}
 
-let DB_msgs = DB.data.get('RTC_msgs')
-let   _msgs = []
 
 export default class RTC {
-	constructor(user_id=false, room='daocasino-room1') {
+	constructor(user_id=false, room=false) {
+		if (!room) {
+			room = _config.rtc_room
+		}
+
+		if (process.env.NODE_ENV !== 'server') {
+			require('ydn.db')
+			this.DB = new ydn.db.Storage( _config.db_name )
+		}
+
 		this.user_id = user_id || Utils.makeSeed()
 
 		this.channel = false
 		this.connect(room)
 
-		DB_msgs.map().val((time,seed)=>{
-			_msgs.push(seed)
-			if ( Math.abs(time - new Date().getTime()) > 5*60*1000 ) {
-				setTimeout(()=>{ DB_msgs.get(seed).put(null) }, 100)
-			}
-		})
+		this.clearOldSeeds()
 	}
 
 	connect(room){
@@ -50,17 +50,11 @@ export default class RTC {
 				return
 			}
 
+			// if (this.isAlreadyReceived(data)) {
+			// 	return
+			// }
+
 			this.acknowledgeReceipt(data)
-
-
-			if (!data.seed || _msgs.indexOf(data.seed) > -1) {
-				return
-			}
-
-			if (data.action != 'delivery_confirmation') {
-				_msgs.push(data.seed)
-				DB_msgs.get(data.seed).put( new Date().getTime() )
-			}
 
 			// Call subscries
 			if (data.address && _subscribes[data.address]) {
@@ -79,6 +73,38 @@ export default class RTC {
 				}
 			}
 		})
+	}
+
+	async isAlreadyReceived(data){
+	// isAlreadyReceived(data){
+		if (!data.seed || typeof data.seed !=='string' || data.action == 'delivery_confirmation') {
+			return false
+		}
+		const seed_exist = await this.DB.get(_config.rtc_store, data.seed)
+		if (seed_exist && this.isFreshSeed(seed_exist.t) ) {
+			return true
+		}
+
+		this.DB.put(_config.rtc_store, { t:new Date().getTime() }, data.seed)
+		return false
+	}
+
+	isFreshSeed(time){
+		let ttl = 2*60*1000
+		let livetime = (new Date().getTime()) - time*1
+		return ( livetime < ttl )
+	}
+
+	async clearOldSeeds(){
+	// clearOldSeeds(){
+		let seeds = await this.DB.values('groups')
+		for(let id in seeds){
+			if (!this.isFreshSeed(seeds[id].t)){
+				this.DB.remove(_config.rtc_store, id)
+			}
+		}
+
+		setTimeout(()=>{ this.clearOldSeeds() }, 10*1000 )
 	}
 
 	subscribe(address, callback, name=false){
