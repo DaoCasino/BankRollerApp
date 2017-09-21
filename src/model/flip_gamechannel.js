@@ -151,7 +151,7 @@ const Casino = {
 	ABI:    ABI,
 }
 
-const WEB3 = require('web3')
+const WEB3 = require('web3/packages/web3')
 const web3 = new WEB3()
 
 import * as Utils from './utils'
