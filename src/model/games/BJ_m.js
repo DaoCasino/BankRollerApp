@@ -18,7 +18,7 @@ var RoomJS = function(){
 		}
 
 		var params = {prnt:_self, balance:deposit, address:address, callback:callback, bMultiplayer:true}
-		var logic = new LogicMultJS(params)
+		var logic = new LogicJS(params)
 
 		if (typeof id === 'undefined') {
 			id = Object.keys(_Users).length
@@ -42,7 +42,7 @@ var RoomJS = function(){
 	}
 
 	_self.callFunction = function(address, name, params){
-		if(_Users[address].logic[name]){
+		if(_Users && _Users[address] && _Users[address].logic && _Users[address].logic[name]){
 			_Users[address].logic[name].apply(null, params)
 		}
 
@@ -62,7 +62,6 @@ var RoomJS = function(){
 			console.log('Game Over')
 			var prcnt = Math.ceil(COUNT_DECKS*COUNT_CARDS*0.75)
 			if(_arCards.length < prcnt){
-				console.log('Mix deck')
 				_self.mixDeck()
 			}
 		}
@@ -91,16 +90,16 @@ var RoomJS = function(){
 		}
 	}
 
-	_self.createCard = function(cardNumber, val){
-		var hash = ABI.soliditySHA3(['bytes32'],[ cardNumber ])
-		if(val != undefined){
+	_self.createCard = function(seed, val, _address){
+		var hash = ABI.soliditySHA3(['bytes32'],[ seed ])
+		if(val){
 			hash = [hash[val]]
 		}
 
 		var rand = bigInt(hash.toString('hex'),16).divmod(_arCards.length).remainder.value
 		var id = _arCards[rand]
 		_arCards.splice(rand, 1)
-		console.log('createCard:', _arCards.length)
+
 		return id
 	}
 
@@ -149,16 +148,13 @@ var RoomJS = function(){
 
 	return _self
 }
-
-
-
 /**
  * Created by DAO.casino
  * BlackJack
  * v 1.0.9
  */
 
-var LogicMultJS = function(params){
+var LogicJS = function(params){
 	var _self = this
 
 	var BLACKJACK = 21
@@ -678,17 +674,7 @@ var LogicMultJS = function(params){
 	}
 
 	function createCard(cardNumber, val){
-		/*var hash = ABI.soliditySHA3(['bytes32'],[ cardNumber ]);
-		if(val != undefined){
-			hash = [hash[val]];
-		}
-
-		var rand = bigInt(hash.toString('hex'),16).divmod(_arCards.length).remainder.value;
-		var id = _arCards[rand];
-		_arCards.splice(rand, 1);
-		console.log("createCard:", _arCards.length, _address);*/
-
-		var id = _prnt.createCard(cardNumber, val)
+		var id = _prnt.createCard(cardNumber, val, _address)
 		return id
 	}
 
@@ -945,6 +931,14 @@ export default class BJgame {
 
 			if (data.action=='call_game_function') {
 				this.callGameFunction(data.user_id, data.game_id, data.name, data.args)
+
+				let n_data = Object.assign({}, data)
+
+				n_data.action       = 'B_call_game_function'
+				n_data.call_user_id = n_data.user_id
+				n_data.args         = this.prepareArgs(n_data.args)
+
+				this.RTC.send(n_data)
 			}
 		})
 
@@ -1091,6 +1085,16 @@ export default class BJgame {
 	}
 
 	callGameFunction(user_id, game_id, function_name, function_args){
+		if (function_name=='BJ_mixDeck') {
+
+			console.log('mixDeck')
+
+			let room = Games[ this.getUserRoom(user_id) ]
+			room.mixDeck()
+
+			return
+		}
+
 		let user = this.getUser(user_id)
 		if (!user) {
 			return
@@ -1122,7 +1126,7 @@ export default class BJgame {
 
 	prepareArgs(args){
 		if (!args || !args.length) {
-			return false
+			return []
 		}
 
 		let new_args = []
