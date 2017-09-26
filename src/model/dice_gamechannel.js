@@ -202,7 +202,7 @@ class DiceGameChannel {
 			contract.address, contract.abi,
 			'open', args,
 			signedTx => { sendTrans(signedTx, callback) },
-			900000
+			900000, 91000000000
 		)
 	}
 
@@ -217,7 +217,7 @@ class DiceGameChannel {
 			data.args.bankroll_balance,
 			data.args.nonce,
 		]
-
+		console.log('closeChannel',args)
 		const msgHash = web3.utils.soliditySha3.apply(this, args)
 		const recover = web3.eth.accounts.recover(msgHash, data.sig)
 

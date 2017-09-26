@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 
 	if (process.env.APP_BUILD_FOR_WINSERVER) {
 		setTimeout(()=>{
-			this.startChannelsGames()
+			Games.startChannelsGames()
 		}, 1500)
 		setTimeout(()=>{
 			Games.startMesh()
@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 		window.Games    = Games
 
 		setTimeout(()=>{
-			this.startChannelsGames()
+			Games.startChannelsGames()
 		}, 1500)
 		setTimeout(()=>{
 			Games.startMesh()

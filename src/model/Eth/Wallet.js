@@ -182,13 +182,13 @@ export default class Wallet {
 	}
 
 	//  Make and Sing contract function transaction
-	async signedContractFuncTx(contract_address, contract_abi, function_name, function_args, callback, gasLimit=700000){
+	async signedContractFuncTx(contract_address, contract_abi, function_name, function_args, callback, gasLimit=700000, gasPrice=81000000000){
 		const nonce = await this.getNonce()
 		console.log('signedContractFuncTx nonce', nonce)
 		let options = {
 			to:       contract_address,
 			nonce:    nonce,
-			gasPrice: '0x'+Utils.numToHex(81000000000),
+			gasPrice: '0x'+Utils.numToHex(gasPrice),
 			gasLimit: '0x'+Utils.numToHex(gasLimit),
 			value:    0,
 		}

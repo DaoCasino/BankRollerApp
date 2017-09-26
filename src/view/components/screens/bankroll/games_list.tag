@@ -9,7 +9,6 @@ import route    from 'riot-route'
 		this.seeds     = []
 
 		this.bj_games   = {}
-		this.slot_games = {}
 		this.dd_games   = []
 
 		this.on('mount', ()=>{
@@ -36,17 +35,6 @@ import route    from 'riot-route'
 					this.update()
 				}
 			}, 3000)
-
-
-			setInterval(()=>{
-				if (Games.Slots && Games.Slots.Games) {
-					this.slot_games = {}
-					for(let u in Games.Slots.Games){ for(let k in Games.Slots.Games[u]){
-						this.slot_games[u+'_'+k] = Games.Slots.Games[u][k]
-					}}
-					this.update()
-				}
-			}, 2000)
 
 		})
 
@@ -155,7 +143,7 @@ import route    from 'riot-route'
 
 	<div class="game-stat">
 
-		<div if={!Object.keys(games).length} class="no-games">You have no active games...</div>
+		<!-- <div if={!Object.keys(games).length} class="no-games">You have no active games...</div> -->
 
 		<table if={Object.keys(games).length} id="games">
 		<caption>Games, contracts</caption>
@@ -231,68 +219,9 @@ import route    from 'riot-route'
 			</tbody>
 		</table>
 
-		<table if={Object.keys(slot_games).length} >
-			<caption>SLOT games</caption>
 
-			<thead>
-				<tr>
-					<th>User</th>
-					<th>Channel</th>
-					<th>rnd</th>
-					<th>deposit</th>
-					<th>profit</th>
-					<th>user win</th>
-				</tr>
-			</thead>
-			<tbody>
-				<tr each={g in slot_games}>
-					<td><a href="https://ropsten.etherscan.io/address/{g.user_id}" target="_blank" rel="noopener">{g.user_id}</a></td>
-					<td>{g.channel}</td>
-					<td>{g.getResult().rnd}</td>
-					<td>{g.deposit}</td>
-					<td>{g.getResult().balance}</td>
-					<td>
-						<span if={g.getResult().result}>{g.getResult().result}</span>
-					</td>
-				</tr>
-			</tbody>
 
-		</table>
-
-		<table if={Object.keys(games).length && Object.keys(seeds).length} class="seeds">
-			<caption>DICE Games</caption>
-			<thead>
-				<tr>
-					<th>TX</th>
-					<th>Contract</th>
-					<th>status</th>
-					<th>random</th>
-					<th></th>
-				</tr>
-			</thead>
-			<tbody>
-				<tr each={s in seeds}>
-					<td><a href="{s.tx_link}" target="_blank" rel="noopener" class="address" title="{s.tx}">{s.tx}</a></td>
-					<td>
-						<a  if={s.contract}
-							href="{s.contract_link}"
-							title="{s.contract}"
-							class="address" target="_blank" rel="noopener">
-							{s.meta_code}
-						</a>
-					</td>
-					<td>
-						<span if={!s.confirm_sended_server && !s.confirm_sended_blockchain}>pending...</span>
-						<span if={s.confirm_sended_server}>sended to player</span>
-						<span if={s.confirm_sended_blockchain}>[in blockhain]</span>
-					</td>
-					<td><span class="confirm">{s.confirm}</span></td>
-					<td></td>
-				</tr>
-			</tbody>
-		</table>
-
-		<table if={dd_games} class="seeds">
+		<table if={Object.keys(dd_games).length} class="seeds">
 			<caption>DICE GameChannels Games</caption>
 			<thead>
 				<tr>

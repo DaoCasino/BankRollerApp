@@ -60,34 +60,11 @@ if (process.env.NODE_ENV === 'server' && global.network ) {
 
 
 
-const games = {
-	// slot:{ code: 'slot',
-	// 	channels: true,
-	// 	name:    'Slots',
-	// 	url:     'https://platform.dao.casino/games/SlotGame/',
-	// },
-
-	// MG: { code: 'MG',
-	// 	channels: true,
-	// 	name:     'MG',
-	// 	url:      'http://blackjackgame.dao.casino/games/MG/#test_multi',
-	// },
-
+const legacy_games = {
 	BJ_m: { code: 'BJ_m',
 		channels: true,
 		name:     'Blackjack Multiplayer',
 		url:      'http://blackjackgame.dao.casino/games/bj/',
-	},
-
-	BJ: { code: 'BJ',
-		channels: true,
-		name:     'Blackjack',
-		url:      'http://blackjackgame.dao.casino/games/bj/',
-	},
-
-	dice_v2:{ code: 'dice_v2',
-		name: 'DiceGame',
-		url:  'https://platform.dao.casino/games/DiceGame/',
 	}
 }
 
@@ -109,7 +86,7 @@ module.exports = {
 	rpc_url:         networks[current_network].rpc_url,
 	etherscan_url:   networks[current_network].etherscan_url,
 
-	games:           games,
+	games:           legacy_games,
 	contracts:       require('./contracts/games.contracts.js'),
 	channels:        require('./contracts/channel.abi.js'),
 

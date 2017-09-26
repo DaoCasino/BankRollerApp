@@ -38,9 +38,7 @@ class Games {
 			}
 		}
 
-		this.BJ    = _gamesLogic['BJ']
-		this.BJ_m  = _gamesLogic['BJ_m']
-		this.Slots = _gamesLogic['slot']
+		this.GamesL = _gamesLogic
 
 		setTimeout(()=>{
 			this.startChannelsGames()
