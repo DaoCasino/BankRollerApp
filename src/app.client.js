@@ -3,6 +3,7 @@ import View    from 'view/app.view'
 import Games   from 'games'
 
 import DiceGameChannel from 'dice_gamechannel'
+import FlipGameChannel from 'flip_gamechannel'
 
 if (window) {
 	window.App = {}
