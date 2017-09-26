@@ -25,6 +25,7 @@ import route    from 'riot-route'
 							this.dd_games.push(s)
 						}
 					}
+					this.dd_games.reverse().splice(0, 10)
 					this.update()
 				}
 			}, 3000)
