@@ -16,6 +16,8 @@ const web3_sha3 = require('web3/packages/web3-utils').sha3
 const rpc    = new RPC( _config.rpc_url )
 const wallet = new Wallet()
 
+let balances_cache = {}
+
 class Eth {
 	constructor(){
 		this.ABI     = ABI
@@ -122,15 +124,32 @@ class Eth {
 		return web3_sha3(name).substr(2,8)
 	}
 
-	getEthBalance(address, callback){
+	getEthBalance(address, callback, force=false){
+		if (!force && balances_cache[address] && balances_cache[address].eth_t > (new Date().getTime()-60*1000) ) {
+			callback( balances_cache[address].eth )
+			return
+		}
+
 		this.RPC.request('getBalance', [address, 'latest']).then( response => {
-			callback( Utils.hexToNum(response.result) / 1000000000000000000 )
+			if (!balances_cache[address]) {
+				balances_cache[address] = {}
+			}
+
+			balances_cache[address].eth_t = new Date().getTime()
+			balances_cache[address].eth   = Utils.hexToNum(response.result) / 1000000000000000000
+
+			callback( balances_cache[address].eth )
 		}).catch( err => {
 			console.error(err)
 		})
 	}
 
-	getBetsBalance(address, callback){
+	getBetsBalance(address, callback, force=false){
+		if (!force && balances_cache[address] && balances_cache[address].bets_t > (new Date().getTime()-60*1000) ) {
+			callback( balances_cache[address].bets )
+			return
+		}
+
 		let data = '0x' + this.hashName('balanceOf(address)')
 				  		+ Utils.pad(Utils.numToHex(address.substr(2)), 64)
 
@@ -141,7 +160,13 @@ class Eth {
 			'data': data
 		}, 'latest']
 		).then( response => {
-			callback( Utils.hexToNum(response.result) / 100000000 )
+			if (!balances_cache[address]) {
+				balances_cache[address] = {}
+			}
+			balances_cache[address].bets_t = new Date().getTime()
+			balances_cache[address].bets   = Utils.hexToNum(response.result) / 100000000
+
+			callback( balances_cache[address].bets )
 		}).catch( err => {
 			console.error(err)
 		})

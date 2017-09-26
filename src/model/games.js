@@ -13,19 +13,12 @@ const web3Utils = require('web3/packages/web3-utils')
 
 import * as Utils from './utils'
 
-import {AsyncPriorityQueue, AsyncTask} from 'async-priority-queue'
-
-
-let skip_games = ['daochannel_v1', 'BJ', 'BJ_m', 'Slot']
-
 if (window) {
 	window.GamesStat = GamesStat
 }
 
 let _games         = {}
 let _gamesLogic    = {}
-let _seeds_list    = {}
-let _pendings_list = {}
 
 
 class Games {
@@ -34,18 +27,6 @@ class Games {
 			if (!game || !game_id) { return }
 			_games[ game_id ] = game
 		})
-
-		if (process.env.APP_BUILD_FOR_WINSERVER) {
-			return
-		}
-
-		this.Queue = new AsyncPriorityQueue({
-			debug:               false,
-			maxParallel:         1,
-			processingFrequency: 500,
-		})
-
-		this.Queue.start()
 	}
 
 	startChannelsGames(){
@@ -67,6 +48,8 @@ class Games {
 	}
 
 	startMesh(){
+		this.startChannelsGames()
+
 		let user_id = Eth.Wallet.get().openkey || false
 		this.RTC = new Rtc(user_id)
 
@@ -272,15 +255,6 @@ class Games {
 	// Remove game item from local database
 	remove(game_id){
 		if (_games[game_id].contract_id) {
-			for(let k in _seeds_list){
-				if (_seeds_list[k].contract==_games[game_id].contract_id) {
-					delete(_seeds_list[k])
-					DB.data.get('seeds_list').get(k).put(null)
-				}
-			}
-
-			/* gunjs bugfix =) */ DB.data.get('seeds_list').map().on( (a,b)=>{ })
-
 			// Return money
 			this.withdraw( Object.assign({}, _games[game_id]) )
 		}
@@ -306,29 +280,6 @@ class Games {
 				}
 			)
 		})
-	}
-
-	// [Cycle] Update contracts balances
-	runUpdateBalance(){
-		this.activeGames().forEach(game => {
-			Eth.getBetsBalance(game.contract_id, (balance)=>{
-				if (_games[game.id].start_balance==0) {
-					_games[game.id].start_balance = balance
-					GamesStat.add(game.contract_id, 'start_balance', balance)
-					DB.data.get('Games').get(game.id).get('start_balance').put(balance)
-				} else {
-					_games[game.id].balance = balance
-					GamesStat.add(game.contract_id, 'balance', balance)
-					DB.data.get('Games').get(game.id).get('balance').put(balance)
-				}
-			})
-		})
-
-		let update_time = this.activeGames().length * 15 * 1000
-		if (update_time <= 0) {
-			update_time = 60*1000
-		}
-		setTimeout(()=>{ this.runUpdateBalance() }, update_time)
 	}
 
 	// Get contract metadata
@@ -381,340 +332,6 @@ class Games {
 			callback(meta)
 		})
 	}
-
-
-	/*
-	 * Random
-	 **/
-	getConfirmNumber(game_code, seed, callback){
-		Eth.Wallet.getPwDerivedKey( PwDerivedKey => {
-			let msg = seed
-
-			let VRS = Eth.Wallet.lib.signing.signMsgHash(
-				Eth.Wallet.getKs(),
-				PwDerivedKey,
-				msg,
-				Eth.Wallet.get().openkey
-			)
-
-			let signature = Eth.Wallet.lib.signing.concatSig(VRS)
-
-			let v = Utils.hexToNum(signature.slice(130, 132)) // 27 or 28
-			let r = signature.slice(0, 66)
-			let s = '0x' + signature.slice(66, 130)
-
-			let confirm = this.confirmNumber(game_code, s)
-
-			callback(confirm, PwDerivedKey, msg,v,r,s)
-		})
-	}
-
-	confirmNumber(game_code, input){
-		if (game_code.indexOf('dice') != -1) {
-			return this.confirmNumber_dice(input)
-		}
-		if (game_code.indexOf('blackjack') != -1 || game_code.indexOf('BJ') != -1) {
-			return this.confirmNumber_blackjack(input)
-		}
-	}
-
-	confirmNumber_dice(input){
-		/* Equivalent of solidity hash function:
-			function confirm(bytes32 _s) public returns(uint256){
-				return uint256 (sha3(_s));
-			}
-		*/
-		let    hash    = '0x'+Eth.ABI.soliditySHA3(['bytes32'],[ input ]).toString('hex')
-		let    confirm = bigInt(hash,16).divmod(65536).remainder.value
-		return confirm
-	}
-	confirmNumber_blackjack(input){
-		return input
-	}
-
-
-	hasFunds(callback){
-		Eth.getEthBalance(Eth.Wallet.get().openkey, eths => {
-			if (eths < 0.01) {
-				Notify.send('Please send some ETH to your account', 'insufficient funds')
-				return
-			}
-			if (eths < 0.5) {
-				Notify.send('Please send some ETH to your account', 'LOW BALANCE '+eths)
-			}
-
-			callback()
-		})
-	}
-
-	/*
-	 * Blockchain confirm
-	 **/
-	runBlockchainConfirm(){
-		if (this.activeGames().length > 0) {
-			this.hasFunds(()=>{
-				this.activeGames().forEach(game => {
-					if (game.balance > 0.5) {
-						this.BlockchainConfirm(game.contract_id, game.meta_code)
-					} else {
-						Notify.send('Please send BETs to game contract', game.meta_name+' - LOW BALANCE')
-					}
-				})
-			})
-		}
-		setTimeout(()=>{ this.runBlockchainConfirm() }, _config.confirm_timeout )
-	}
-
-	BlockchainConfirm(contract_id, game_code){
-		if (!_config.games[game_code] || (_config.games[game_code] && _config.games[game_code].channels)) {
-			return
-		}
-
-		// Get wait seeds list from contract logs
-		this.getBlockchainLogs(contract_id, seeds => {
-
-			// Add task in order - to send confirm in blockchain
-			seeds.forEach(item => {
-				Eth.setCurBlock(item.blockNumber)
-
-				let seed = item.data
-				if (this.isValidSeed(seed)) {
-					if (!_seeds_list[seed]) {
-						_seeds_list[seed] = { contract:contract_id }
-					}
-
-					if (!_seeds_list[seed].confirm_sended_blockchain) {
-						this.addTaskSendRandom(game_code, contract_id, seed)
-					}
-				}
-			})
-		})
-	}
-
-	async getBlockchainLogs(contract_id, callback){
-		if (!contract_id) { return }
-
-		// Blockchain
-		const response = await Eth.RPC.request('getLogs',[{
-			'address':   contract_id,
-			'fromBlock': Eth.getCurBlock(),
-			'toBlock':   'latest',
-		}], 74)
-
-		if(!response || !response.result){ callback([]); return }
-		if (callback) callback(response.result)
-	}
-
-	// Add send random task to queue
-	addTaskSendRandom(game_code, address, seed, callback=false, repeat_on_error=7, priority='low'){
-		let task = new AsyncTask({ priority: priority,
-			callback:()=>{
-				return new Promise((resolve, reject) => {
-
-					this.sendRandom2Blockchain(game_code, address, seed, (ok, result)=>{
-						if (ok) {
-							resolve( result )
-						} else {
-							reject( result )
-						}
-					})
-				})
-			},
-		})
-
-		task.promise.then(
-			result => {
-				if (callback) callback(result)
-			},
-			// Ошибка
-			e => {
-				if (repeat_on_error>0) {
-					repeat_on_error--
-					this.addTaskSendRandom(address, seed, callback, repeat_on_error, 'high')
-				}
-			}
-		)
-
-		this.Queue.enqueue(task)
-	}
-
-	sendRandom2Blockchain(game_code, address, seed, callback){
-		if (_seeds_list[seed] && _seeds_list[seed].proccess_sended_blockchain ) {
-			return
-		}
-
-		_seeds_list[seed].proccess_sended_blockchain = true
-
-		this.signConfirmTx(game_code, seed, address, _config.contracts[game_code].abi, (signedTx, confirm)=>{
-			Eth.RPC.request('sendRawTransaction', ['0x'+signedTx], 0).then( response => {
-
-				if (!response.result) {
-					callback(false, response)
-					return
-				}
-
-				_seeds_list[seed].tx                        = response.result
-				_seeds_list[seed].confirm_blockchain_time   = new Date().getTime()
-				_seeds_list[seed].confirm_sended_blockchain = true
-				_seeds_list[seed].confirm                   = confirm
-				_seeds_list[seed].confirm_blockchain        = confirm
-
-				DB.data.get('seeds_list').get(seed).put(_seeds_list[seed])
-
-				callback(true, response)
-			}).catch( err => {
-				callback(false, err)
-			})
-
-		})
-	}
-
-	signConfirmTx(game_code, seed, address, abi, callback){
-		this.getConfirmNumber(game_code, seed, (confirm, PwDerivedKey, msg,v,r,s)=>{
-
-			// get signed transaction for confirm function
-			Eth.Wallet.signedContractFuncTx(
-				// game contract address and ABI
-				address, abi,
-				// function adn params
-				'confirm', [msg, v, r, s],
-
-				// result: transaction
-				signedTx => {
-					callback(signedTx, confirm)
-				}
-			)
-		})
-	}
-
-
-	/*
-	 * Server confirm
-	 **/
-	runServerConfirm(){
-		if (this.activeGames().length > 0) {
-			this.hasFunds(()=>{
-				this.activeGames().forEach(game => {
-					if (!game || !game.contract_id) {
-						return
-					}
-
-					if (game.balance > 0.5) {
-						this.ServerConfirm(game.contract_id, game.meta_code, game.meta_version)
-					}
-				})
-			})
-		}
-
-		setTimeout(()=>{ this.runServerConfirm() }, _config.confirm_timeout/2 )
-	}
-
-	async ServerConfirm(contract_id, game_code, game_version){
-		const seeds = await Api.getLogs(contract_id, game_code, game_version)
-		if (!seeds || !seeds.length) {
-			return
-		}
-		console.log('seeds', seeds)
-
-		seeds.forEach( seed => {
-			this.sendRandom2Server(game_code, contract_id, seed)
-		})
-
-	}
-
-	sendRandom2Server(game_code, address, seed){
-		if (skip_games.indexOf(game_code) > -1 ) {
-			return
-		}
-		if (!_config.games[game_code] || (_config.games[game_code] && _config.games[game_code].channels)) {
-			return
-		}
-
-		if (!_seeds_list[seed]) {
-			_seeds_list[seed] = {
-				contract:address,
-			}
-
-			DB.data.get('seeds_list').get(seed).put(_seeds_list[seed])
-		}
-
-		if (_seeds_list[seed] && _seeds_list[seed].confirm_sended_server) {
-			return
-		}
-
-
-		// this.checkPending(game_code, address, seed, ()=>{
-		this.getConfirmNumber(game_code, seed, (confirm, PwDerivedKey)=>{
-
-			if (this.RTC) {
-				this.RTC.send({
-					action:    'send_random',
-					game_code: game_code,
-					address:   address,
-					seed:      seed,
-					random:    confirm,
-				})
-			}
-			console.log('sendConfirm', confirm)
-			Api.sendConfirm(address, seed, confirm).then( console.log )
-
-			_seeds_list[seed].confirm_server_time   = new Date().getTime()
-			_seeds_list[seed].confirm               = confirm
-			_seeds_list[seed].confirm_server        = confirm
-			_seeds_list[seed].confirm_sended_server = true
-
-			DB.data.get('seeds_list').get(seed).put(_seeds_list[seed])
-			/* gunjs bugfix =) */ DB.data.get('seeds_list').map().on( (a,b)=>{ })
-		})
-		// })
-	}
-
-	async checkPending(game_code, address, seed, callback){
-		if (game_code.indexOf('blackjack')!=-1) {
-			callback()
-			return
-		}
-		if (_seeds_list[seed].pending) {
-			callback()
-		}
-
-		if (!_pendings_list[address+'_'+seed]) {
-			_pendings_list[address+'_'+seed] = 0
-		}
-
-		_pendings_list[address+'_'+seed]++
-
-		if (_pendings_list[address+'_'+seed] > 30) {
-			DB.data.get('seeds_list').get(seed).put(null)
-			return
-		}
-
-		const response = Eth.RPC.request('call', [{
-			'to':   address,
-			'data': '0x' + Eth.hashName('listGames(bytes32)') + seed.substr(2)
-		}, 'pending'], 0)
-
-		if (!response.result){
-			setTimeout(()=>{ this.checkPending(game_code, address, seed, callback) }, 1000)
-			return
-		}
-		let resdata = response.result.split('0').join('')
-
-		if (resdata.length < 5) {
-			setTimeout(()=>{ this.checkPending(game_code, address, seed, callback) }, 1000)
-			_seeds_list[seed].pending = false
-			return
-		}
-
-		_seeds_list[seed].pending = true
-		delete( _pendings_list[address+'_'+seed] )
-		callback()
-	}
-
-	isValidSeed(seed){
-		return (seed.length==66)
-	}
-
 
 }
 

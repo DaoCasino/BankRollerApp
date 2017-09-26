@@ -188,7 +188,7 @@ export default class Wallet {
 		let options = {
 			to:       contract_address,
 			nonce:    nonce,
-			gasPrice: '0x'+Utils.numToHex(61000000000),
+			gasPrice: '0x'+Utils.numToHex(81000000000),
 			gasLimit: '0x'+Utils.numToHex(gasLimit),
 			value:    0,
 		}
