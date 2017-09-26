@@ -48,8 +48,6 @@ class Games {
 	}
 
 	startMesh(){
-		this.startChannelsGames()
-
 		let user_id = Eth.Wallet.get().openkey || false
 		this.RTC = new Rtc(user_id)
 
