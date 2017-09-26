@@ -10,7 +10,9 @@ if (window) {
 }
 
 document.addEventListener('DOMContentLoaded',()=>{
-	window.DiceGameChannel = DiceGameChannel
+	if (typeof DiceGameChannel!='undefined') {
+		window.DiceGameChannel = DiceGameChannel
+	}
 
 	if (process.env.APP_BUILD_FOR_WINSERVER) {
 		setTimeout(()=>{

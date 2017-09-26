@@ -1,6 +1,7 @@
 const _config = require('./config.electron.js')
 const http    = require('http')
 const path    = require('path')
+const queryp  = require('querystring')
 const fs      = require('fs')
 
 const Gun     = require('gun')
@@ -19,10 +20,33 @@ const filetypes = {
 	'.wav':  'audio/wav',
 }
 
-let server = http.createServer(function (request, response) {
+const server = http.createServer(function (request, response) {
 	if(Gun.serve(request, response)){
 		return
 	}
+
+	response.setHeader('Access-Control-Allow-Origin', '*')
+
+
+	if (request.method == 'POST' && request.url.indexOf('/upload_game/')>-1) {
+		console.log( 'upload_game' )
+
+		let body = ''
+		request.on('data', function (data) {
+			body += data
+
+			// Too much POST data, kill the connection!
+			// 1e6 === 1 * Math.pow(10, 6) === 1 * 1000000 ~~~ 1MB
+			if (body.length > 1e6) request.connection.destroy()
+		})
+
+		request.on('end', ()=>{
+			uploadGame(queryp.parse(body), ()=>{
+				response.end('{"result":"ok"}', 'utf-8')
+			})
+		})
+	}
+
 
 	let filePath = __dirname + request.url
 	if (filePath == __dirname+'/'){
@@ -98,3 +122,25 @@ setTimeout(()=>{
 	require('./app.background.js')
 
 }, 1000)
+
+
+const uploadGame = function(data, callback){
+	console.log( data )
+	let manifest
+	for(let k in data){
+		try {
+			manifest = JSON.parse(k).manifest
+			break
+		} catch(e) {
+			console.log(e)
+		}
+	}
+
+	// read file
+	// manifest.path+manifest.name
+
+	// copy dir
+	// manifest.path
+
+	callback()
+}

@@ -14,7 +14,7 @@ import route    from 'riot-route'
 		this.on('mount', ()=>{
 
 			setInterval(()=>{
-				if (DiceGameChannel.Games) {
+				if (typeof DiceGameChannel!='undefined' && DiceGameChannel.Games) {
 					this.dd_games = []
 					for(let k in DiceGameChannel.Games){
 						for(let j in DiceGameChannel.Games[k].history){

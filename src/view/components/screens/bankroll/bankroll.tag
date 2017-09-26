@@ -55,10 +55,14 @@ import './games_list'
 	<div id="bankroll" class={screen:true, loading:this.loading}>
 		<div id="loading_status">{loading_status}</div>
 
+		<div class="upload-area">
+			<upload_game></upload_game>
+		</div>
+
 		<games_list></games_list>
 
  		<div class="game-add-forms">
-		  <form id="add_game_form" onsubmit={deployGame}>
+		 <!--  <form id="add_game_form" onsubmit={deployGame}>
 			<fieldset>
 				<legend>Deploy new game contract</legend>
 				<select ref="game_name" required>
@@ -67,7 +71,7 @@ import './games_list'
 				</select>
 				<button class="button" id="create_new_game">Create</button>
 			</fieldset>
-		  </form>
+		  </form> -->
 		  <!-- <form id="add_contract_form" onsubmit={addContract}>
 			<fieldset>
 				<legend>or add existing game contract</legend>
@@ -76,6 +80,7 @@ import './games_list'
 			</fieldset>
 		  </form> -->
 		</div>
+
 	</div>
 
 	<style type="less">
