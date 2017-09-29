@@ -3,6 +3,7 @@ const http    = require('http')
 const path    = require('path')
 const queryp  = require('querystring')
 const fs      = require('fs')
+const fse     = require('fs-extra')
 
 const Gun     = require('gun')
 
@@ -124,8 +125,18 @@ setTimeout(()=>{
 }, 1000)
 
 
+
+
+
+const readManifest = function(path){
+	try	{
+		return JSON.parse(fs.readFileSync(path))		
+	} catch(e){
+		return {}
+	}
+}
+
 const uploadGame = function(data, callback){
-	console.log( data )
 	let manifest
 	for(let k in data){
 		try {
@@ -136,7 +147,32 @@ const uploadGame = function(data, callback){
 		}
 	}
 
-	console.log( manifest )
+	const dapp_config = readManifest(manifest.path)
+
+	fse.copySync( 
+		manifest.path.split('/').slice(0,-1).join('/'), 
+		_config.dapps_path+dapp_config.name 
+	)
 
 	callback()
 }
+
+
+// Run games
+// const dappsDirs = fse.readdirSync(_config.dapps_path)
+// dappsDirs.forEach(dir=>{
+// 	let full_path     = _config.dapps_path+dir+'/'
+// 	const dapp_config = readManifest( full_path+'dapp.manifest' )
+	
+// 	console.log('dapp_config', dapp_config)
+	
+// 	const module_path = __dirname+'/../'+full_path+dapp_config.run.server
+
+// 	console.log(module_path)
+// 	require(module_path)
+// })
+
+
+
+
+

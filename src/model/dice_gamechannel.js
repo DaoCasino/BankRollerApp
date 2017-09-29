@@ -371,6 +371,10 @@ class DiceGameChannel {
 
 	// Проверяем сколько денег разрешено списывать контракту игры
 	getAllowance(address, callback){
+		if (!address) {
+			return
+		}
+		
 		Eth.RPC.request('call', [{
 			'from' : Eth.Wallet.get().openkey,
 			'to'   : _config.erc20_address,
