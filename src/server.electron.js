@@ -5,6 +5,8 @@ const queryp  = require('querystring')
 const fs      = require('fs')
 const fse     = require('fs-extra')
 
+const {app} = require('electron')
+
 const Gun     = require('gun')
 
 console.log('')
@@ -129,7 +131,7 @@ setTimeout(()=>{
 
 
 
-
+let dapps_path = (app.getAppPath() + _config.dapps_path).split('//').join('/')
 
 const readManifest = function(path){
 	try	{
@@ -156,9 +158,8 @@ const uploadGame = function(data){
 	}
 	fse.copySync( 
 		manifest.path.split('/').slice(0,-1).join('/'), 
-		__dirname + _config.dapps_path + dapp_config.name 
+		dapps_path + dapp_config.name 
 	)
-
 }
 
 
@@ -166,14 +167,15 @@ const uploadGame = function(data){
 const runGames = function(){	
 	let dappsDirs = false
 	try {
-		dappsDirs = fse.readdirSync(_config.dapps_path)
+		dappsDirs = fse.readdirSync(dapps_path)
 	} catch(e) {
 		return
 	}
 	
 	console.log(dappsDirs)
+
 	dappsDirs.forEach(dir=>{
-		const full_path   = _config.dapps_path+dir+'/'
+		const full_path   = dapps_path+dir+'/'
 		const dapp_config = readManifest( full_path+'dapp.manifest' )
 		if (!dapp_config) {
 			return
@@ -181,7 +183,7 @@ const runGames = function(){
 
 		console.log('dapp_config', dapp_config)
 		
-		const module_path = __dirname+'/../'+full_path+dapp_config.run.server
+		const module_path = full_path + dapp_config.run.server
 
 		console.log('module_path', module_path)
 

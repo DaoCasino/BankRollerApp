@@ -4,5 +4,5 @@ module.exports = {
 	index_page_url : 'http://localhost:9999',
 	database       : 'database.json',
 
-	dapps_path     : './DApps/',
+	dapps_path     : '/../DApps/',
 }
