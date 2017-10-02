@@ -7,6 +7,10 @@ const fse     = require('fs-extra')
 
 const Gun     = require('gun')
 
+console.log('')
+console.log('Start electron server with config', _config)
+console.log('')
+
 /*
  * HTTP static file server
  *  + Gun websocket
@@ -42,9 +46,8 @@ const server = http.createServer(function (request, response) {
 		})
 
 		request.on('end', ()=>{
-			uploadGame(queryp.parse(body), ()=>{
-				response.end('{"result":"ok"}', 'utf-8')
-			})
+			uploadGame( queryp.parse(body) )
+			response.end('{"result":"ok"}', 'utf-8')
 		})
 	}
 
@@ -132,11 +135,11 @@ const readManifest = function(path){
 	try	{
 		return JSON.parse(fs.readFileSync(path))		
 	} catch(e){
-		return {}
+		return false
 	}
 }
 
-const uploadGame = function(data, callback){
+const uploadGame = function(data){
 	let manifest
 	for(let k in data){
 		try {
@@ -148,29 +151,47 @@ const uploadGame = function(data, callback){
 	}
 
 	const dapp_config = readManifest(manifest.path)
-
+	if (!dapp_config) {
+		return
+	}
 	fse.copySync( 
 		manifest.path.split('/').slice(0,-1).join('/'), 
-		_config.dapps_path+dapp_config.name 
+		__dirname + _config.dapps_path + dapp_config.name 
 	)
 
-	callback()
 }
 
 
 // Run games
-// const dappsDirs = fse.readdirSync(_config.dapps_path)
-// dappsDirs.forEach(dir=>{
-// 	let full_path     = _config.dapps_path+dir+'/'
-// 	const dapp_config = readManifest( full_path+'dapp.manifest' )
+const runGames = function(){	
+	let dappsDirs = false
+	try {
+		dappsDirs = fse.readdirSync(_config.dapps_path)
+	} catch(e) {
+		return
+	}
 	
-// 	console.log('dapp_config', dapp_config)
-	
-// 	const module_path = __dirname+'/../'+full_path+dapp_config.run.server
+	console.log(dappsDirs)
+	dappsDirs.forEach(dir=>{
+		const full_path   = _config.dapps_path+dir+'/'
+		const dapp_config = readManifest( full_path+'dapp.manifest' )
+		if (!dapp_config) {
+			return
+		}
 
-// 	console.log(module_path)
-// 	require(module_path)
-// })
+		console.log('dapp_config', dapp_config)
+		
+		const module_path = __dirname+'/../'+full_path+dapp_config.run.server
+
+		console.log('module_path', module_path)
+
+		require(module_path)
+	})
+}
+
+runGames()
+
+
 
 
 
