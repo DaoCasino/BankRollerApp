@@ -131,7 +131,8 @@ setTimeout(()=>{
 
 
 
-let dapps_path = (app.getAppPath() + _config.dapps_path).split('//').join('/')
+// let dapps_path = (app.getAppPath() + _config.dapps_path).split('//').join('/')
+let dapps_path = (app.getPath('appData') + _config.dapps_path).split('//').join('/')
 
 const readManifest = function(path){
 	try	{
