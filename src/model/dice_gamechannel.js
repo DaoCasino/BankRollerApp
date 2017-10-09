@@ -21,7 +21,7 @@ const GameLogic = function(deposit){
 		}
 
 		balance += profit
-
+		
 		const roll_item = {
 			timestamp   : new Date().getTime(),
 			user_bet    : user_bet,
@@ -353,9 +353,8 @@ class DiceGameChannel {
 
 	// Проверяем разрешил ли игрок списывать бэты контракту
 	setGameContract(address, callback){
-		console.log('setGameContract')
 		this.getAllowance(address, allowance_bets =>{
-			console.log('allowance_bets',allowance_bets)
+			// console.log('allowance_bets',allowance_bets)
 			if (allowance_bets < 1000000) {
 				this.approveContract(address, 2000000, ()=>{
 					this.setGameContract(address, callback)

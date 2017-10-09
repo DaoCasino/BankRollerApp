@@ -30,12 +30,12 @@ const networks = {
 		etherscan_url: 'https://rinkeby.etherscan.io'
 	},
 
-	'mainnet': {
-		enabled: false,
-		name:    'Main Ethereum Network',
-		rpc_url: 'https://infura.io/JCnK5ifEPH9qcQkX0Ahl',
-		etherscan_url: 'https://etherscan.io'
-	},
+	// 'mainnet': {
+	// 	enabled: false,
+	// 	name:    'Main Ethereum Network',
+	// 	rpc_url: 'https://infura.io/JCnK5ifEPH9qcQkX0Ahl',
+	// 	etherscan_url: 'https://etherscan.io'
+	// },
 }
 
 

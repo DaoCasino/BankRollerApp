@@ -7,11 +7,18 @@ const fse     = require('fs-extra')
 
 const {app} = require('electron')
 
-const Gun     = require('gun')
+const Gun = require('gun')
 
 console.log('')
 console.log('Start electron server with config', _config)
 console.log('')
+
+
+let dapps_path = __dirname+_config.dapps_path
+if (typeof app != 'undefined') {
+	dapps_path = (app.getPath('appData') + _config.dapps_path).split('//').join('/')
+}
+
 
 /*
  * HTTP static file server
@@ -57,6 +64,10 @@ const server = http.createServer(function (request, response) {
 	let filePath = __dirname + request.url
 	if (filePath == __dirname+'/'){
 		filePath = __dirname+'/index.html'
+	}
+
+	if (request.url.indexOf('DApps')>-1) {
+		filePath = dapps_path + request.url.replace('/DApps/','')
 	}
 
 	let contentType = filetypes[path.extname(filePath)] || false
@@ -131,8 +142,7 @@ setTimeout(()=>{
 
 
 
-// let dapps_path = (app.getAppPath() + _config.dapps_path).split('//').join('/')
-let dapps_path = (app.getPath('appData') + _config.dapps_path).split('//').join('/')
+
 
 const readManifest = function(path){
 	try	{
@@ -165,16 +175,15 @@ const uploadGame = function(data){
 
 
 // Run games
-const runGames = function(){	
+const runGames = function(){
 	let dappsDirs = false
 	try {
+		console.log(dapps_path)
 		dappsDirs = fse.readdirSync(dapps_path)
 	} catch(e) {
 		return
 	}
 	
-	console.log(dappsDirs)
-
 	dappsDirs.forEach(dir=>{
 		const full_path   = dapps_path+dir+'/'
 		const dapp_config = readManifest( full_path+'dapp.manifest' )
@@ -183,11 +192,19 @@ const runGames = function(){
 		}
 
 		console.log('dapp_config', dapp_config)
+
+		GunDB.get('DApps').get(dir).put({
+			config : JSON.stringify(dapp_config),
+			path   : full_path,
+		})
 		
+		
+		if (!dapp_config.run.server) {
+			return
+		}
+
 		const module_path = full_path + dapp_config.run.server
-
 		console.log('module_path', module_path)
-
 		require(module_path)
 	})
 }
