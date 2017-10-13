@@ -59,15 +59,6 @@ if (process.env.NODE_ENV === 'server' && global.network ) {
 
 
 
-
-const legacy_games = {
-	BJ_m: { code: 'BJ_m',
-		channels: true,
-		name:     'Blackjack Multiplayer',
-		url:      'http://blackjackgame.dao.casino/games/bj/',
-	}
-}
-
 module.exports = {
 	db_name:        'DaoCasino',
 	rtc_room:       'daocasino-room1',
@@ -86,8 +77,6 @@ module.exports = {
 	rpc_url:         networks[current_network].rpc_url,
 	etherscan_url:   networks[current_network].etherscan_url,
 
-	games:           legacy_games,
-	contracts:       require('./contracts/games.contracts.js'),
 	channels:        require('./contracts/channel.abi.js'),
 
 	rtc_signalserver: 'https://ws.dao.casino/mesh/',

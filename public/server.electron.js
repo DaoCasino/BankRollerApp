@@ -3,27 +3,10 @@ const http    = require('http')
 const path    = require('path')
 const queryp  = require('querystring')
 const fs      = require('fs')
+const Gun     = require('gun')
 const fse     = require('fs-extra')
+const {app}   = require('electron')
 
-const {app} = require('electron')
-
-const Gun = require('gun')
-
-console.log('')
-console.log('Start electron server with config', _config)
-console.log('')
-
-
-let dapps_path = __dirname+_config.dapps_path
-if (typeof app != 'undefined') {
-	dapps_path = (app.getPath('appData') + _config.dapps_path).split('//').join('/')
-}
-
-
-/*
- * HTTP static file server
- *  + Gun websocket
- */
 const filetypes = {
 	'.js':   'text/javascript',
 	'.css':  'text/css',
@@ -34,6 +17,188 @@ const filetypes = {
 	'.wav':  'audio/wav',
 }
 
+
+/*
+ * DApps init
+ */
+
+// Find DApps folder for current ENV
+let dapps_path = __dirname+_config.dapps_path
+if (typeof app != 'undefined') {
+	dapps_path = (app.getPath('appData') + _config.dapps_path).split('//').join('/')
+}
+
+const DApps = {
+	list:{},
+
+	init:function(dapps_dirs=false, callback=false){
+		console.log('initDApps', dapps_dirs)
+		if (!dapps_dirs) {	
+			try {
+				console.log(dapps_path)
+				dapps_dirs = fse.readdirSync(dapps_path)
+			} catch(e) {
+				return
+			}
+		}
+
+		dapps_dirs.forEach(dir=>{
+			const full_path   = dapps_path+dir+'/'
+			const dapp_config = this.readManifest( full_path+'dapp.manifest' )
+			if (!dapp_config) {
+				console.log('Cant find manifest for ', dir)
+				return
+			}
+
+			console.log('dapp_config', dapp_config)
+
+			const dapp_data = {
+				config : dapp_config,
+				path   : full_path,
+			}
+
+			this.list[dir] = dapp_data
+		
+			if (callback) {
+				callback(dapp_data)
+			}
+			// tempory disable server part
+			return;
+			// if (!dapp_config.run.server) {
+			// 	return
+			// }
+
+			// const module_path = full_path + dapp_config.run.server
+			// console.log('module_path', module_path)
+			// require(module_path)
+		})
+	},
+
+	readManifest: function(path){
+		console.log('readManifest',path)
+		try	{
+			return JSON.parse(fs.readFileSync(path))		
+		} catch(e){
+			return false
+		}
+	},
+
+	upload: function(data, callback){
+		let manifest
+		for(let k in data){
+			try {
+				manifest = JSON.parse(k).manifest
+				break
+			} catch(e) {
+				console.log(e)
+			}
+		}
+
+		const dapp_config = this.readManifest(manifest.path)
+		if (!dapp_config) {
+			console.log('cant find manifets')
+			return
+		}
+		fse.copySync( 
+			manifest.path.split('/').slice(0,-1).join('/'), 
+			dapps_path + dapp_config.name 
+		)
+
+		this.init([dapp_config.name], callback )
+	},
+
+	remove: function(key, callback){
+		if (!this.list[key]) {
+			return
+		}
+
+		const full_path = dapps_path+dir+'/'
+		console.log('Remove folder ', full_path)
+		fse.removeSync(full_path)
+		delete(this.list[key])
+	},
+
+	serve: function(request, response){
+
+		// Upload game folder
+		if (request.method == 'POST' && request.url.indexOf('/upload_game/')>-1) {
+			console.log( 'Upload_game...' )
+
+			let body = ''
+			request.on('data', function (data) {
+				body += data
+				console.log('.')
+				// Too much POST data, kill the connection!
+				// 1e6 === 1 * Math.pow(10, 6) === 1 * 1000000 ~~~ 1MB
+				if (body.length > 1e6) { 
+					request.connection.destroy()
+					console.log('Too much POST data')
+				}
+			})
+
+			request.on('end', ()=>{
+				console.log('Create folder')
+				this.upload( queryp.parse(body), (dapp_data)=>{
+					response.end(JSON.stringify(dapp_data), 'utf-8')
+				})
+			})
+			return true
+		}
+
+
+		// Get dapps list
+		if (request.url.indexOf('DApps/list')>-1) {
+			console.log('get daaps list', this.list)
+			response.end(JSON.stringify( this.list ), 'utf-8')
+			return true
+		}
+
+		// remove game
+		if (request.url.indexOf('DApps/remove')>-1) {
+			let folder = request.url.split('/').slice(-1)
+			this.remove( folder )
+			response.end(JSON.stringify({removed:true}), 'utf-8')
+			return true
+		}
+
+		// return DApp static content
+		if (request.url.indexOf('DApps')>-1) {
+			let filePath    = dapps_path + request.url.replace('/DApps/','')
+			let contentType = filetypes[path.extname(filePath)] || false
+
+			fs.readFile(filePath, function(error, content) {
+				if (error) {
+					response.writeHead(500)
+					response.end('Sorry, check with the site admin for error: '+error.code+' ..\n')
+					response.end()
+				} else {
+					if (contentType) {
+						response.writeHead(200, { 'Content-Type': contentType })
+					}
+					response.end(content, 'utf-8')
+				}
+			})
+			
+			return true
+		}
+	}
+}
+DApps.init()
+
+
+
+console.log('')
+console.log('Start electron server with config', _config)
+console.log('')
+
+
+
+
+/*
+ * HTTP static file server
+ *  + Gun websocket
+ *  + DApps serve
+ */
 const server = http.createServer(function (request, response) {
 	if(Gun.serve(request, response)){
 		return
@@ -41,23 +206,8 @@ const server = http.createServer(function (request, response) {
 
 	response.setHeader('Access-Control-Allow-Origin', '*')
 
-
-	if (request.method == 'POST' && request.url.indexOf('/upload_game/')>-1) {
-		console.log( 'upload_game' )
-
-		let body = ''
-		request.on('data', function (data) {
-			body += data
-
-			// Too much POST data, kill the connection!
-			// 1e6 === 1 * Math.pow(10, 6) === 1 * 1000000 ~~~ 1MB
-			if (body.length > 1e6) request.connection.destroy()
-		})
-
-		request.on('end', ()=>{
-			uploadGame( queryp.parse(body) )
-			response.end('{"result":"ok"}', 'utf-8')
-		})
+	if (DApps.serve(request, response)) {
+		return
 	}
 
 
@@ -66,10 +216,7 @@ const server = http.createServer(function (request, response) {
 		filePath = __dirname+'/index.html'
 	}
 
-	if (request.url.indexOf('DApps')>-1) {
-		filePath = dapps_path + request.url.replace('/DApps/','')
-	}
-
+	// Static serve
 	let contentType = filetypes[path.extname(filePath)] || false
 
 	fs.readFile(filePath, function(error, content) {
@@ -121,99 +268,22 @@ setTimeout(()=>{
 	global.network = Object.assign({}, start_net)
 
 	// Subscribe to change network
-	GunDB.get('network').on( n =>{
-		if (!n || typeof n === 'undefined') { return }
+	// GunDB.get('network').on( n =>{
+	// 	if (!n || typeof n === 'undefined') { return }
 
-		if (network.code != n.code || (n.code=='custom' && (n.url!=network.url || n.erc20!=network.erc20)) ) {
-			clearTimeout(global.restartT)
-			global.restartT = setTimeout(()=>{
-				if (typeof app!=='undefined') {
-					app.quit()
-					return
-				}
-				process.exit()
-			}, 5000)
-		}
-	})
+	// 	if (network.code != n.code || (n.code=='custom' && (n.url!=network.url || n.erc20!=network.erc20)) ) {
+	// 		clearTimeout(global.restartT)
+	// 		global.restartT = setTimeout(()=>{
+	// 			if (typeof app!=='undefined') {
+	// 				app.quit()
+	// 				return
+	// 			}
+	// 			process.exit()
+	// 		}, 5000)
+	// 	}
+	// })
 
 	require('./app.background.js')
 
 }, 1000)
-
-
-
-
-
-const readManifest = function(path){
-	try	{
-		return JSON.parse(fs.readFileSync(path))		
-	} catch(e){
-		return false
-	}
-}
-
-const uploadGame = function(data){
-	let manifest
-	for(let k in data){
-		try {
-			manifest = JSON.parse(k).manifest
-			break
-		} catch(e) {
-			console.log(e)
-		}
-	}
-
-	const dapp_config = readManifest(manifest.path)
-	if (!dapp_config) {
-		return
-	}
-	fse.copySync( 
-		manifest.path.split('/').slice(0,-1).join('/'), 
-		dapps_path + dapp_config.name 
-	)
-}
-
-
-// Run games
-const runGames = function(){
-	let dappsDirs = false
-	try {
-		console.log(dapps_path)
-		dappsDirs = fse.readdirSync(dapps_path)
-	} catch(e) {
-		return
-	}
-	
-	dappsDirs.forEach(dir=>{
-		const full_path   = dapps_path+dir+'/'
-		const dapp_config = readManifest( full_path+'dapp.manifest' )
-		if (!dapp_config) {
-			return
-		}
-
-		console.log('dapp_config', dapp_config)
-
-		GunDB.get('DApps').get(dir).put({
-			config : JSON.stringify(dapp_config),
-			path   : full_path,
-		})
-		
-		
-		if (!dapp_config.run.server) {
-			return
-		}
-
-		const module_path = full_path + dapp_config.run.server
-		console.log('module_path', module_path)
-		require(module_path)
-	})
-}
-
-runGames()
-
-
-
-
-
-
 
