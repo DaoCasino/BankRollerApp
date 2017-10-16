@@ -14,7 +14,7 @@
 	<div id="dev" class={screen:true, loading:this.loading}>
 
 		<div class="upload-area">
-			<upload_game></upload_game>
+			<dapps_list></dapps_list>
 		</div>
 
 		

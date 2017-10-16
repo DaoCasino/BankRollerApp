@@ -37,6 +37,14 @@ export default new class DApps {
 		this.loadAll()
 	}
 
+
+	remove(key, callback){
+		fetch(_config.server+'/DApps/remove/'+key).then( r => {
+			delete(this.List[key])
+			callback()
+		})
+	}
+
 	loadAll(){
 		fetch(_config.server+'/DApps/list/').then( r => { return r.json() }).then( list => {
 			this.List = Object.assign({},list)

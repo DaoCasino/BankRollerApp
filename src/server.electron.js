@@ -63,7 +63,7 @@ const DApps = {
 				callback(dapp_data)
 			}
 			// tempory disable server part
-			return;
+			return
 			// if (!dapp_config.run.server) {
 			// 	return
 			// }
@@ -71,6 +71,29 @@ const DApps = {
 			// const module_path = full_path + dapp_config.run.server
 			// console.log('module_path', module_path)
 			// require(module_path)
+		})
+
+		setInterval(()=>{
+			this.readDirs()
+		}, 5000)
+	},
+
+	readDirs(){
+		this.list = {}
+		fse.readdirSync(dapps_path).forEach(dir=>{
+			const full_path   = dapps_path+dir+'/'
+			const dapp_config = this.readManifest( full_path+'dapp.manifest' )
+			if (!dapp_config) {
+				console.log('Cant find manifest for ', dir)
+				return
+			}
+
+			const dapp_data = {
+				config : dapp_config,
+				path   : full_path,
+			}
+
+			this.list[dir] = dapp_data
 		})
 	},
 
@@ -112,7 +135,7 @@ const DApps = {
 			return
 		}
 
-		const full_path = dapps_path+dir+'/'
+		const full_path = dapps_path+key+'/'
 		console.log('Remove folder ', full_path)
 		fse.removeSync(full_path)
 		delete(this.list[key])
@@ -155,7 +178,8 @@ const DApps = {
 
 		// remove game
 		if (request.url.indexOf('DApps/remove')>-1) {
-			let folder = request.url.split('/').slice(-1)
+			let folder = request.url.split('/').slice(-1)[0]
+			console.log('Remove folder', folder)
 			this.remove( folder )
 			response.end(JSON.stringify({removed:true}), 'utf-8')
 			return true
