@@ -1,8 +1,0 @@
-{
-	"name" : "TestGame",
-
-	"run" : {
-		"client" : "b.client.js",
-		"server" : "b.server.js"
-	}
-}

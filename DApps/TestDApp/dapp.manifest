@@ -1,0 +1,9 @@
+{
+	"name" : "TestDapp",
+	"code" : "testdapp_v1",
+
+	"run" : {
+		"client" : "client.js",
+		"disabled_server" : "server.js"
+	}
+}

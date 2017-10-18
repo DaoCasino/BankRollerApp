@@ -145,7 +145,7 @@ class Eth {
 	}
 
 	getBetsBalance(address, callback, force=false){
-		if (!force && balances_cache[address] && balances_cache[address].bets_t > (new Date().getTime()-60*1000) ) {
+		if (!force && balances_cache[address] && balances_cache[address].bets_t > (new Date().getTime()-60*10000) ) {
 			callback( balances_cache[address].bets )
 			return
 		}

@@ -1,7 +1,28 @@
-import _config from 'app.config'
-import DB      from 'DB/DB'
+
+import _config  from 'app.config'
+import DB       from 'DB/DB'
+import Eth      from 'Eth/Eth'
+import Rtc      from 'rtc'
+import DApp      from './DApp'
+import {AsyncPriorityQueue, AsyncTask} from 'async-priority-queue'
+
+import printDocs from './docs'
+
+// for dapps
+import Wallet     from 'Eth/Wallet'
+import ABI        from 'ethereumjs-abi'
+import bigInt     from 'big-integer'
+
+const Account = new Wallet()
+
+const WEB3 = require('web3/packages/web3')
+const web3 = new WEB3( new WEB3.providers.HttpProvider(_config.rpc_url) )
+
+import * as Utils from '../utils'
 
 
+
+let loaded_dapps = []
 const injectDAppScript = function(key, url){
 	if (typeof document === 'undefined') {
 		return
@@ -26,17 +47,40 @@ const injectDAppScript = function(key, url){
 }
 
 
-let loaded_dapps = []
 
-export default new class DApps {
+
+/*
+ * Lib constructor
+ */ 
+class _DCLib {
+	constructor() {
+		this.Account      = Account
+		this.web3         = web3
+		this.Utils        = Utils
+		this.Utils.ABI    = ABI
+		this.Utils.bigInt = bigInt
+
+		this.DApp = DApp
+	}
+}
+
+
+export default new class DAppsAPIInit {
 	constructor() {
 		this.List = {}
+
+		// export local API methods 
+		// to globals 
+		let G = window || global
+		G.DCLib = new _DCLib()
+		
+		printDocs( G.DCLib )
 	}
+
 
 	start(){
 		this.loadAll()
 	}
-
 
 	remove(key, callback){
 		fetch(_config.server+'/DApps/remove/'+key).then( r => {
@@ -85,7 +129,9 @@ export default new class DApps {
 					path : file.path || path,
 				} })
 			}).then(r=>{
-				callback(r)
+				return r.json()
+			}).then(json => {
+				callback(json)
 			}).catch(err=>{
 				callback(err)
 			})
@@ -134,5 +180,4 @@ export default new class DApps {
 			};
 		}, 5000)
 	}
-
 }

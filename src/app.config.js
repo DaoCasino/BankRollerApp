@@ -8,13 +8,13 @@ let bankroller_server = 'http://localhost:9999'
 let stat_contract = '0xe195eed0e77b48146aa246dadf987d2504ac88cb'
 
 const networks = {
-	'custom': {
-		enabled:       true,
-		name:          'Custom RPC',
-		rpc_url:       'http://localhost:8545',
-		erc20_address: '0x95a48dca999c89e4e284930d9b9af973a7481287',
-		etherscan_url: '#custom_rpc',
-	},
+	// 'custom': {
+	// 	enabled:       true,
+	// 	name:          'Custom RPC',
+	// 	rpc_url:       'http://localhost:8545',
+	// 	erc20_address: '0x95a48dca999c89e4e284930d9b9af973a7481287',
+	// 	etherscan_url: '#custom_rpc',
+	// },
 	'ropsten': {
 		enabled:       true,
 		name:          'Ropsten Test Network',
@@ -22,13 +22,13 @@ const networks = {
 		erc20_address: '0x95a48dca999c89e4e284930d9b9af973a7481287',
 		etherscan_url: 'https://ropsten.etherscan.io'
 	},
-	'rinkeby': {
-		enabled:       true,
-		name:          'Rinkeby Test Network',
-		rpc_url:       'https://rinkeby.infura.io/JCnK5ifEPH9qcQkX0Ahl',
-		erc20_address: '0xba2f1399df21c75ce578630ff9ed9285b2146b8d',
-		etherscan_url: 'https://rinkeby.etherscan.io'
-	},
+	// 'rinkeby': {
+	// 	enabled:       true,
+	// 	name:          'Rinkeby Test Network',
+	// 	rpc_url:       'https://rinkeby.infura.io/JCnK5ifEPH9qcQkX0Ahl',
+	// 	erc20_address: '0xba2f1399df21c75ce578630ff9ed9285b2146b8d',
+	// 	etherscan_url: 'https://rinkeby.etherscan.io'
+	// },
 
 	// 'mainnet': {
 	// 	enabled: false,
@@ -61,7 +61,7 @@ if (process.env.NODE_ENV === 'server' && global.network ) {
 
 module.exports = {
 	db_name:        'DaoCasino',
-	rtc_room:       'daocasino-room1',
+	rtc_room:       'dc-room1',
 
 	wallet_pass:     '1234',
 	server:          bankroller_server,

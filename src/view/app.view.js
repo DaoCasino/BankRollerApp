@@ -15,9 +15,9 @@ export default class View {
 
 		this.routing()
 
-		if (!this.isFontAvaible('Roboto')) {
-			$('body').append('<link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900&amp;subset=cyrillic" rel="stylesheet">')
-		}
+		// if (!this.isFontAvaible('Roboto')) {
+		// 	$('body').append('<link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900&amp;subset=cyrillic" rel="stylesheet">')
+		// }
 	}
 
 	importTags() {

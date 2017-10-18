@@ -1,4 +1,4 @@
-import DApps from 'DApps'
+import DApps from 'DApps/DApps'
 import './dapps_list.less'
 <dapps_list>
 	<script>
@@ -59,6 +59,8 @@ import './dapps_list.less'
 				DApps.upload(e, res => {
 					this.upload_procces = false
 					this.update()
+
+					alert(JSON.stringify(res))
 
 					console.log(res)
 

@@ -25,8 +25,13 @@ const filetypes = {
 // Find DApps folder for current ENV
 let dapps_path = __dirname+_config.dapps_path
 if (typeof app != 'undefined') {
-	dapps_path = (app.getPath('appData') + _config.dapps_path).split('//').join('/')
+	dapps_path = (app.getPath('userData') + _config.dapps_path).split('//').join('/')
 }
+
+if ( /^win/.test(process.platform) ) {
+	dapps_path = app.getPath('userData') + 'DApps'
+}
+
 
 const DApps = {
 	list:{},
@@ -119,11 +124,20 @@ const DApps = {
 
 		const dapp_config = this.readManifest(manifest.path)
 		if (!dapp_config) {
-			console.log('cant find manifets')
+			console.log('cant find manifest')
 			return
 		}
+
+		callback({
+			from:       manifest.path.split('/').slice(0,-1).join('/'), 
+			to:         dapps_path + dapp_config.name,
+			dapps_path: dapps_path,
+		})
+		return 
+
 		fse.copySync( 
 			manifest.path.split('/').slice(0,-1).join('/'), 
+		
 			dapps_path + dapp_config.name 
 		)
 
