@@ -26,7 +26,7 @@
 		"webserver": "npm run server & npm run serve_web",
 		"server": "NODE_ENV=server npm run build_server && node ./build/server.electron.js",
 		"serve_web": "node scripts/start.js",
-		"build": "npm run build_web & npm run build_server",
+		"build": "npm run build_web && npm run build_server",
 		"build_web": "node scripts/build.js",
 		"build_server": "npm run cp_electron & node scripts/build_server.js",
 		"cp_electron": "cp ./src/index.electron.js ./public/index.electron.js & cp ./src/index.electron.js ./build/index.electron.js & cp ./src/server.electron.js ./public/server.electron.js & cp ./src/server.electron.js ./build/server.electron.js & cp ./src/config.electron.js ./build/config.electron.js ",
