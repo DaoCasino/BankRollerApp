@@ -3,23 +3,19 @@ import _config  from 'app.config'
 import DB       from 'DB/DB'
 import Eth      from 'Eth/Eth'
 import Rtc      from 'rtc'
-import DApp      from './DApp'
+import DApp     from './DApp'
 import {AsyncPriorityQueue, AsyncTask} from 'async-priority-queue'
 
 import printDocs from './docs'
 
 // for dapps
-import Wallet     from 'Eth/Wallet'
-import ABI        from 'ethereumjs-abi'
-import bigInt     from 'big-integer'
-
+import Wallet from 'Eth/Wallet'
 const Account = new Wallet()
 
 const WEB3 = require('web3/packages/web3')
 const web3 = new WEB3( new WEB3.providers.HttpProvider(_config.rpc_url) )
 
 import * as Utils from '../utils'
-
 
 
 let loaded_dapps = []
@@ -54,13 +50,11 @@ const injectDAppScript = function(key, url){
  */ 
 class _DCLib {
 	constructor() {
-		this.Account      = Account
-		this.web3         = web3
-		this.Utils        = Utils
-		this.Utils.ABI    = ABI
-		this.Utils.bigInt = bigInt
+		this.Account = Account
+		this.web3    = web3
+		this.Utils   = Utils
 
-		this.DApp = DApp
+		this.DApp    = DApp
 	}
 }
 

@@ -1,4 +1,5 @@
-import _config from 'app.config'
+import _config    from 'app.config'
+import Event      from './event'
 import * as Utils from './utils'
 
 const delivery_timeout = 3000
@@ -50,28 +51,22 @@ export default class RTC {
 				return
 			}
 
-			// if (this.isAlreadyReceived(data)) {
-			// 	return
-			// }
-
 			this.acknowledgeReceipt(data)
 
-			// Call subscries
-			if (data.address && _subscribes[data.address]) {
-				for(let k in _subscribes[data.address]){
-					if (typeof _subscribes[data.address][k] === 'function') {
-						_subscribes[data.address][k](data)
-					}
-				}
+			Event.emit('all', data)
+
+			if (data.action) {
+				Event.emit('action::'+data.action, data)
 			}
 
-			if (_subscribes['all']) {
-				for(let k in _subscribes['all']){
-					if (typeof _subscribes['all'][k] === 'function') {
-						_subscribes['all'][k](data)
-					}
-				}
+			if (data.address) {
+				Event.emit('address::'+data.address, data)
 			}
+
+			if (data.user_id) {
+				Event.emit('user_id::'+data.user_id, data)
+			}
+
 		})
 	}
 
@@ -107,36 +102,20 @@ export default class RTC {
 		setTimeout(()=>{ this.clearOldSeeds() }, 10*1000 )
 	}
 
+	on(event, callback){
+		Event.on(event, callback)
+	}
+
+	off(event, callback){
+		Event.off(event, callback)
+	}
+
 	subscribe(address, callback, name=false){
-		if (!_subscribes[address]) { _subscribes[address] = {} }
-
-		if (name && _subscribes[address][name]) {
-			return
-		}
-
-		if (name===false) {
-			name = Utils.makeSeed()
-		};
-
-		_subscribes[address][name] = callback
-
-		return name
+		this.on('address::'+address, callback)
 	}
 
 	unsubscribe(address, callback, name=false){
-		if (name!==false && _subscribes[address][name]) {
-			delete(_subscribes[address][name])
-			return
-		}
-
-		let new_subs = {}
-		for(let k in _subscribes[address]){
-			if (_subscribes[address][k] && _subscribes[address][k].toString() == callback.toString()) {
-				continue
-			}
-			new_subs[k] = _subscribes[address][k]
-		}
-		_subscribes[address] = new_subs
+		this.off('address::'+address, callback)
 	}
 
 
