@@ -26,12 +26,11 @@ const filetypes = {
 let dapps_path = __dirname+_config.dapps_path
 if (typeof app != 'undefined') {
 	dapps_path = (app.getPath('userData') + _config.dapps_path).split('//').join('/')
+	
+	if ( /^win/.test(process.platform) ) {
+		dapps_path = app.getPath('userData') + '\\DApps\\'
+	}
 }
-
-if ( /^win/.test(process.platform) ) {
-	dapps_path = app.getPath('userData') + 'DApps'
-}
-
 
 const DApps = {
 	list:{},
@@ -48,7 +47,11 @@ const DApps = {
 		}
 
 		dapps_dirs.forEach(dir=>{
-			const full_path   = dapps_path+dir+'/'
+			let full_path = dapps_path+dir+'/'
+			if ( /^win/.test(process.platform) ) {
+				full_path = dapps_path+dir+'\\'
+			}
+
 			const dapp_config = this.readManifest( full_path+'dapp.manifest' )
 			if (!dapp_config) {
 				console.log('Cant find manifest for ', dir)
@@ -86,7 +89,11 @@ const DApps = {
 	readDirs(){
 		this.list = {}
 		fse.readdirSync(dapps_path).forEach(dir=>{
-			const full_path   = dapps_path+dir+'/'
+			let full_path = dapps_path+dir+'/'
+			if ( /^win/.test(process.platform) ) {
+				full_path = dapps_path+dir+'\\'
+			}
+
 			const dapp_config = this.readManifest( full_path+'dapp.manifest' )
 			if (!dapp_config) {
 				console.log('Cant find manifest for ', dir)
@@ -128,16 +135,22 @@ const DApps = {
 			return
 		}
 
-		callback({
-			from:       manifest.path.split('/').slice(0,-1).join('/'), 
-			to:         dapps_path + dapp_config.name,
-			dapps_path: dapps_path,
-		})
-		return 
+		let cp_from = manifest.path.split('/').slice(0,-1).join('/')
+
+		if ( /^win/.test(process.platform) ) {
+			full_path = manifest.path.split('\\').slice(0,-1).join('\\')
+		}
+
+		// callback({
+		// 	manpath:    manifest.path,
+		// 	from:       
+		// 	to:         dapps_path + dapp_config.name,
+		// 	dapps_path: dapps_path,
+		// })
+		// return 
 
 		fse.copySync( 
-			manifest.path.split('/').slice(0,-1).join('/'), 
-		
+			cp_from,
 			dapps_path + dapp_config.name 
 		)
 
@@ -184,8 +197,25 @@ const DApps = {
 
 
 		// Get dapps list
+		if (request.url.indexOf('DApps/info')>-1) {
+			let app_paths = {}
+			if (typeof app != 'undefined') {
+				app_paths = {
+					userData:   app.getPath('userData'),
+					appData:    app.getPath('appData'),
+				}
+			}
+
+			response.end(JSON.stringify( Object.assign(app_paths,{
+				dapps_path: dapps_path,	
+				dirname:    __dirname,
+				proc_env:   process.env
+			}) ), 'utf-8')
+
+			return true
+		}
+
 		if (request.url.indexOf('DApps/list')>-1) {
-			console.log('get daaps list', this.list)
 			response.end(JSON.stringify( this.list ), 'utf-8')
 			return true
 		}

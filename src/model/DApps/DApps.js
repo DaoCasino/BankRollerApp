@@ -69,6 +69,13 @@ export default new class DAppsAPIInit {
 		G.DCLib = new _DCLib()
 		
 		printDocs( G.DCLib )
+
+		console.log('get DApps info')
+		fetch(_config.server+'/DApps/info/')
+			.then( r => { return r.json() })
+			.then( info => {
+				console.log(info)
+			})
 	}
 
 
