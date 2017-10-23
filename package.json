@@ -13,7 +13,7 @@
 	"meta": {
 		"_": "It used for generate manifest.json in ./scripts/favicons.js",
 		"start_url": "/",
-		"appName": "BankRollerApp App",
+		"appName": "BankRollerApp",
 		"appDescription": "Dao.Casino app for bankroller",
 		"background": "#1c2026",
 		"theme_color": "#1c2026",
