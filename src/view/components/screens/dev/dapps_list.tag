@@ -24,11 +24,14 @@ import './dapps_list.less'
 			}
 		}
 
+		this.on('unmount', ()=>{
+			clearInterval(this.upd_i)
+		})
 		this.on('mount', ()=>{
-			setInterval(()=>{
+			this.upd_i = setInterval(()=>{
 				this.dapps = DApps.List 
 				this.update()
-			}, 2000)
+			}, 1000)
 
 			const form = this.refs.form
 			form.classList.add( 'has-advanced-upload' ); // letting the CSS part to know drag&drop is supported by the browser

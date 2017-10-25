@@ -55,6 +55,14 @@ export default class RTC {
 
 			Event.emit('all', data)
 
+			if (data.type && data.action) {
+				Event.emit(data.type+'::'+data.action, data)
+			}
+
+			if (data.uiid) {
+				Event.emit('uiid::'+data.uiid, data)
+			}
+
 			if (data.action) {
 				Event.emit('action::'+data.action, data)
 			}
@@ -104,6 +112,10 @@ export default class RTC {
 
 	on(event, callback){
 		Event.on(event, callback)
+	}
+
+	once(event, callback){
+		Event.once(event, callback)
 	}
 
 	off(event, callback){

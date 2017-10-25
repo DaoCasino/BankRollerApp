@@ -79,15 +79,18 @@ export default class Wallet {
 			return this.pwDerivedKey
 		}
 
-		if (!this.getKs()) { return }
+		return new Promise((resolve, reject) => {
+			if (!this.getKs()) { reject(); return }
 
-		this.getKs().keyFromPassword(_config.wallet_pass, (err, pwDerivedKey)=>{
-			if (err && limit>0 ) { this.getPwDerivedKey(callback, (limit-1)); return }
+			this.getKs().keyFromPassword(_config.wallet_pass, (err, pwDerivedKey)=>{
+				if (err && limit>0 ) { this.getPwDerivedKey(callback, (limit-1)); return }
 
-			if (pwDerivedKey) {
-				this.pwDerivedKey = pwDerivedKey
-			}
-			if(callback) callback(pwDerivedKey)
+				if (pwDerivedKey) {
+					this.pwDerivedKey = pwDerivedKey
+				}
+				resolve(pwDerivedKey)
+				if(callback) callback(pwDerivedKey)
+			})
 		})
 	}
 
