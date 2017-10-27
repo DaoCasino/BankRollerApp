@@ -11,6 +11,21 @@ const default_paymentchannel_contract = {
 }
 
 
+/*
+	TODO: Bankroller
+	 - выпилить eth-ligthwallet - заменить его на web3
+     - избавиться от RPC - юзать web3
+     - написать открытие закрытие каналов
+     - написать подпись и валидацию подписи сообщений
+     - заменить мессенджинг на ipfs
+     - написать ведение статистики игр
+     - сделать красивый интерфейс таба разработчика
+     - написать деплой игры в ipfs
+     - написать установку игры из ipfs
+*/
+
+
+
 const max_users = 9
 
 /*
@@ -102,32 +117,47 @@ export default class DApp {
 
 		const signMsg = async (rawMsg=false)=>{
 			if (!rawMsg) return ''
-			return Eth.Wallet.lib.signing.concatSig( Eth.Wallet.lib.signing.signMsg(
-				Eth.Wallet.getKs(),
-				await Eth.Wallet.getPwDerivedKey(),
-				rawMsg,
-				Eth.Wallet.get().openkey
-			) )
+
+			return new Promise(async (resolve, reject) => {
+				
+				console.log('signMsg', rawMsg)
+
+				const sig = Eth.Wallet.lib.signing.concatSig( Eth.Wallet.lib.signing.signMsg(
+					Eth.Wallet.getKs(),
+					await Eth.Wallet.getPwDerivedKey(),
+					rawMsg,
+					Eth.Wallet.get().openkey
+				) )
+
+				console.log('sig:',sig)
+				resolve(sig)
+				return sig
+			})
 		}
 
-		const prepareArgs = (args)=>{
-			if (!args || !args.length) return []
+		const prepareArgs = async (args=[])=>{
+			args = args || []
 			
-			let new_args = []
-			args.forEach( arg => {
-				if (arg && (''+arg).indexOf('confirm')!=-1) {
-					let seed = arg.split('confirm(')[1].split(')')[0]
-					arg = signMsg(seed)
-				}
+			return new Promise(async (resolve, reject) => {
+				
+				let new_args = []
+				for(let k in args){
+					let arg = args[k]
+					if (arg && (''+arg).indexOf('confirm')!=-1) {
+						let seed = arg.split('confirm(')[1].split(')')[0]
+						arg = (await signMsg(seed)).substr(2)
+					}
 
-				new_args.push(arg)
+					new_args.push(arg)
+				}
+				
+				resolve(new_args)
 			})
-			return new_args
 		}
 
 
 		// Listen personal user room messages
-		const listen_all = data => {
+		const listen_all = async data => {
 			if (!data || !data.action || !data.user_id || !this.users[data.user_id]) return
 
 			let User = this.users[data.user_id]
@@ -137,7 +167,7 @@ export default class DApp {
 				if (!data.func || !data.func.name || !data.func.args) return				
 				if (!User.logic[data.func.name]) return
 
-				let args    = prepareArgs(data.func.args)
+				let args    = await prepareArgs(data.func.args)
 				let returns = User.logic[data.func.name].apply(this, args)
 
 				this.response(data, {
