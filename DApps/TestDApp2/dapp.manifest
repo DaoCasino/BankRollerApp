@@ -1,0 +1,8 @@
+{
+	"name" : "TestDapp2",
+	"code" : "testdapp_v2",
+
+	"run" : {
+		"client" : "client.js"
+	}
+}

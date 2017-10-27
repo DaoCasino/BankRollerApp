@@ -109,10 +109,9 @@ export default class DApp {
 			room  : new Rtc( Eth.Wallet.get().openkey, this.hash+'_'+connection_id )
 		}
 
-		this.response(params, {id:connection_id})
+		this.response(params, {id:connection_id}, this.sharedRoom)
 		
-		console.log('User '+user_id+' connected')
-
+		console.log('User '+user_id+' connected to '+this.code)
 
 
 		const signMsg = async (rawMsg=false)=>{
@@ -173,7 +172,7 @@ export default class DApp {
 				this.response(data, {
 					args    : args,
 					returns : returns
-				})
+				}, User.room)
 
 				return
 			}
@@ -182,7 +181,7 @@ export default class DApp {
 				console.log('User '+data.user_id+' disconnected')
 				User.room.off('all', listen_all)
 				delete(this.users[data.user_id])
-				this.response(data, {disconnected:true})
+				this.response(data, {disconnected:true}, User.room)
 				return
 			}
 		}
@@ -194,7 +193,10 @@ export default class DApp {
 
 	// Send message and wait response
 	request(params, callback=false, Room=false){
-		Room = Room || this.Room || this.sharedRoom
+		if (!Room) {
+			console.error('request roo not set!')
+			return
+		}
 
 		return new Promise((resolve, reject) => {
 
@@ -223,9 +225,14 @@ export default class DApp {
 	
 	// Response to request-message
 	response(request_data, response, Room=false){
-		Room = Room || this.Room || this.sharedRoom
+		if (!Room) {
+			console.error('request roo not set!')
+			return
+		}
 
 		request_data.response = response
+		request_data.type     = 'response'
+
 		Room.send(request_data)
 	}
 
