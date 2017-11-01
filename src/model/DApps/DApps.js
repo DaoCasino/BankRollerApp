@@ -53,9 +53,16 @@ class _DCLib {
 		this.Account = Account
 		this.web3    = web3
 		this.Utils   = Utils
-
 		this.DApp    = DApp
 	}
+
+	numFromHash(random_hash, min=0, max=100) {
+		if (min > max) { let c = min; min = max; max = c }
+		if (min==max) return max
+	
+		max++
+		return Utils.bigInt(random_hash,16).divmod(max-min).remainder.value + min
+	}	
 }
 
 

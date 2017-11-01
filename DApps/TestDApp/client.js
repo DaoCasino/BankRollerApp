@@ -18,7 +18,8 @@ window.MyDApp = (function(){
 		var Roll = function(user_bet, user_num, random_hash){
 			let profit = -user_bet
 			
-			const random_num = DCLib.Utils.bigInt(random_hash,16).divmod(65536).remainder.value
+			const random_num = DCLib.numFromHash(random_hash, 0, 65536)
+			console.log(random_num)
 			
 			if (user_num > random_num) {
 				profit = (user_bet * (65536 - 1310) / user_num) - user_bet

@@ -16,6 +16,7 @@ publisher.json
 /coverage
 
 # production
+/public/static/meta
 /dist
 /build
 /builds

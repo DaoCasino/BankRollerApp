@@ -45,6 +45,9 @@ const networks = {
 let current_network = 'ropsten'
 if (process.env.NODE_ENV !== 'server' && window && window.localStorage.current_network) {
 	current_network = window.localStorage.current_network
+	if(!networks[current_network]){
+		current_network = 'ropsten'
+	}
 
 	if (current_network=='custom') {
 		networks.custom.rpc_url       = window.localStorage.custom_network_url
