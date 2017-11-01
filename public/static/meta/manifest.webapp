@@ -1,6 +1,6 @@
 {
-  "version": "0.1.3",
-  "name": "BankRollerApp App",
+  "version": "0.2.1",
+  "name": "BankRollerApp",
   "description": "Dao.Casino app for bankroller",
   "icons": {
     "60": "public/static/meta/firefox_app_60x60.png",
