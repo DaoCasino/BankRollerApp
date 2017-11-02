@@ -59,7 +59,11 @@ class _DCLib {
 	numFromHash(random_hash, min=0, max=100) {
 		if (min > max) { let c = min; min = max; max = c }
 		if (min==max) return max
-	
+
+		if (random_hash.length > 3 && random_hash.substr(0,2)=='0x' ) {
+			random_hash = random_hash.substr(2)
+		}
+
 		max++
 		return Utils.bigInt(random_hash,16).divmod(max-min).remainder.value + min
 	}	
