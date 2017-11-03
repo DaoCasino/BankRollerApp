@@ -12,9 +12,6 @@ import printDocs from './docs'
 import Wallet from 'Eth/Wallet'
 const Account = new Wallet()
 
-const WEB3 = require('web3/packages/web3')
-const web3 = new WEB3( new WEB3.providers.HttpProvider(_config.rpc_url) )
-
 import * as Utils from '../utils'
 
 
@@ -51,9 +48,19 @@ const injectDAppScript = function(key, url){
 class _DCLib {
 	constructor() {
 		this.Account = Account
-		this.web3    = web3
+		this.web3    = Account.web3
 		this.Utils   = Utils
 		this.DApp    = DApp
+
+		// Init ERC20 contract
+		this.ERC20 = new this.web3.eth.Contract(
+			_config.contracts.erc20.abi, 
+			_config.contracts.erc20.address 
+		)
+	}
+
+	randomHash(){
+		return this.Account.sign( Utils.makeSeed() ).messageHash
 	}
 
 	numFromHash(random_hash, min=0, max=100) {
@@ -66,7 +73,64 @@ class _DCLib {
 
 		max++
 		return Utils.bigInt(random_hash,16).divmod(max-min).remainder.value + min
-	}	
+	}
+
+	sigRecover(raw_msg, signed_msg){
+		raw_msg = Utils.remove0x(raw_msg)
+		return this.web3.eth.accounts.recover(raw_msg, signed_msg)
+	}
+	
+	checkSig(raw_msg, signed_msg, need_address){		
+		raw_msg = Utils.remove0x(raw_msg)
+		return ( need_address==this.web3.eth.accounts.recover(raw_msg, signed_msg) )
+	}
+
+	async getBalances(address, callback=false){
+		const [bets, eth] = await Promise.all([
+			this.getBetBalance( address ),
+			this.getEthBalance( address )
+		])
+
+		const res = { bets:bets, eth:eth }
+		
+		if (callback) callback( res )
+		return res
+	}
+
+	getEthBalance(address=false, callback=false){
+		address = address || this.Account.get().openkey
+		if (!address) return
+		
+		return new Promise((resolve, reject) => {
+
+			this.web3.eth.getBalance(address).then(value => {
+				const balance = this.web3.utils.fromWei(value)
+				resolve( balance )
+				if(callback) callback( balance )
+			}).catch( err => {
+				console.error(err)
+				reject(err)
+			})
+		})
+	}
+
+	getBetBalance(address=false, callback=false){
+		address = address || this.Account.get().openkey
+		if (!address) return
+		
+		return new Promise((resolve, reject) => {
+			
+			this.ERC20.methods.balanceOf(address).call().then( value => {
+				const balance = Utils.bet2dec(value) 
+				resolve( balance )
+				if(callback) callback( balance )
+			}).catch( err => {
+				console.error(err)
+				reject(balance)
+			})
+		})
+	}
+
 }
 
 
@@ -85,7 +149,7 @@ export default new class DAppsAPIInit {
 		fetch(_config.server+'/DApps/info/')
 			.then( r => { return r.json() })
 			.then( info => {
-				console.log(info)
+				this.info = info
 			})
 	}
 
@@ -96,7 +160,11 @@ export default new class DAppsAPIInit {
 
 	remove(key, callback){
 		fetch(_config.server+'/DApps/remove/'+key).then( r => {
-			delete(this.List[key])
+			Object.keys(this.List).forEach(d=>{
+				if ( d.toLowerCase() === key.toLowerCase() ) {
+					delete(this.List[d])
+				}
+			})
 			callback()
 		})
 	}

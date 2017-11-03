@@ -54,12 +54,12 @@ const DApps = {
 
 			const dapp_config = this.readManifest( full_path+'dapp.manifest' )
 			if (!dapp_config) {
-				console.log('Cant find manifest for ', dir)
+				// console.log('Cant find manifest for ', dir)
 				return
 			}
 
-			console.log('dapp_config', dapp_config)
-
+			// console.log('dapp_config', dapp_config)
+			
 			const dapp_data = {
 				config : dapp_config,
 				path   : full_path,
@@ -70,15 +70,14 @@ const DApps = {
 			if (callback) {
 				callback(dapp_data)
 			}
-			// tempory disable server part
-			return
-			// if (!dapp_config.run.server) {
-			// 	return
-			// }
 
-			// const module_path = full_path + dapp_config.run.server
+			if (!dapp_config.run.server) {
+				return
+			}
+
+			const module_path = full_path + dapp_config.run.server
 			// console.log('module_path', module_path)
-			// require(module_path)
+			require(module_path)
 		})
 
 		setInterval(()=>{
@@ -96,7 +95,7 @@ const DApps = {
 
 			const dapp_config = this.readManifest( full_path+'dapp.manifest' )
 			if (!dapp_config) {
-				console.log('Cant find manifest for ', dir)
+				// console.log('Cant find manifest for ', dir)
 				return
 			}
 
@@ -110,9 +109,13 @@ const DApps = {
 	},
 
 	readManifest: function(path){
-		console.log('readManifest',path)
 		try	{
-			return JSON.parse(fs.readFileSync(path))		
+			let dapp_config = JSON.parse(fs.readFileSync(path))	
+			if (typeof dapp_config.run !== 'object') {
+				let str = ''+dapp_config.run 
+				dapp_config.run = {client:str}
+			}
+			return dapp_config
 		} catch(e){
 			return false
 		}
@@ -131,7 +134,7 @@ const DApps = {
 
 		const dapp_config = this.readManifest(manifest.path)
 		if (!dapp_config) {
-			console.log('cant find manifest')
+			// console.log('cant find manifest')
 			return
 		}
 
@@ -158,14 +161,16 @@ const DApps = {
 	},
 
 	remove: function(key, callback){
-		if (!this.list[key]) {
-			return
-		}
+		Object.keys(this.list).forEach( d => {
+			if ( d.toLowerCase() !== key.toLowerCase() ) {
+				return
+			}
 
-		const full_path = dapps_path+key+'/'
-		console.log('Remove folder ', full_path)
-		fse.removeSync(full_path)
-		delete(this.list[key])
+			const full_path = dapps_path+d+'/'
+			console.log('!!! Remove folder ', full_path)
+			fse.removeSync(full_path)
+			delete(this.list[d])
+		})
 	},
 
 	serve: function(request, response){

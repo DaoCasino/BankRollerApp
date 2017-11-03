@@ -5,6 +5,16 @@ const web3_sha3 = require('web3/packages/web3-utils').sha3
 
 export const sha3 = web3_sha3
 
+
+export const bet2dec = function(val, r=2){
+	return +(val / 100000000).toFixed(r)
+}
+
+export const bet4dec = function(val){
+	return val*100000000
+}
+
+
 export const clearcode = function(string){
 	return string.toString()
 		.split('\t').join('')
@@ -58,6 +68,23 @@ export const buf2hex = buffer => {
 }
 export const buf2bytes32 = buffer => {
 	return '0x'+buf2hex(buffer)
+}
+
+
+export const remove0x = (str) => {
+	if (str.length > 2 && str.substr(0,2)=='0x') {
+		console.log('0x prefix removed from ', str)
+		str = str.substr(2)
+	}
+	return str
+}
+
+export const add0x = (str) => {
+	if (str.substr(0,2)!='0x') {
+		console.log('0x prefix added to', str)
+		str = '0x'+str
+	}
+	return str
 }
 
 export const makeSeed = () => {

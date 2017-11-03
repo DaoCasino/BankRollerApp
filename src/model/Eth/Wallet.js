@@ -3,19 +3,26 @@ import ethWallet  from 'eth-lightwallet'
 import DB         from 'DB/DB'
 import * as Utils from 'utils'
 
+
+const WEB3 = require('web3/packages/web3')
+const web3 = new WEB3( new WEB3.providers.HttpProvider(_config.rpc_url) )
+
 import RPC from './RPC'
 const rpc = new RPC( _config.rpc_url )
 
+let _web3acc
 let _wallet = false
 
 export default class Wallet {
 	constructor() {
-		this.lib = ethWallet
+		this.lib  = ethWallet
+		this.web3 = web3
 
 		if ( process.env.NODE_ENV !== 'server' ) {
 			DB.getItem('wallet', (err, wallet)=>{
 				if (wallet) {
 					_wallet = wallet
+					this.initWeb3Wallet()
 					return
 				}
 
@@ -39,6 +46,7 @@ export default class Wallet {
 					this.checkWallet()
 				} else {
 					_wallet = ack.put
+					this.initWeb3Wallet()
 				}
 			})
 		},3000)
@@ -224,6 +232,24 @@ export default class Wallet {
 			return signedTx
 		})
 	}
+
+	initWeb3Wallet(){
+		if (typeof this.signTransaction === 'function') return
+		this.exportPrivateKey( privkey => {
+			_web3acc = this.web3.eth.accounts.privateKeyToAccount( '0x'+privkey )
+			this.web3.eth.accounts.wallet.add( privkey )
+			this.signTransaction = _web3acc.signTransaction
+		})
+	}
+
+	sign(raw){
+		console.info('call %web3.eth.accounts.sign', ['font-weight:bold;'])
+		console.log('More docs: http://web3js.readthedocs.io/en/1.0/web3-eth-accounts.html#sign')
+		
+		raw = Utils.remove0x(raw)
+		return _web3acc.sign(raw)
+	}
+
 }
 
 

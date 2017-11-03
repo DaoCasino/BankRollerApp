@@ -161,6 +161,10 @@ export default class DApp {
 
 			let User = this.users[data.user_id]
 			
+			if (data.action=='open_channel') {
+				this._openChannel(data)
+			}
+
 			// call user logic function
 			if (data.action=='call') {
 				if (!data.func || !data.func.name || !data.func.args) return				
@@ -188,7 +192,9 @@ export default class DApp {
 		this.users[user_id].room.on('all', listen_all)
 	}
 
-
+	_openChannel(params){
+		console.log(params)
+	}
 	
 
 	// Send message and wait response

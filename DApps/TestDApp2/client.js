@@ -19,8 +19,9 @@ window.MyDApp2 = (function(){
 			var Roll = function(user_bet, user_num, random_hash){
 				let profit = -user_bet
 				
-				const random_num = DCLib.Utils.bigInt(random_hash,16).divmod(65536).remainder.value
-				
+				const random_num = DCLib.numFromHash(random_hash, 0, 65536)
+				console.log(random_num)
+
 				if (user_num > random_num) {
 					profit = (user_bet * (65536 - 1310) / user_num) - user_bet
 				}
@@ -31,6 +32,7 @@ window.MyDApp2 = (function(){
 				balance += profit*1
 
 				const roll_item = {
+					timestamp   : new Date().getTime(),
 					user_bet    : user_bet,
 					profit      : profit,
 					user_num    : user_num,
@@ -48,6 +50,7 @@ window.MyDApp2 = (function(){
 				setBalance: setBalance,
 				getBalance: getBalance,
 				roll:       Roll,
+				history:    history,
 			}
 		}
 	})

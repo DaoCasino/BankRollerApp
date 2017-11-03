@@ -72,18 +72,24 @@ module.exports = {
 	network:         current_network,
 	networks:        networks,
 
+	rpc_url:         networks[current_network].rpc_url,
+	etherscan_url:   networks[current_network].etherscan_url,
+
+	rtc_signalserver: 'https://ws.dao.casino/mesh/',
+	api_url:          'https://platform.dao.casino/api/',
+	confirm_timeout:  7000,
+
+	contracts: {
+		erc20      : require('./contracts/contracts/erc20.js'),
+		paychannel : require('./contracts/contracts/paychannel.js'),
+	},
+	
 	erc20_address:   networks[current_network].erc20_address,
 	erc20_abi:       require('./contracts/erc20.abi.js'),
 
 	stat_contract:   stat_contract,
 
-	rpc_url:         networks[current_network].rpc_url,
-	etherscan_url:   networks[current_network].etherscan_url,
 
 	channels:        require('./contracts/channel.abi.js'),
-
-	rtc_signalserver: 'https://ws.dao.casino/mesh/',
-	api_url:          'https://platform.dao.casino/api/',
-	confirm_timeout:  7000,
 }
 

@@ -13,42 +13,95 @@ dapps_list {
 }
 }
 
-table#dapps_list {
-	width:100%;
-	margin:10px 0 20px 0;
 
-	th, td { padding:7px 5px 7px 15px; font-size:13px;
-		white-space:nowrap;
-		a {
-			overflow:hidden; text-overflow: ellipsis;
-			white-space:nowrap;
-			display:inline-block;
-			max-width:100px;
+.upload-block { 
+	margin: 40px 0 0 0;
+
+	.other {
+		padding: 20px; line-height: 1.4rem;
+		border:3px solid #333;
+		margin: 10px;
+		span {
+			color: #fff;
 		}
 	}
 
-	th.actions { text-align: right; }
-	th {
-		background:rgba(100,100,100,0.1);
-		font-weight:normal; text-transform:uppercase; letter-spacing:1px;
-		font-size:10px;
-		font-weight:300;
+	.macos {
+		display: none;
+		p {text-align: center;}
 	}
 
-	
+	.macos , .other { display: none; }
+	.show { display: block; }
+}
+
+
+table#dapps_list {
+	width:100%;
+	margin:10px 0 20px 0;
+}
+
+dapps_list .dapp {
+
+	border: 1px solid #333;
+	margin:0 10px 10px 10px; padding: 15px 15px 10px 15px;
+	.code {
+		text-transform: uppercase;
+		display: inline-block;
+		font-weight: 200; letter-spacing: 2px;
+	}
+
+
+	.config {
+		display: block;
+		a {
+			letter-spacing: 1px; font-size: 12px;
+			display: inline-block; margin: 5px 5px 5px 0px;
+		}
+
+		width: 100%;
+
+		pre {
+			background: #252525; padding: 10px; width: 100%;
+			margin-bottom: 15px;
+			font-size: 13px; font-family:monospace;
+		}
+	}
+
 	.actions {
 		text-align: right;
-		padding-right: 25px;
+		a { display: inline-block;
+			padding: 3px 15px 4px 15px;
+			border-radius: 10px;
+			font-size: 11px; letter-spacing: 1px;
+			 border: 1px solid #fff;
+
+			opacity: 0.7;
+			&:hover {
+				opacity: 1;
+				background: green;
+				&[href="#remove"] {
+					background: red;
+				}
+			}
+
+		 }
 	}
 
-	a {
-		display: block;
-		overflow: hidden; max-width: 90%;
-		text-overflow:ellipsis;
+	pre {
+		&, * { word-break: break-all;
+			white-space: pre-wrap;
+		} 
+		.json-key { color: brown; }
+		.json-value { color: navy; }
+		.json-string { color: olive; }
 	}
-
-	tr:hover td { background:#222; }
+	.config pre { display: none; }
+	.config.show pre { display: block; }
 }
+
+
+
 
 
 
@@ -215,22 +268,3 @@ table#dapps_list {
 	background-color: #000;
 }
 
-
-
-
-pre {
-	
-	&, * { word-break: break-all;
-	white-space: pre-wrap;
-	max-width: 85%;
-	} 
-.json-key {
-   color: brown;
-   }
-.json-value {
-   color: navy;
-   }
-.json-string {
-   color: olive;
-   }
-}
