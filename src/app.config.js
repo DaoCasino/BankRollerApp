@@ -79,6 +79,9 @@ module.exports = {
 	api_url:          'https://platform.dao.casino/api/',
 	confirm_timeout:  7000,
 
+	gasPrice : 40*1000000000,
+	gasLimit : 40*100000,
+
 	contracts: {
 		erc20      : require('./contracts/contracts/erc20.js'),
 		paychannel : require('./contracts/contracts/paychannel.js'),

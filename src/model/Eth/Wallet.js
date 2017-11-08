@@ -4,6 +4,8 @@ import DB         from 'DB/DB'
 import * as Utils from 'utils'
 
 
+import {sign as signHash} from 'web3/packages/web3-eth-accounts/node_modules/eth-lib/lib/account.js'
+
 const WEB3 = require('web3/packages/web3')
 const web3 = new WEB3( new WEB3.providers.HttpProvider(_config.rpc_url) )
 
@@ -237,7 +239,7 @@ export default class Wallet {
 		if (typeof this.signTransaction === 'function') return
 		this.exportPrivateKey( privkey => {
 			_web3acc = this.web3.eth.accounts.privateKeyToAccount( '0x'+privkey )
-			this.web3.eth.accounts.wallet.add( privkey )
+			this.web3.eth.accounts.wallet.add( '0x'+privkey )
 			this.signTransaction = _web3acc.signTransaction
 		})
 	}
@@ -248,6 +250,10 @@ export default class Wallet {
 		
 		raw = Utils.remove0x(raw)
 		return _web3acc.sign(raw)
+	}
+
+	signHash(hash){
+		return signHash(hash, this.exportPrivateKey() )
 	}
 
 }

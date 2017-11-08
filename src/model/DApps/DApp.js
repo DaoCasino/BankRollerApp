@@ -4,11 +4,55 @@ import Rtc      from 'rtc'
 
 import * as Utils from '../utils'
 
-// @TODO
-const default_paymentchannel_contract = {
-	address : '0x...',
-	abi     : JSON.parse('{}')
+const Account  = Eth.Wallet
+const _openkey = Account.get().openkey
+const web3     = Account.web3
+
+const ERC20 = new web3.eth.Contract(
+	_config.contracts.erc20.abi, 
+	_config.contracts.erc20.address 
+)
+
+const ERC20approve = async function(spender, amount, callback=false){
+	return new Promise(async (resolve, reject) => {
+		console.log('Check how many tokens user '+_openkey+' is still allowed to withdraw from contract '+spender+' . . . ')
+		
+		let allowance = await ERC20.methods.allowance( _openkey, spender).call()
+
+		console.log('💸 allowance:', allowance)
+
+		if (allowance < amount) {
+			console.log('allowance lower than need deposit')
+
+			console.group('Call .approve on ERC20')
+			console.log('Allow paychannle to withdraw from your account, multiple times, up to the '+amount+' amount.')
+
+			const receipt = await ERC20.methods.approve( 
+				spender,
+				amount * 9
+			).send({
+				from     : _openkey,
+				gasPrice : _config.gasPrice,
+				gas      : (await ERC20.methods.approve(spender, amount * 9).estimateGas({from : _openkey})),
+			}).on('error', err=>{ 
+				console.error(err)
+				reject(false, err)
+			})
+			
+			console.log('📌 ERC20.approve receipt:', receipt)
+			
+			allowance = await ERC20.methods.allowance( _openkey, spender).call()
+
+			console.log('💸💸💸 allowance:', allowance)
+
+			console.groupEnd()			
+		}
+		
+		resolve(true, null)
+		if (callback) callback()
+	})
 }
+
 
 
 /*
@@ -44,7 +88,7 @@ export default class DApp {
 		this.hash  = Utils.checksum( params.logic )
 		this.users = {}
 
-		this.sharedRoom = new Rtc( (Eth.Wallet.get().openkey || false) , 'dapp_room_'+this.hash )
+		this.sharedRoom = new Rtc( (_openkey || false) , 'dapp_room_'+this.hash )
 
 		console.groupCollapsed('DApp %c'+this.code+' %ccreated','color:orange','color:default')
 		console.info(' >>> Unique DApp logic checksum/hash would be used for connect to bankrollers:')
@@ -67,7 +111,7 @@ export default class DApp {
 				return
 			}
 			
-			Eth.getBetsBalance( Eth.Wallet.get().openkey , bets=>{
+			Eth.getBetsBalance( _openkey , bets=>{
 				this.sharedRoom.sendMsg({
 					action  : 'bankroller_active',
 					deposit : bets*100000000,
@@ -106,13 +150,8 @@ export default class DApp {
 			id    : connection_id,
 			num   : Object.keys(this.users).length,
 			logic : new this.logic(),
-			room  : new Rtc( Eth.Wallet.get().openkey, this.hash+'_'+connection_id )
+			room  : new Rtc( _openkey, this.hash+'_'+connection_id )
 		}
-
-		this.response(params, {id:connection_id}, this.sharedRoom)
-		
-		console.log('User '+user_id+' connected to '+this.code)
-
 
 		const signMsg = async (rawMsg=false)=>{
 			if (!rawMsg) return ''
@@ -121,11 +160,11 @@ export default class DApp {
 				
 				console.log('signMsg', rawMsg)
 
-				const sig = Eth.Wallet.lib.signing.concatSig( Eth.Wallet.lib.signing.signMsg(
-					Eth.Wallet.getKs(),
-					await Eth.Wallet.getPwDerivedKey(),
+				const sig = Account.lib.signing.concatSig( Account.lib.signing.signMsg(
+					Account.getKs(),
+					await Account.getPwDerivedKey(),
 					rawMsg,
-					Eth.Wallet.get().openkey
+					_openkey
 				) )
 
 				console.log('sig:',sig)
@@ -162,7 +201,12 @@ export default class DApp {
 			let User = this.users[data.user_id]
 			
 			if (data.action=='open_channel') {
+				console.log('user room action open channel')
 				this._openChannel(data)
+			}
+			if (data.action=='close_channel') {
+				console.log('user room action close channel')
+				this._closeChannel(data)
 			}
 
 			// call user logic function
@@ -190,12 +234,165 @@ export default class DApp {
 			}
 		}
 		this.users[user_id].room.on('all', listen_all)
+
+
+		setTimeout(()=>{
+			this.response(params, {id:connection_id}, this.sharedRoom)
+			console.log('User '+user_id+' connected to '+this.code)
+		}, 999)
 	}
 
-	_openChannel(params){
-		console.log(params)
+	PayChannel(){
+		if (!this.PayChannelContract) {
+			this.PayChannelContract = new web3.eth.Contract( pay_contract_abi, pay_contract_address )
+		}
+		return this.PayChannelContract
+	}
+
+	async _openChannel(params){
+		const response_room = this.users[params.user_id].room
+
+		console.log('_openChannel', params)
+		const pay_contract_abi     = _config.contracts.paychannel.abi
+		const pay_contract_address = _config.contracts.paychannel.address
+
+		const channel_id         = params.open_args.channel_id
+		const player_address     = params.user_id
+		const bankroller_address = _openkey
+		const player_deposit     = params.open_args.player_deposit
+		const bankroller_deposit = params.open_args.player_deposit*2
+		const session            = params.open_args.session
+		const ttl_blocks         = params.open_args.ttl_blocks
+		const signed_args        = params.open_args.signed_args
+
+
+		const approve = await ERC20approve(pay_contract_address, bankroller_deposit*1000)
+
+		console.log(channel_id, player_address, bankroller_address, player_deposit, bankroller_deposit, session, ttl_blocks)
+
+		const rec_openkey = web3.eth.accounts.recover( Utils.sha3(channel_id, player_address, bankroller_address, player_deposit, bankroller_deposit, session, ttl_blocks), signed_args )
+		if (player_address!=rec_openkey) {
+			console.error('🚫 invalid sig on open channel', rec_openkey)
+			this.response(params, { error:'Invalid sig' }, response_room)
+			return
+		}
+		// estimateGas - в данном случае работает неккоректно и 
+		// возвращает лимит газа аж на целый блок
+		// из-за чего транзакцию никто не майнит, т.к. она одна на весь блок
+		// const gasLimit = await this.PayChannel().methods.open(channel_id,player_address,bankroller_address,player_deposit,bankroller_deposit,session,ttl_blocks, signed_args).estimateGas({from: _openkey})
+		
+		const gasLimit = 900000
+		
+		console.log('Send open channel trancsaction')
+		console.log('⛽ gasLimit:', gasLimit)
+		
+		const receipt = await this.PayChannel().methods
+			.open(
+				channel_id         , // random bytes32 id
+				player_address     ,
+				bankroller_address ,
+				player_deposit     ,
+				bankroller_deposit ,
+				session            , // integer num/counter
+				ttl_blocks         , // channel ttl in blocks count
+				signed_args
+			).send({
+				gas      : gasLimit,
+				gasPrice : 1.2 * _config.gasPrice,
+				from     : _openkey,
+			})
+			.on('transactionHash', transactionHash=>{
+				console.log('# openchannel TX pending', transactionHash)
+				console.log('https://ropsten.etherscan.io/tx/'+transactionHash)
+				console.log('⏳ wait receipt...')
+			})
+			.on('error', err=>{ 
+				console.warn('Open channel error', err)
+				this.response(params, { error:'cant open channel', more:err }, response_room)
+			})
+		
+		console.log('open channel result', receipt)
+
+		this.users[params.user_id].paychannel = {
+			channel_id         : channel_id         ,
+			player_deposit     : player_deposit     ,
+			bankroller_deposit : bankroller_deposit ,
+			session            : session            ,
+		}
+
+		this.response(params, { receipt:receipt }, response_room)
 	}
 	
+	async _closeChannel(params){
+		const response_room = this.users[params.user_id].room
+		console.log('_closeChannel', params)
+
+		const channel_id         =  params.close_args.channel_id         // bytes32 id, 
+		const player_balance     =  params.close_args.player_balance     // uint playerBalance, 
+		const bankroller_balance =  params.close_args.bankroller_balance // uint bankrollBalance, 
+		const session            =  0 // uint session=0px 
+		const signed_args        =  params.close_args.signed_args 
+
+		// Check Sig
+		const rec_openkey = web3.eth.accounts.recover( Utils.sha3(channel_id, player_balance, bankroller_balance, session), signed_args )
+		if (params.user_id != rec_openkey) {
+			console.error('🚫 invalid sig on open channel', rec_openkey)
+			this.response(params, { error:'Invalid sig' }, response_room)
+			return
+		}
+
+		// Check user results with out results
+		const channel     = this.users[params.user_id].channel
+		const user_profit = this.users[params.user_id].logic.__getProfit()
+
+		const l_player_balance     =  user_profit + channel.player_deposit
+		const l_bankroller_balance = -user_profit + channel.bankroller_deposit
+		
+		if (l_player_balance!=player_balance || l_bankroller_balance!=bankroller_balance) {
+			console.error('Invalid profit',{
+				l_player_balance     : l_player_balance,
+				player_balance       : player_balance,
+				l_bankroller_balance : l_bankroller_balance,
+				bankroller_balance   : bankroller_balance,
+			})
+			this.response(params, { error:'Invalid profit' }, response_room)
+			return
+		}
+
+
+		const gasLimit = 900000
+		console.log('Send close channel trancsaction')
+		console.log('⛽ gasLimit:', gasLimit)
+
+		const receipt = await this.PayChannel().methods
+			.close(
+				channel_id,
+				player_balance,
+				bankroller_balance,
+				session,
+				signed_args,
+			).send({
+				gas      : gasLimit,
+				gasPrice : 1.2 * _config.gasPrice,
+				from     : _openkey,
+			})
+			.on('transactionHash', transactionHash=>{
+				console.log('# openchannel TX pending', transactionHash)
+				console.log('https://ropsten.etherscan.io/tx/'+transactionHash)
+				console.log('⏳ wait receipt...')
+			})
+			.on('error', err=>{ 
+				console.warn('Close channel error', err)
+				this.response(params, { error:'cant close channel', more:err }, response_room)
+			})
+
+		console.log('Close channel receipt', receipt)
+		if (receipt.transactionHash) {
+			delete this.users[params.user_id].paychannel
+		}
+
+		this.response(params, { receipt:receipt }, response_room)
+	}
 
 	// Send message and wait response
 	request(params, callback=false, Room=false){
