@@ -4,6 +4,8 @@ import Rtc      from 'rtc'
 
 import * as Utils from '../utils'
 
+import paychannelLogic from './paychannel'
+
 const Account  = Eth.Wallet
 const _openkey = Account.get().openkey
 const web3     = Account.web3
@@ -52,7 +54,6 @@ const ERC20approve = async function(spender, amount, callback=false){
 		if (callback) callback()
 	})
 }
-
 
 
 /*
@@ -149,9 +150,13 @@ export default class DApp {
 		this.users[user_id] = {
 			id    : connection_id,
 			num   : Object.keys(this.users).length,
-			logic : new this.logic(),
+			logic : new this.logic,
 			room  : new Rtc( _openkey, this.hash+'_'+connection_id )
 		}
+
+		// inject payChannel in logic
+		this.users[user_id].logic.payChannel = new paychannelLogic()
+
 
 		const signMsg = async (rawMsg=false)=>{
 			if (!rawMsg) return ''
@@ -243,9 +248,13 @@ export default class DApp {
 	}
 
 	PayChannel(){
-		if (!this.PayChannelContract) {
-			this.PayChannelContract = new web3.eth.Contract( pay_contract_abi, pay_contract_address )
-		}
+		if (this.PayChannelContract) return this.PayChannelContract
+
+		const pay_contract_abi     = _config.contracts.paychannel.abi
+		const pay_contract_address = _config.contracts.paychannel.address
+
+		this.PayChannelContract    = new web3.eth.Contract( pay_contract_abi, pay_contract_address )
+		
 		return this.PayChannelContract
 	}
 
@@ -253,9 +262,7 @@ export default class DApp {
 		const response_room = this.users[params.user_id].room
 
 		console.log('_openChannel', params)
-		const pay_contract_abi     = _config.contracts.paychannel.abi
-		const pay_contract_address = _config.contracts.paychannel.address
-
+		
 		const channel_id         = params.open_args.channel_id
 		const player_address     = params.user_id
 		const bankroller_address = _openkey
@@ -266,7 +273,7 @@ export default class DApp {
 		const signed_args        = params.open_args.signed_args
 
 
-		const approve = await ERC20approve(pay_contract_address, bankroller_deposit*1000)
+		const approve = await ERC20approve(this.PayChannel().options.address, bankroller_deposit*1000)
 
 		console.log(channel_id, player_address, bankroller_address, player_deposit, bankroller_deposit, session, ttl_blocks)
 
@@ -320,6 +327,11 @@ export default class DApp {
 			session            : session            ,
 		}
 
+		if (receipt.transactionHash) {
+			// Set deposit in logic
+			this.users[params.user_id].logic.payChannel.setDeposit( player_deposit )
+		}
+
 		this.response(params, { receipt:receipt }, response_room)
 	}
 	
@@ -343,7 +355,7 @@ export default class DApp {
 
 		// Check user results with out results
 		const channel     = this.users[params.user_id].channel
-		const user_profit = this.users[params.user_id].logic.__getProfit()
+		const user_profit = this.users[params.user_id].logic.payChannel._getProfit()
 
 		const l_player_balance     =  user_profit + channel.player_deposit
 		const l_bankroller_balance = -user_profit + channel.bankroller_deposit
