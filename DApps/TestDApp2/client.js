@@ -2,6 +2,8 @@
 window.MyDApp2 = (function(){
 
 	const GameLogic = function(){
+		const _self = this
+
 		const MAX_RAND_NUM = 65536
 		const HOUSEEDGE    = 0.02 // 2%
 		
@@ -9,7 +11,7 @@ window.MyDApp2 = (function(){
 
 		var Roll = function(user_bet, user_num, random_hash){
 			// convert 1BET to 100000000
-			user_bet = Utils.bet4dec(user_bet)
+			user_bet = DCLib.Utils.bet4dec(user_bet)
 
 			// generate random number
 			const random_num = DCLib.numFromHash(random_hash, 0, 65536)
@@ -21,8 +23,8 @@ window.MyDApp2 = (function(){
 			}
 
 			// add result to paychannel
-			this.payChannel.addTX( profit )
-			this.payChannel.printLog()
+			_self.payChannel.addTX( profit )
+			_self.payChannel.printLog()
 
 			// push all data to our log
 			// just for debug 
@@ -31,7 +33,7 @@ window.MyDApp2 = (function(){
 				user_bet    : user_bet,
 				profit      : profit,
 				user_num    : user_num,
-				balance     : this.payChannel.getBalance(),
+				balance     : _self.payChannel.getBalance(),
 				random_hash : random_hash,
 				random_num  : random_num,
 			}

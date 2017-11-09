@@ -6,6 +6,16 @@ import * as Utils from '../utils'
 
 import paychannelLogic from './paychannel'
 
+const payChannelWrap = function(logic){
+	let payChannel             = new paychannelLogic()
+	logic.prototype.payChannel = payChannel
+	let modifiedLogic          = new logic()
+	modifiedLogic.payChannel   = payChannel
+	return modifiedLogic
+}
+
+
+
 const Account  = Eth.Wallet
 const _openkey = Account.get().openkey
 const web3     = Account.web3
@@ -150,13 +160,9 @@ export default class DApp {
 		this.users[user_id] = {
 			id    : connection_id,
 			num   : Object.keys(this.users).length,
-			logic : new this.logic,
+			logic : payChannelWrap(this.logic),
 			room  : new Rtc( _openkey, this.hash+'_'+connection_id )
 		}
-
-		// inject payChannel in logic
-		this.users[user_id].logic.payChannel = new paychannelLogic()
-
 
 		const signMsg = async (rawMsg=false)=>{
 			if (!rawMsg) return ''
@@ -218,6 +224,9 @@ export default class DApp {
 			if (data.action=='call') {
 				if (!data.func || !data.func.name || !data.func.args) return				
 				if (!User.logic[data.func.name]) return
+
+				console.log('User.logic', User.logic)
+				console.log('User.logic.payChannel', User.logic.payChannel)
 
 				let args    = await prepareArgs(data.func.args)
 				let returns = User.logic[data.func.name].apply(this, args)
