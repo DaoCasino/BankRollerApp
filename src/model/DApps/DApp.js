@@ -157,6 +157,8 @@ export default class DApp {
 		const connection_id = Utils.makeSeed()
 		const user_id       = params.user_id
 
+		if(this.users[user_id]) return 
+
 		this.users[user_id] = {
 			id    : connection_id,
 			num   : Object.keys(this.users).length,
@@ -363,7 +365,7 @@ export default class DApp {
 		}
 
 		// Check user results with out results
-		const channel     = this.users[params.user_id].channel
+		const channel     = this.users[params.user_id].paychannel
 		const user_profit = this.users[params.user_id].logic.payChannel._getProfit()
 
 		const l_player_balance     =  user_profit + channel.player_deposit
@@ -386,7 +388,7 @@ export default class DApp {
 		console.log('⛽ gasLimit:', gasLimit)
 
 		const receipt = await this.PayChannel().methods
-			.close(
+			.closeByConsent(
 				channel_id,
 				player_balance,
 				bankroller_balance,

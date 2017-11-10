@@ -74,11 +74,14 @@ export default class Wallet {
 		return this.keyStore
 	}
 
-	exportPrivateKey(callback){
-		this.getPwDerivedKey( PwDerivedKey => {
-			let private_key = this.getKs().exportPrivateKey(_wallet.addr, PwDerivedKey)
+	exportPrivateKey(callback=false){
+		return new Promise((resolve, reject) => {	
+			this.getPwDerivedKey( PwDerivedKey => {
+				let private_key = this.getKs().exportPrivateKey(_wallet.addr, PwDerivedKey)
 
-			callback(private_key)
+				if(callback) callback(private_key)
+				resolve(private_key)
+			})
 		})
 	}
 
@@ -252,8 +255,8 @@ export default class Wallet {
 		return _web3acc.sign(raw)
 	}
 
-	signHash(hash){
-		return signHash(hash, this.exportPrivateKey() )
+	async signHash(hash){
+		return signHash(hash, (await this.exportPrivateKey()) )
 	}
 
 }

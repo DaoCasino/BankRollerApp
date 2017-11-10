@@ -80,6 +80,10 @@ class _DCLib {
 		return this.web3.eth.accounts.recover(raw_msg, signed_msg).toLowerCase()
 	}
 	
+	sigHashRecover(){
+		return this.web3.eth.accounts.recover(raw_msg, signed_msg).toLowerCase()
+	}
+	
 	checkSig(raw_msg, signed_msg, need_address){		
 		raw_msg = Utils.remove0x(raw_msg)
 		return ( need_address.toLowerCase() == this.web3.eth.accounts.recover(raw_msg, signed_msg).toLowerCase() )
