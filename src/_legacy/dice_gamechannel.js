@@ -4,8 +4,15 @@ const GameLogic = function(deposit){
 
 	var roll = function(user_bet, user_num, random_hash){
 		let profit = -user_bet
+		console.log(random_hash)
 
-		const random_num = bigInt(random_hash,16).divmod(65536).remainder.value
+
+		if (random_hash.substr(0,2)=='0x') {
+			random_hash = random_hash.substr(2)
+		}
+
+		const random_num = bigInt(random_hash, 16).divmod(65536).remainder.value
+
 		if (user_num > random_num) {
 			profit = (user_bet * (65536 - 1310) / user_num) - user_bet
 		}
@@ -14,7 +21,7 @@ const GameLogic = function(deposit){
 		}
 
 		balance += profit
-
+		
 		const roll_item = {
 			timestamp   : new Date().getTime(),
 			user_bet    : user_bet,
@@ -68,7 +75,6 @@ const _channels = {}
 
 class DiceGameChannel {
 	constructor(){
-		this.web3  = web3
 		this.Games = Games
 
 		this.setGameContract(contract.address, ()=>{
@@ -162,16 +168,18 @@ class DiceGameChannel {
 
 		let prev_trans = false
 		const sendTrans = (signedTx, cb, repeat=5)=>{
+			console.log('TXs:',prev_trans, signedTx)
 			if (prev_trans==signedTx) return
-			prev_trans = signedTx
-
+			console.log('sendRawTransaction')
 			Eth.RPC.request('sendRawTransaction', ['0x'+signedTx], 0).then( response => {
 				repeat--
 				if (!response || !response.result || response.error) {
 					if (repeat < 0 || (response && response.error && response.error.code==-32000)) return
-					setTimeout(()=>{ sendTrans(signedTx, cb) }, 1500)
+					setTimeout(()=>{ sendTrans(signedTx, cb, repeat) }, 1500)
 					return
 				}
+
+				prev_trans = signedTx
 
 				// Create game logic
 				Games[data.args.channel_id] = new GameLogic(data.args.player_deposit)
@@ -182,6 +190,10 @@ class DiceGameChannel {
 				}
 
 				cb( response.result )
+			}).catch(e=>{
+				repeat--
+				console.error('sendTrans Error:', e)
+				setTimeout(()=>{ sendTrans(signedTx, cb, repeat) }, 1500)
 			})
 		}
 
@@ -189,7 +201,8 @@ class DiceGameChannel {
 		Eth.Wallet.signedContractFuncTx(
 			contract.address, contract.abi,
 			'open', args,
-			signedTx => { sendTrans(signedTx, callback) }
+			signedTx => { sendTrans(signedTx, callback) },
+			900000, 91000000000
 		)
 	}
 
@@ -204,7 +217,7 @@ class DiceGameChannel {
 			data.args.bankroll_balance,
 			data.args.nonce,
 		]
-
+		console.log('closeChannel',args)
 		const msgHash = web3.utils.soliditySha3.apply(this, args)
 		const recover = web3.eth.accounts.recover(msgHash, data.sig)
 
@@ -287,7 +300,7 @@ class DiceGameChannel {
 
 	prepareArgs(args){
 		if (!args || !args.length) {
-			return false
+			return []
 		}
 
 		let new_args = []
@@ -323,7 +336,7 @@ class DiceGameChannel {
 			const VRS = Eth.Wallet.lib.signing.signMsgHash(
 				Eth.Wallet.getKs(),
 				pwDerivedKey,
-				this.web3.utils.soliditySha3.apply(this, data2sign),
+				web3.utils.soliditySha3.apply(this, data2sign),
 				Eth.Wallet.get().openkey.substr(2)
 			)
 
@@ -333,16 +346,15 @@ class DiceGameChannel {
 	}
 
 	checkMsg(check_data, sig, user_id){
-		const recover = this.web3.eth.accounts.recover((this.web3.utils.soliditySha3.apply(this, check_data)), sig)
+		const recover = web3.eth.accounts.recover((web3.utils.soliditySha3.apply(this, check_data)), sig)
 
 		return (recover.toLowerCase() == user_id.toLowerCase())
 	}
 
 	// Проверяем разрешил ли игрок списывать бэты контракту
 	setGameContract(address, callback){
-		console.log('setGameContract')
 		this.getAllowance(address, allowance_bets =>{
-			console.log('allowance_bets',allowance_bets)
+			// console.log('allowance_bets',allowance_bets)
 			if (allowance_bets < 1000000) {
 				this.approveContract(address, 2000000, ()=>{
 					this.setGameContract(address, callback)
@@ -358,6 +370,10 @@ class DiceGameChannel {
 
 	// Проверяем сколько денег разрешено списывать контракту игры
 	getAllowance(address, callback){
+		if (!address) {
+			return
+		}
+		
 		Eth.RPC.request('call', [{
 			'from' : Eth.Wallet.get().openkey,
 			'to'   : _config.erc20_address,

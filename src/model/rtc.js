@@ -1,24 +1,69 @@
-import _config from 'app.config'
+import _config    from 'app.config'
+import EE         from 'event-emitter'
 import * as Utils from './utils'
 
 const delivery_timeout = 3000
+const msg_ttl = 10*60*1000
 
-let _subscribes = {}
 
+const seedsDB = (function(){
+	const store_name = 'rtc_msgs_seeds'
+
+	let _seeds = {}
+	let w_time = false	
+
+	const read = function(){
+		if (process.env.NODE_ENV == 'server') return
+		if (!localStorage) { return }
+		try {
+			_seeds = JSON.parse( localStorage[store_name] )
+		} catch(e){}
+	}
+	const write = function(){
+		if (process.env.NODE_ENV == 'server') return
+		if (!localStorage) { return }
+		
+		clearTimeout(w_time)
+		w_time = setTimeout(function(){
+			localStorage[store_name] = JSON.stringify(_seeds)
+		}, 500)
+	}
+
+	read()
+
+	return {	
+		add(data, id){
+			_seeds[id] = data
+			write()
+		},
+
+		get(id){
+			if (!_seeds[id]) read()
+
+			return _seeds[id] || null
+		},
+
+		getAll(){
+			return _seeds
+		},
+
+		remove(id){
+			delete _seeds[id]
+			write()
+		}
+	}
+})()
 
 export default class RTC {
 	constructor(user_id=false, room=false) {
-		if (!room) {
-			room = _config.rtc_room
-		}
-
-		if (process.env.NODE_ENV !== 'server') {
-			require('ydn.db')
-			this.DB = new ydn.db.Storage( _config.db_name )
-		}
+		room = room || _config.rtc_room
+		
+		const EC = function(){}
+		EE(EC.prototype)
+		this.Event = new EC()
 
 		this.user_id = user_id || Utils.makeSeed()
-
+		this.room_id = room
 		this.channel = false
 		this.connect(room)
 
@@ -49,29 +94,34 @@ export default class RTC {
 			if (data.user_id && data.user_id==this.user_id) {
 				return
 			}
-
-			// if (this.isAlreadyReceived(data)) {
+			// if (data.room_id != this.room_id) {
 			// 	return
 			// }
 
 			this.acknowledgeReceipt(data)
 
-			// Call subscries
-			if (data.address && _subscribes[data.address]) {
-				for(let k in _subscribes[data.address]){
-					if (typeof _subscribes[data.address][k] === 'function') {
-						_subscribes[data.address][k](data)
-					}
-				}
+			this.Event.emit('all', data)
+
+			if (data.uiid) {
+				this.Event.emit('uiid::'+data.uiid, data)
 			}
 
-			if (_subscribes['all']) {
-				for(let k in _subscribes['all']){
-					if (typeof _subscribes['all'][k] === 'function') {
-						_subscribes['all'][k](data)
-					}
-				}
+			if (data.type && data.action) {
+				this.Event.emit(data.type+'::'+data.action, data)
 			}
+
+			if (data.action) {
+				this.Event.emit('action::'+data.action, data)
+			}
+
+			if (data.address) {
+				this.Event.emit('address::'+data.address, data)
+			}
+
+			if (data.user_id) {
+				this.Event.emit('user_id::'+data.user_id, data)
+			}
+
 		})
 	}
 
@@ -80,63 +130,51 @@ export default class RTC {
 		if (!data.seed || typeof data.seed !=='string' || data.action == 'delivery_confirmation') {
 			return false
 		}
-		const seed_exist = await this.DB.get(_config.rtc_store, data.seed)
+		const seed_exist = seedsDB.get(data.seed)
 		if (seed_exist && this.isFreshSeed(seed_exist.t) ) {
 			return true
 		}
 
-		this.DB.put(_config.rtc_store, { t:new Date().getTime() }, data.seed)
+		seedsDB.add({ t:new Date().getTime() }, data.seed)
 		return false
 	}
 
 	isFreshSeed(time){
-		let ttl = 2*60*1000
+		let ttl = msg_ttl || 7*1000
 		let livetime = (new Date().getTime()) - time*1
 		return ( livetime < ttl )
 	}
 
 	async clearOldSeeds(){
 	// clearOldSeeds(){
-		let seeds = await this.DB.values('groups')
+		let seeds = seedsDB.getAll()
 		for(let id in seeds){
 			if (!this.isFreshSeed(seeds[id].t)){
-				this.DB.remove(_config.rtc_store, id)
+				seedsDB.remove(id)
 			}
 		}
 
 		setTimeout(()=>{ this.clearOldSeeds() }, 10*1000 )
 	}
 
+	on(event, callback){
+		this.Event.on(event, callback)
+	}
+
+	once(event, callback){
+		this.Event.once(event, callback)
+	}
+
+	off(event, callback){
+		this.Event.off(event, callback)
+	}
+
 	subscribe(address, callback, name=false){
-		if (!_subscribes[address]) { _subscribes[address] = {} }
-
-		if (name && _subscribes[address][name]) {
-			return
-		}
-
-		if (name===false) {
-			name = Utils.makeSeed()
-		};
-
-		_subscribes[address][name] = callback
-
-		return name
+		this.on('address::'+address, callback)
 	}
 
 	unsubscribe(address, callback, name=false){
-		if (name!==false && _subscribes[address][name]) {
-			delete(_subscribes[address][name])
-			return
-		}
-
-		let new_subs = {}
-		for(let k in _subscribes[address]){
-			if (_subscribes[address][k] && _subscribes[address][k].toString() == callback.toString()) {
-				continue
-			}
-			new_subs[k] = _subscribes[address][k]
-		}
-		_subscribes[address] = new_subs
+		this.off('address::'+address, callback)
 	}
 
 
@@ -222,7 +260,9 @@ export default class RTC {
 	}
 
 	sendMsg(data){
-		data.user_id = this.user_id
+		data.seed       = Utils.makeSeed()
+		data.user_id    = this.user_id
+		// data.room_id = this.room_id
 
 		this.channel.set(this.user_id, JSON.stringify(data))
 

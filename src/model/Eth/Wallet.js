@@ -3,19 +3,28 @@ import ethWallet  from 'eth-lightwallet'
 import DB         from 'DB/DB'
 import * as Utils from 'utils'
 
+
+import {sign as signHash} from 'web3/packages/web3-eth-accounts/node_modules/eth-lib/lib/account.js'
+
+const WEB3 = require('web3/packages/web3')
+const web3 = new WEB3( new WEB3.providers.HttpProvider(_config.rpc_url) )
+
 import RPC from './RPC'
 const rpc = new RPC( _config.rpc_url )
 
+let _web3acc
 let _wallet = false
 
 export default class Wallet {
 	constructor() {
-		this.lib = ethWallet
+		this.lib  = ethWallet
+		this.web3 = web3
 
 		if ( process.env.NODE_ENV !== 'server' ) {
 			DB.getItem('wallet', (err, wallet)=>{
 				if (wallet) {
 					_wallet = wallet
+					this.initWeb3Wallet()
 					return
 				}
 
@@ -39,6 +48,7 @@ export default class Wallet {
 					this.checkWallet()
 				} else {
 					_wallet = ack.put
+					this.initWeb3Wallet()
 				}
 			})
 		},3000)
@@ -64,11 +74,14 @@ export default class Wallet {
 		return this.keyStore
 	}
 
-	exportPrivateKey(callback){
-		this.getPwDerivedKey( PwDerivedKey => {
-			let private_key = this.getKs().exportPrivateKey(_wallet.addr, PwDerivedKey)
+	exportPrivateKey(callback=false){
+		return new Promise((resolve, reject) => {	
+			this.getPwDerivedKey( PwDerivedKey => {
+				let private_key = this.getKs().exportPrivateKey(_wallet.addr, PwDerivedKey)
 
-			callback(private_key)
+				if(callback) callback(private_key)
+				resolve(private_key)
+			})
 		})
 	}
 
@@ -79,15 +92,18 @@ export default class Wallet {
 			return this.pwDerivedKey
 		}
 
-		if (!this.getKs()) { return }
+		return new Promise((resolve, reject) => {
+			if (!this.getKs()) { reject(); return }
 
-		this.getKs().keyFromPassword(_config.wallet_pass, (err, pwDerivedKey)=>{
-			if (err && limit>0 ) { this.getPwDerivedKey(callback, (limit-1)); return }
+			this.getKs().keyFromPassword(_config.wallet_pass, (err, pwDerivedKey)=>{
+				if (err && limit>0 ) { this.getPwDerivedKey(callback, (limit-1)); return }
 
-			if (pwDerivedKey) {
-				this.pwDerivedKey = pwDerivedKey
-			}
-			if(callback) callback(pwDerivedKey)
+				if (pwDerivedKey) {
+					this.pwDerivedKey = pwDerivedKey
+				}
+				resolve(pwDerivedKey)
+				if(callback) callback(pwDerivedKey)
+			})
 		})
 	}
 
@@ -182,13 +198,13 @@ export default class Wallet {
 	}
 
 	//  Make and Sing contract function transaction
-	async signedContractFuncTx(contract_address, contract_abi, function_name, function_args, callback, gasLimit=700000){
+	async signedContractFuncTx(contract_address, contract_abi, function_name, function_args, callback, gasLimit=700000, gasPrice=81000000000){
 		const nonce = await this.getNonce()
 		console.log('signedContractFuncTx nonce', nonce)
 		let options = {
 			to:       contract_address,
 			nonce:    nonce,
-			gasPrice: '0x'+Utils.numToHex(61000000000),
+			gasPrice: '0x'+Utils.numToHex(gasPrice),
 			gasLimit: '0x'+Utils.numToHex(gasLimit),
 			value:    0,
 		}
@@ -221,6 +237,28 @@ export default class Wallet {
 			return signedTx
 		})
 	}
+
+	initWeb3Wallet(){
+		if (typeof this.signTransaction === 'function') return
+		this.exportPrivateKey( privkey => {
+			_web3acc = this.web3.eth.accounts.privateKeyToAccount( '0x'+privkey )
+			this.web3.eth.accounts.wallet.add( '0x'+privkey )
+			this.signTransaction = _web3acc.signTransaction
+		})
+	}
+
+	sign(raw){
+		console.info('call %web3.eth.accounts.sign', ['font-weight:bold;'])
+		console.log('More docs: http://web3js.readthedocs.io/en/1.0/web3-eth-accounts.html#sign')
+		
+		raw = Utils.remove0x(raw)
+		return _web3acc.sign(raw)
+	}
+
+	async signHash(hash){
+		return signHash(hash, (await this.exportPrivateKey()) )
+	}
+
 }
 
 

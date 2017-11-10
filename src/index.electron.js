@@ -17,6 +17,11 @@ global.Tray = Tray
 const path = require('path')
 const url  = require('url')
 
+require('electron-debug')({
+	enabled:      true  ,
+	showDevTools: false ,
+});
+
 
 // Check updates
 // require('electron-simple-updater').init({
@@ -43,7 +48,8 @@ if (shouldQuit) {
 
 function createWindow () {
 	mainWindow = new BrowserWindow({
-		resizable: false, width: 670, height: 530,
+		// resizable: false, 
+		width: 670, height: 530,
 
 		icon: path.join(__dirname, 'static/icons/icon-128.png'),
 
@@ -81,9 +87,9 @@ function createWindow () {
 	const trayIcon = new Tray(path.join(__dirname, 'static/icons/icon-38.png'))
 	trayIcon.setToolTip('Dao.Casino')
 	trayIcon.setContextMenu(Menu.buildFromTemplate([
-		{ label: 'Show App', click:() => {
-			mainWindow.show()
-		} },
+		// { label: 'Show App', click:() => {
+		// 	mainWindow.show()
+		// } },
 		{ label: 'Quit', click:() => {
 			app.isQuiting = true
 			app.quit()

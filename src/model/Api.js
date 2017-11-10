@@ -19,38 +19,6 @@ class Api {
 			return response.text()
 		})
 	}
-
-
-	/*
-	 * Confirm
-	 */
-	getLogs(address, game_code, game_version){
-		return this.request({
-			a:       'unconfirmed',
-			address: address,
-			game:    game_code,
-			version: game_version,
-		}, 'proxy.php').then(r => {
-			let res = {}
-			try {
-				res = r.json()
-			} catch(e) {
-			}
-			return res
-		})
-	}
-
-	sendConfirm(address, seed, confirm){
-		return this.request({
-			a:       'confirm',
-			address: address,
-			vconcat: seed,
-			result:  confirm,
-		},'proxy.php').then( response => {
-			return response.text()
-		})
-	}
-
 }
 
 export default new Api( _config.api_url )

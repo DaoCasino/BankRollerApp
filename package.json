@@ -1,6 +1,6 @@
 {
 	"name": "BankRollerApp",
-	"version": "0.1.3",
+	"version": "0.2.3",
 	"description": "Dao.Casino app for bankroller",
 	"author": "Dao Casino <team@dao.casino>",
 	"repository": {
@@ -13,7 +13,7 @@
 	"meta": {
 		"_": "It used for generate manifest.json in ./scripts/favicons.js",
 		"start_url": "/",
-		"appName": "BankRollerApp App",
+		"appName": "BankRollerApp",
 		"appDescription": "Dao.Casino app for bankroller",
 		"background": "#1c2026",
 		"theme_color": "#1c2026",
@@ -26,7 +26,7 @@
 		"webserver": "npm run server & npm run serve_web",
 		"server": "NODE_ENV=server npm run build_server && node ./build/server.electron.js",
 		"serve_web": "node scripts/start.js",
-		"build": "npm run build_web & npm run build_server",
+		"build": "npm run build_web && npm run build_server",
 		"build_web": "node scripts/build.js",
 		"build_server": "npm run cp_electron & node scripts/build_server.js",
 		"cp_electron": "cp ./src/index.electron.js ./public/index.electron.js & cp ./src/index.electron.js ./build/index.electron.js & cp ./src/server.electron.js ./public/server.electron.js & cp ./src/server.electron.js ./build/server.electron.js & cp ./src/config.electron.js ./build/config.electron.js ",
@@ -45,6 +45,7 @@
 		"lint-staged": "lint-staged",
 		"check_build": "serve -s build -p 9000"
 	},
+	"__icons_creator": "https://iconverticons.com/online/",
 	"build": {
 		"appId": "com.daocasino.bankroller",
 		"files": [
@@ -64,6 +65,7 @@
 			"iconUrl": "https://raw.githubusercontent.com/DaoCasino/BankRollerApp/master/public/windows-icon.ico"
 		},
 		"mac": {
+			"icon": "public/icon.icns",
 			"category": "public.app-category.developer-tools"
 		}
 	},
@@ -115,9 +117,13 @@
 		"async-priority-queue": "^0.1.2",
 		"big-integer": "^1.6.25",
 		"bufferutil": "^3.0.2",
+		"devtron": "^1.4.0",
+		"electron-debug": "^1.4.0",
 		"eth-lightwallet": "^2.5.6",
 		"ethereumjs-abi": "^0.6.4",
+		"event-emitter": "^0.3.5",
 		"freeice": "^2.2.0",
+		"fs-extra": "^3.0.1",
 		"gun": "^0.8.4",
 		"highcharts": "^5.0.14",
 		"jquery": "^3.2.1",
@@ -127,10 +133,9 @@
 		"riot-route": "^3.1.2",
 		"rtc-mesh": "^1.0.0",
 		"rtc-quickconnect": "^5.8.0",
-		"solidity-sha3": "^0.4.1",
 		"toastr": "^2.1.2",
 		"utf-8-validate": "^3.0.3",
-		"web3": "github:ethereum/web3.js#1.0",
+		"web3": "git://github.com/ethereum/web3.js.git#1.0ES6",
 		"ydn.db": "^1.3.0"
 	},
 	"devDependencies": {
@@ -149,8 +154,8 @@
 		"chalk": "^2.1.0",
 		"css-loader": "^0.28.7",
 		"dotenv": "^4.0.0",
-		"electron": "^1.6.11",
-		"electron-builder": "^19.16.0",
+		"electron": "^1.7.8",
+		"electron-builder": "^19.33.0",
 		"eslint": "^4.6.1",
 		"eslint-loader": "^1.9.0",
 		"eslint-plugin-flowtype": "^2.35.1",
@@ -160,10 +165,8 @@
 		"extract-text-webpack-plugin": "^2.1.2",
 		"favicons": "^4.8.6",
 		"file-loader": "^0.11.2",
-		"fs-extra": "^3.0.1",
 		"html-webpack-plugin": "^2.30.1",
 		"jest": "20.0.4",
-		"lerna": "^2.2.0",
 		"less": "^2.7.2",
 		"less-loader": "^4.0.5",
 		"lint-staged": "^4.0.0",

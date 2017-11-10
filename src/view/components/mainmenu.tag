@@ -8,9 +8,9 @@ import route from 'riot-route'
 				name:'Wallet',
 				active:true,
 			},
-			bankroll:{
-				link:'#bankroll',
-				name:'Bankroll',
+			dev:{
+				link:'#dev',
+				name:'DEV',
 				active:false,
 			},
 			referer:{

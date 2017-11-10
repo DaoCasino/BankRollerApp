@@ -19,7 +19,7 @@ export default class ethRPC {
 		return new Promise((resolve, reject) => {
 			try	{
 				let res = this.callMethod(method_name, params, id, (response)=>{
-					if (response) {
+					if (response && !response.error) {
 						resolve( response )
 					} else {
 						reject( response )
@@ -53,8 +53,14 @@ export default class ethRPC {
 		}).then( response => {
 			return response.json()
 		}).then( obj => {
+			if (obj.error) {
+				console.info(method_name, params)
+				console.error(obj)
+			}
 			callback( obj )
 		}).catch( err => {
+			console.info(method_name, params)
+			console.error(err)
 			callback( err )
 		})
 	}
