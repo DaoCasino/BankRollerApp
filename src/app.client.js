@@ -1,6 +1,6 @@
 // import _config from 'app.config'
-import View    from 'view/app.view'
-import DApps   from 'DApps/DApps'
+import View  from 'view/app.view'
+import DApps from 'DApps/DApps'
 
 if (window) {
 	window.App = {}

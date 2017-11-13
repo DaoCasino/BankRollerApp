@@ -1,0 +1,240 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, maximum-scale=1.0"/>
+		<meta name="HandheldFriendly" content="True"/>
+		<title>Dice Game Channels</title>
+
+		<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/min/1.5/min.min.css">
+		<link rel="stylesheet" type="text/css" href="./styles.css">
+
+		<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha256-k2WSCIexGzOj3Euiig+TlR8gA0EmPjuc79OEeY5L45g=" crossorigin="anonymous"></script>
+		
+
+		<!-- DCLib https://github.com/DaoCasino/DCLib -->
+		<script src="./lib/DC.js"></script>
+		
+		<!-- our Dapp core logic -->
+		<script src="./dapp_logic.js"></script>
+
+		<script>
+			$(document).ready( function(){
+
+				// Create our DApp
+				DCLib.on('ready', function(){
+					window.MyDApp = new DCLib.DApp({code :'dicedapp_v2'})
+				})
+				
+
+				// Init interface
+				initView({
+					// Create DApp and open payment channel
+					onSetDeposit : startGame,
+				
+					// call DApp functions, and send res to bankroller 
+					onRoll       : callDAppFunc,
+				
+					// close payment channel, destroy DApp
+					onEndGame    : endGame,
+				})
+			})
+			
+
+			function startGame(deposit){
+				MyDApp.connect({
+					bankroller : 'auto', 
+					paychannel : { deposit : deposit } 
+				},
+				function(connected, info){
+					console.log('connect result:', connected)
+					console.log('connect info:', info)
+					if (!connected) return 
+
+					let maxbet = DCLib.Utils.bet2dec( info.channel.player_deposit )
+
+					$('#user_bet')[0].max = Math.ceil( maxbet )
+					$('#user_bet').val( (maxbet*0.1).toFixed(2) )
+
+					$('body').addClass('cur-step-2').addClass('cur-step-3')
+				})
+			}
+
+			function callDAppFunc(user_bet, user_num){
+				MyDApp.call(
+					// function name and args
+					'roll', [user_bet, user_num, DCLib.randomHash() ],
+
+					// result
+					function(res, advanced){
+						console.log('result', res )
+						console.log('advanced', advanced )
+	
+						renderGames()
+
+						var ubets = Game.payChannel.getBalance()
+						$('#user_bet').max = ubets
+					},
+
+					// log
+					function(log){
+						$('#play_log').append('<div> >> '+log+'</div>')
+					}
+				)
+
+			}
+
+			function endGame(){
+				MyDApp.disconnect({}, function(res){
+					console.log('disconnect result', res)
+				})	
+			}
+
+
+			
+			function initView(callbacks){
+				let deposit_set = false
+				const updBalance = function(){
+					$('#user_balance').text('...')
+					
+					DCLib.Account.info(function(info){
+						$('#user_balance').text(info.balance.bet)
+						$('#user_balance_eth').text(info.balance.eth)
+						
+						setTimeout(updBalance, 30000)
+
+						if (info.balance.bet > 0) {
+							$('body').addClass('cur-step-1')
+
+							if (!deposit_set) {
+								deposit_set = true
+								d = (info.balance.bet*0.5).toFixed(2)
+								if (d>1) { d = 1 }
+								$('#user_deposit').val( d )
+							}
+						}
+					})
+				}
+				updBalance()
+
+
+				$('body').addClass('cur-step-1')
+				$('#loading').hide()
+				$('#content').show()
+
+				$('#user_address').html('<a target="_blank" href="https://ropsten.etherscan.io/address/'+DCLib.Account.get().openkey+'">'+DCLib.Account.get().openkey+'</a>')
+				$('#faucet').attr('href', 'https://platform.dao.casino/faucet?to='+DCLib.Account.get().openkey)
+
+				$('.step-1 form').on('submit', function(e){
+					e.preventDefault()
+
+					$(this).addClass('disabled')
+
+					var deposit = $('#user_deposit').val()
+					
+					callbacks.onSetDeposit( deposit )					
+				})
+
+
+				$('form.step-2').on('submit', function(e){
+					e.preventDefault()
+
+					$(this).addClass('disabled')
+
+					var user_bet = $('#user_bet').val()
+					var user_num = $('#user_num').val()
+
+					callbacks.onRoll(user_bet, user_num)
+				})
+
+				$('form.step-3').on('submit', function(e){
+					e.preventDefault()
+
+					callbacks.onEndGame()
+				})
+			}
+
+
+			function renderGames(history){
+				if (typeof Game === 'undefined') {
+					window.Game = MyDApp.logic
+				}
+
+				history = history || Game.history
+				var ghtml = ''
+				for(var k in history){
+					var g = history[k]
+					ghtml += '<tr><td>'+g.user_bet+'</td><td>'+g.user_num+'</td><td><span class="hash">'+g.random_hash+'</span></td><td>'+g.random_num+'</td><td>'+g.profit+'</td></tr>'
+				}
+
+				ghtml = '<table><thead><tr><th>bet</th><th>num</th><th>hash</th><th>random</th><th>profit</th></tr></thead><tbody>'+ghtml+'</tbody><tfoot><tr><th colspan="5">Game Balance: '+Game.payChannel.getBalance()+'</th></tr></tfoot></table>'
+
+				$('#games_list').html(ghtml)
+			}
+		</script>
+	</head>
+	<body class="cur-step-0">
+
+		<p id="loading">Loading...</p>
+
+		<section id="content" style="display: none">
+
+			<div id="user" class="step step-0">
+				<h3>0. Create account, get BETs</h3>
+				<p>
+					<b>addr</b>: &nbsp;<span id="user_address"></span>
+					<br>
+					<br>
+					<b>BET</b>: &nbsp;<span id="user_balance"></span>
+					<b>ETH</b>: &nbsp;<span id="user_balance_eth"></span>
+					&nbsp;
+					<a id="faucet" target="_blank" href="">faucet</a>
+				</p>
+			</div>
+
+			<div class="step step-1">
+				<h3>1. Open game-channel</h3>
+
+				<form>
+					<label>
+						Set game deposit:
+						<input id="user_deposit" type="number" value="1.1" min="0" max="4" step="0.1">
+					</label>
+					<input type="submit" value="Set">
+				</form>
+
+				<div id="open_log">
+
+				</div>
+			</div>
+
+			<form class="step step-2">
+				<h3>2. Play</h3>
+				<label>
+					your bet:
+					<input id="user_bet" type="number" value="1" min="0" max="4" step="0.1">
+				</label>
+				<label>
+					your num:
+					<input id="user_num" type="number" value="35000" min="0" max="65000" step="1">
+				</label>
+
+				<input type="submit" value="Roll">
+
+				<div id="play_log"></div>
+				<div id="games_list"></div>
+			</form>
+
+			<form class="step step-3">
+				<h3>3. Close game-channel</h3>
+
+				<div id="close_info"></div>
+				<input type="submit" value="Close">
+
+				<div id="close_log"></div>
+			</form>
+
+
+		</section>
+	</body>
+</html>

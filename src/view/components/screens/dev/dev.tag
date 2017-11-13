@@ -12,7 +12,6 @@
 	</script>
 
 	<div id="dev" class={screen:true, loading:this.loading}>
-
 		<div class="upload-area">
 			<dapps_list></dapps_list>
 		</div>

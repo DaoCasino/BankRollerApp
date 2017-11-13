@@ -119,6 +119,10 @@ import './dapps_list.less'
 		}
 	</script>
 
+	<div class="links">
+		<a target="_blank" href="{dapps_path}/example.zip">Download DApp exmaple</a>
+		<a target="_blank" href="https://github.com/DaoCasino/DCLib">Read docs</a>
+	</div>
 
 	<table id="dapps_list">
 		<caption>DApps</caption>
@@ -126,6 +130,9 @@ import './dapps_list.less'
 			
 			<div class="dapp" each={dapp in dapps}>
 				<span class="code">{dapp.config.name}</span>
+				
+
+				<p class="local-path"><b>Local path</b>: {dapps_path}{dapp.config.code}</p>
 
 				<div class={config:true, show:dapp.show_config}>
 					<a onclick={toggleConfig} href="#config">show dapp.manifest</a>
@@ -133,6 +140,7 @@ import './dapps_list.less'
 				</div>
 
 				<div class="actions">
+					<a class="open-in-browser" target="_blank" href="{dapp.frontend_url}">Open in browser</a>
 					<a onclick={remove} href="#remove">remove</a>
 					<a onclick={deployIPFS} href="#upload_ips">deploy 2 IPFS</a>
 				</div>
