@@ -103,7 +103,6 @@ const DApps = {
 				config : dapp_config,
 				path   : full_path,
 			}
-
 			this.list[dir] = dapp_data
 		})
 	},
@@ -154,10 +153,10 @@ const DApps = {
 
 		fse.copySync( 
 			cp_from,
-			dapps_path + dapp_config.name 
+			dapps_path + dapp_config.code 
 		)
 
-		this.init([dapp_config.name], callback )
+		this.init([dapp_config.code], callback )
 	},
 
 	remove: function(key, callback){
