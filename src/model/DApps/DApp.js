@@ -88,15 +88,23 @@ const max_users = 9
  */
 export default class DApp {
 	constructor(params) {
-		if (!params.code || !params.logic) {
+		if (!params.code) {
 			console.error('Create DApp error', params)
-			throw new Error('code and logic is required')
+			throw new Error('code option is required')
 			return
 		}
 
+		let G = window || global
+
+		if (!G.DAppsLogic || !G.DAppsLogic[params.code]) {
+			console.log('First you need define your DApp logic')
+			console.log('Example DCLib.defineDAppLogic("'+params.code+'", function(){...})')
+			throw new Error('Cant find DApp logic')
+		}
+
 		this.code  = params.code
-		this.logic = params.logic		
-		this.hash  = Utils.checksum( params.logic )
+		this.logic = G.DAppsLogic[this.code]		
+		this.hash  = Utils.checksum( this.logic )
 		this.users = {}
 
 		this.sharedRoom = new Rtc( (_openkey || false) , 'dapp_room_'+this.hash )
@@ -105,7 +113,7 @@ export default class DApp {
 		console.info(' >>> Unique DApp logic checksum/hash would be used for connect to bankrollers:')
 		console.info('%c SHA3: %c' + this.hash , 'background:#333; padding:3px 0px 3px 3px;', 'color:orange; background:#333; padding:3px 10px 3px 3px;')
 		console.groupCollapsed('Logic string')
-		console.log( Utils.clearcode( params.logic ) )
+		console.log( Utils.clearcode( this.logic ) )
 		console.groupEnd()
 		console.groupEnd()
 
@@ -400,7 +408,7 @@ export default class DApp {
 				from     : _openkey,
 			})
 			.on('transactionHash', transactionHash=>{
-				console.log('# openchannel TX pending', transactionHash)
+				console.log('# closechannel TX pending', transactionHash)
 				console.log('https://ropsten.etherscan.io/tx/'+transactionHash)
 				console.log('⏳ wait receipt...')
 			})

@@ -1,0 +1,9 @@
+{
+	"name" : "Dice DApp Example",
+	"code" : "dicedapp_v2",
+
+	"index" : "./index.html",
+	"logic" : "./dapp_logic.js",
+
+	"run"   : "./bankroller.js"
+}

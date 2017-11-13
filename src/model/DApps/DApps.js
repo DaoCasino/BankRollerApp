@@ -16,7 +16,7 @@ import * as Utils from '../utils'
 
 
 let loaded_dapps = []
-const injectDAppScript = function(key, url){
+const injectDAppScript = function(key, url, callback){
 	if (typeof document === 'undefined') {
 		return
 	}
@@ -29,65 +29,27 @@ const injectDAppScript = function(key, url){
 	}
 
 	setTimeout(()=>{
-		var script = document.createElement('script')
-		script.id  = script_id
-		script.src = url
+		console.log('injectDAppScript', url)
+		var script  = document.createElement('script')
+		script.id   = script_id
+		script.src  = url
+
 		script.onload = script.onreadystatechange = function() {
 			//console.log('script '+url+' loaded')
+			callback()
 		}
 		document.body.appendChild(script)
 	}, 1000)
 }
 
 
-
-
-/*
- * Lib constructor
- */ 
-class _DCLib {
-	constructor() {
-		this.Account = Account
-		this.web3    = Account.web3
-		this.Utils   = Utils
-		this.DApp    = DApp
-
-		// Init ERC20 contract
-		this.ERC20 = new this.web3.eth.Contract(
-			_config.contracts.erc20.abi, 
-			_config.contracts.erc20.address 
-		)
+const EthHelpers = class EthHelpers {
+	constructor(acc,web3,erc20) {
+		this.Account = acc
+		this.web3    = web3
+		this.ERC20   = erc20
 	}
 
-	randomHash(){
-		return this.Account.sign( Utils.makeSeed() ).messageHash
-	}
-
-	numFromHash(random_hash, min=0, max=100) {
-		if (min > max) { let c = min; min = max; max = c }
-		if (min==max) return max
-
-		if (random_hash.length > 3 && random_hash.substr(0,2)=='0x' ) {
-			random_hash = random_hash.substr(2)
-		}
-
-		max++
-		return Utils.bigInt(random_hash,16).divmod(max-min).remainder.value + min
-	}
-
-	sigRecover(raw_msg, signed_msg){
-		raw_msg = Utils.remove0x(raw_msg)
-		return this.web3.eth.accounts.recover(raw_msg, signed_msg).toLowerCase()
-	}
-	
-	sigHashRecover(){
-		return this.web3.eth.accounts.recover(raw_msg, signed_msg).toLowerCase()
-	}
-	
-	checkSig(raw_msg, signed_msg, need_address){		
-		raw_msg = Utils.remove0x(raw_msg)
-		return ( need_address.toLowerCase() == this.web3.eth.accounts.recover(raw_msg, signed_msg).toLowerCase() )
-	}
 
 	async getBalances(address, callback=false){
 		const [bets, eth] = await Promise.all([
@@ -134,7 +96,72 @@ class _DCLib {
 			})
 		})
 	}
+}
 
+
+/*
+ * Lib constructor
+ */ 
+class _DCLib {
+	constructor() {
+		this.Account = Account
+		this.web3    = Account.web3
+		this.Utils   = Utils
+		this.DApp    = DApp
+		
+		// Init ERC20 contract
+		this.ERC20 = new this.web3.eth.Contract(
+			_config.contracts.erc20.abi, 
+			_config.contracts.erc20.address 
+		)
+		
+		this.Eth = new EthHelpers(Account, Account.web3, this.ERC20)
+	}
+
+	/**
+	 * Define DApp logic constructor function
+	 * @param {string} dapp_code         unique code of your dapp
+	 * @param {function} logic_constructor constructor Dapp logic
+	 */
+	defineDAppLogic(dapp_code, logic_constructor){
+		let G = window || global
+
+		if (!G.DAppsLogic) {
+			G.DAppsLogic = {}
+		}
+
+		G.DAppsLogic[dapp_code] = logic_constructor
+	}
+
+	randomHash(){
+		return this.Account.sign( Utils.makeSeed() ).messageHash
+	}
+
+	numFromHash(random_hash, min=0, max=100) {
+		if (min > max) { let c = min; min = max; max = c }
+		if (min==max) return max
+
+		if (random_hash.length > 3 && random_hash.substr(0,2)=='0x' ) {
+			random_hash = random_hash.substr(2)
+		}
+
+		max++
+		return Utils.bigInt(random_hash,16).divmod(max-min).remainder.value + min
+	}
+
+	sigRecover(raw_msg, signed_msg){
+		raw_msg = Utils.remove0x(raw_msg)
+		return this.web3.eth.accounts.recover(raw_msg, signed_msg).toLowerCase()
+	}
+	
+	sigHashRecover(){
+		return this.web3.eth.accounts.recover(raw_msg, signed_msg).toLowerCase()
+	}
+	
+	checkSig(raw_msg, signed_msg, need_address){		
+		raw_msg = Utils.remove0x(raw_msg)
+		return ( need_address.toLowerCase() == this.web3.eth.accounts.recover(raw_msg, signed_msg).toLowerCase() )
+	}
 }
 
 
@@ -175,6 +202,7 @@ export default new class DAppsAPIInit {
 
 	loadAll(){
 		fetch(_config.server+'/DApps/list/').then( r => { return r.json() }).then( list => {
+			console.log(list)
 			this.List = Object.assign({},list)
 			Object.keys(list).forEach( key => {
 				this.loadDApp(key)
@@ -190,7 +218,10 @@ export default new class DAppsAPIInit {
 			base = 'http://localhost:9999/'
 		}
 
+		let logic_script_url  = base + 'DApps/' + key +'/'+ this.List[key].config.logic
 		let client_script_url = base + 'DApps/' + key +'/'+ this.List[key].config.run.client
+
+		this.List[key].frontend_url = base + 'DApps/' + key +'/'+ this.List[key].config.index
 
 		if (!reload && loaded_dapps.indexOf(client_script_url)>-1) {
 			return
@@ -198,7 +229,9 @@ export default new class DAppsAPIInit {
 
 		loaded_dapps.push(client_script_url)
 
-		injectDAppScript(key, client_script_url)
+		injectDAppScript(key+'_logic', logic_script_url, function(){
+			injectDAppScript(key, client_script_url, function(){})
+		})
 	}
 
 

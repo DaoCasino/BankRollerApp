@@ -1,0 +1,53 @@
+html, body {
+	font-family: 'Roboto', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
+	font-size: 14px;
+	text-align: left;
+	padding: 20px 30px;
+
+	user-select: none;
+}
+
+#user_balance {
+	display: inline-block; min-width: 20px;
+}
+
+.step {
+	margin-bottom: 40px;
+}
+
+#open_log, #play_log  { margin: 10px 0;  }
+#open_log > div, #play_log > div {
+	font-size: 10px;
+	margin: 0px 0 2px 0;
+	border-bottom: 1px solid #f7f7f7;
+	padding: 3px 0 5px 3px;
+}
+
+.cur-step-0 .step-1 *, .cur-step-0 .step-2 * , .cur-step-0 .step-3 * {
+	pointer-events: none; opacity: 0.5;
+}
+.cur-step-1 .step-0 h3 { color: green; }
+.cur-step-1 .step-0 h3:before { content: '✔ '; margin: 10px 5px 10px -23px; }
+
+.cur-step-1 .step-1 * {
+	pointer-events: auto; opacity: 1;
+}
+
+.cur-step-2 .step-1 h3 { color: green; }
+.cur-step-2 .step-1 h3:before { content: '✔ '; margin: 10px 5px 10px -23px; }
+.cur-step-2 .step-2 * {
+	pointer-events: auto; opacity: 1;
+}
+.cur-step-3 .step-3 * {
+	pointer-events: auto; opacity: 1;
+}
+
+.disabled * {
+	pointer-events: none !important; opacity: 0.8 !important;
+}
+
+
+#games_list {}
+#games_list .hash { display:inline-block; overflow: hidden; max-width: 100px; }
+#games_list td, #games_list th {padding:3px;}
+#games_list th { text-transform:uppercase; font-weight:200; letter-spacing:1px; }
