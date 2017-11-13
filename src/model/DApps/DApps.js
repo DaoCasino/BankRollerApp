@@ -29,7 +29,6 @@ const injectDAppScript = function(key, url, callback){
 	}
 
 	setTimeout(()=>{
-		console.log('injectDAppScript', url)
 		var script  = document.createElement('script')
 		script.id   = script_id
 		script.src  = url
@@ -179,7 +178,6 @@ export default new class DAppsAPIInit {
 		
 		printDocs( G.DCLib )
 
-		console.log('get DApps info')
 		fetch(_config.server+'/DApps/info/')
 			.then( r => { return r.json() })
 			.then( info => {
@@ -205,7 +203,6 @@ export default new class DAppsAPIInit {
 
 	loadAll(){
 		fetch(_config.server+'/DApps/list/').then( r => { return r.json() }).then( list => {
-			console.log(list)
 			this.List = Object.assign({},list)
 			Object.keys(list).forEach( key => {
 				this.loadDApp(key)

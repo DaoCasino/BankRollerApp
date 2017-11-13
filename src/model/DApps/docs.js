@@ -30,11 +30,6 @@ export default function(DCLib){
 
 	console.group('Account')
 	
-	console.group('Eth Lightwallet')
-	console.log('lightwallet placed in DCLib.Account.lib ')
-	console.log('docs: https://github.com/ConsenSys/eth-lightwallet')
-	console.groupEnd()
-
 	console.group('Eth Account/Wallet')
 	console.log('Account info DCLib().Account.get():')
 	let accinfo = DCLib.Account.get()
