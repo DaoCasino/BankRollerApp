@@ -153,7 +153,7 @@ class _DCLib {
 		return this.web3.eth.accounts.recover(raw_msg, signed_msg).toLowerCase()
 	}
 	
-	sigHashRecover(){
+	sigHashRecover(raw_msg, signed_msg){
 		return this.web3.eth.accounts.recover(raw_msg, signed_msg).toLowerCase()
 	}
 	

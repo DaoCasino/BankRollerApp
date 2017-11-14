@@ -258,7 +258,7 @@ export default class Wallet {
 
 	signHash(hash){
 		if (!_privkey) return false
-		return signHash(hash, _privkey )
+		return signHash(hash, _privkey)
 	}
 
 }
