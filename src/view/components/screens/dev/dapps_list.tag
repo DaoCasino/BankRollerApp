@@ -1,5 +1,8 @@
 import DApps from 'DApps/DApps'
 import './dapps_list.less'
+
+const fs = require('fs')
+
 <dapps_list>
 	<script>
 
@@ -31,7 +34,7 @@ import './dapps_list.less'
 		this.on('mount', ()=>{
 			this.upd_i = setInterval(()=>{
 				this.dapps = DApps.List 
-				this.dapps_path = DApps.info.dapps_path
+				this.dapps_path = DApps.info.dapps_path.split(/\/\w+\/\.\./i).join('')
 				this.update()
 			}, 1000)
 
