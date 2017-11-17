@@ -120,7 +120,7 @@ import './dapps_list.less'
 	</script>
 
 	<div class="links">
-		<a target="_blank" href="{dapps_path}/example.zip">Download DApp exmaple</a>
+		<a target="_blank" href="https://github.com/DaoCasino/BankRollerApp/raw/master/DApps/example.zip">Download DApp exmaple</a>
 		<a target="_blank" href="https://github.com/DaoCasino/DCLib">Read docs</a>
 	</div>
 

@@ -13,7 +13,8 @@ import RPC from './RPC'
 const rpc = new RPC( _config.rpc_url )
 
 let _web3acc
-let _wallet = false
+let _wallet  = false
+let _privkey = false 
 
 export default class Wallet {
 	constructor() {
@@ -78,7 +79,7 @@ export default class Wallet {
 		return new Promise((resolve, reject) => {	
 			this.getPwDerivedKey( PwDerivedKey => {
 				let private_key = this.getKs().exportPrivateKey(_wallet.addr, PwDerivedKey)
-
+				_privkey = private_key
 				if(callback) callback(private_key)
 				resolve(private_key)
 			})
@@ -255,8 +256,16 @@ export default class Wallet {
 		return _web3acc.sign(raw)
 	}
 
-	async signHash(hash){
-		return signHash(hash, (await this.exportPrivateKey()) )
+	signHash(hash){
+		if (!_privkey) return false
+
+		hash = Utils.add0x(hash)
+		if (this.web3.utils.isHexStrict(hash)) {
+			console.log(hash+' is incorrect hex')
+			console.log('Use DCLib.Utils.makeSeed or Utils.soliditySHA3(your_args) to create valid hash')
+		}
+
+		return signHash(hash, Utils.add0x(_privkey))
 	}
 
 }

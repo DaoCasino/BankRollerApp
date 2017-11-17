@@ -348,7 +348,7 @@ export default class DApp {
 
 		if (receipt.transactionHash) {
 			// Set deposit in logic
-			this.users[params.user_id].logic.payChannel.setDeposit( player_deposit )
+			this.users[params.user_id].logic.payChannel.setDeposit( Utils.bet2dec(player_deposit) )
 		}
 
 		this.response(params, { receipt:receipt }, response_room)

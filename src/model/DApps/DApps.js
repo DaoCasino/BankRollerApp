@@ -29,7 +29,6 @@ const injectDAppScript = function(key, url, callback){
 	}
 
 	setTimeout(()=>{
-		console.log('injectDAppScript', url)
 		var script  = document.createElement('script')
 		script.id   = script_id
 		script.src  = url
@@ -154,12 +153,15 @@ class _DCLib {
 		return this.web3.eth.accounts.recover(raw_msg, signed_msg).toLowerCase()
 	}
 	
-	sigHashRecover(){
+	sigHashRecover(raw_msg, signed_msg){
 		return this.web3.eth.accounts.recover(raw_msg, signed_msg).toLowerCase()
 	}
 	
 	checkSig(raw_msg, signed_msg, need_address){		
 		raw_msg = Utils.remove0x(raw_msg)
+		return ( need_address.toLowerCase() == this.web3.eth.accounts.recover(raw_msg, signed_msg).toLowerCase() )
+	}
+	checkHashSig(raw_msg, signed_msg, need_address){		
 		return ( need_address.toLowerCase() == this.web3.eth.accounts.recover(raw_msg, signed_msg).toLowerCase() )
 	}
 }
@@ -176,7 +178,6 @@ export default new class DAppsAPIInit {
 		
 		printDocs( G.DCLib )
 
-		console.log('get DApps info')
 		fetch(_config.server+'/DApps/info/')
 			.then( r => { return r.json() })
 			.then( info => {
@@ -202,7 +203,6 @@ export default new class DAppsAPIInit {
 
 	loadAll(){
 		fetch(_config.server+'/DApps/list/').then( r => { return r.json() }).then( list => {
-			console.log(list)
 			this.List = Object.assign({},list)
 			Object.keys(list).forEach( key => {
 				this.loadDApp(key)
