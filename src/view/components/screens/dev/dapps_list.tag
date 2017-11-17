@@ -1,8 +1,6 @@
 import DApps from 'DApps/DApps'
 import './dapps_list.less'
 
-const fs = require('fs')
-
 <dapps_list>
 	<script>
 
