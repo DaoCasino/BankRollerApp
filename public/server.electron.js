@@ -23,7 +23,7 @@ const filetypes = {
  */
 
 // Find DApps folder for current ENV
-let dapps_path = __dirname+_config.dapps_path
+let dapps_path = __dirname + _config.dapps_path
 if (typeof app != 'undefined') {
 	dapps_path = (app.getPath('userData') + _config.dapps_path).split('//').join('/')
 	
