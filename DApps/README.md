@@ -82,7 +82,7 @@ Example:
 <script src="https://platform.dao.casino/api/lib/v2/DC.js?v=2"></script> <!-- connect library DC.js -->
 <script src="dapp_logic.js"></script> <!-- connect logic file -->
 <script>
-    window.MyDApp = new DCLib.DApp({code :'dicedapp_v2'})
+    window.App = new DCLib.DApp({code :'dicedapp_v2'})
     App.connect({bankroller : "auto"}, function(connected){
       if (connected) {
         var randomHash = DCLib.Utils.makeSeed();
