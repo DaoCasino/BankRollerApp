@@ -1,0 +1,63 @@
+<script src="lib/DC.js?v=2"></script> <!-- connect library DC.js -->
+<script src="dapp_logic.js"></script> <!-- connect logic file -->
+
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha256-k2WSCIexGzOj3Euiig+TlR8gA0EmPjuc79OEeY5L45g=" crossorigin="anonymous"></script>
+		
+<p>
+					<b>addr</b>: &nbsp;<span id="user_address"></span>
+					<br>
+					<br>
+					<b>BET</b>: &nbsp;<span id="user_balance"></span>
+					<b>deposit</b>: &nbsp;<span id="user_deposit"></span>
+					<b>ETH</b>: &nbsp;<span id="user_balance_eth"></span>
+					&nbsp;
+					<a id="faucet" target="_blank" href="">faucet</a>
+				</p>
+	Правила игры "даблер". <br>
+	1. Ставите ставку получаете x2, но только если кто то еще другой поставит. <br>
+	2. Если после вас никто не нажмет "еще", то вы теряете свою ставку. <br>
+	3. Жмите "Хватит", чтоб забрать бабло и выйти из игры (дисконект)<br>
+	
+	<input type='button' id='f1' onclick='App.connect({bankroller : "auto",paychannel : { deposit : 0.01 } },function(connected, info){$(".isopen").show();$("#f1").hide();});' value='Поехали'> 
+	 
+	<input type='button' style='display:none' class='isopen' onclick='App.call("register", [DCLib.Account.get().openkey], function(d){$("#curbet").html(d)});' value='Еще'> 
+	<input type='button' style='display:none' class='isopen' onclick='App.call("getpayout", [DCLib.Account.get().openkey],function(){ App.disconnect(); alert("Вроде канал закрывается, но это не точно");});' value='Хватит'> 
+				
+	<h2 id='curbet'></h2>
+<script>
+
+  var deposit_set;
+	const updBalance = function(){
+					$('#user_balance').text('...')
+					
+					DCLib.Account.info(function(info){
+						$('#user_balance').text(info.balance.bet)
+						$('#user_balance_eth').text(info.balance.eth)
+						
+						setTimeout(updBalance, 30000)
+
+						if (info.balance.bet > 0) {
+							$('body').addClass('cur-step-1')
+
+							if (!deposit_set) {
+								deposit_set = true
+								d = (info.balance.bet*0.5).toFixed(2)
+								if (d>1) { d = 1 }
+								$('#user_deposit').val( d )
+							}
+						}
+					})
+				}
+				updBalance()
+		$('#user_address').html('<a target="_blank" href="https://ropsten.etherscan.io/address/'+DCLib.Account.get().openkey+'">'+DCLib.Account.get().openkey+'</a>')
+		
+		
+
+	    
+	DCLib.on("ready",function(){
+	
+		window.App = new DCLib.DApp({code :"bitcoiner"});
+	
+	});	
+	
+</script>
