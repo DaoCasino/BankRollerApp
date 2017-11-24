@@ -12,7 +12,7 @@ DCLib.defineDAppLogic('dicedapp_v2', function(){
 
 	var Roll = function(user_bet, user_num, random_hash){
 		// convert 1BET to 100000000
-		user_bet = DCLib.Utils.bet4dec(user_bet)
+		user_bet = DCLib.Utils.bet2dec(user_bet)
 
 		// generate random number
 		const random_num = DCLib.numFromHash(random_hash, 0, 65536)

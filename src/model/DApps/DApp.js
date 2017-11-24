@@ -106,7 +106,8 @@ export default class DApp {
 		this.logic = G.DAppsLogic[this.code]		
 		this.hash  = Utils.checksum( this.logic )
 		this.users = {}
-
+		this.contract_address = params.contract.contract_address
+		this.contract_abi = params.contract.contract_abi
 		this.sharedRoom = new Rtc( (_openkey || false) , 'dapp_room_'+this.hash )
 
 		console.groupCollapsed('DApp %c'+this.code+' %ccreated','color:orange','color:default')
@@ -116,8 +117,6 @@ export default class DApp {
 		console.log( Utils.clearcode( this.logic ) )
 		console.groupEnd()
 		console.groupEnd()
-
-
 
 		// Sending beacon messages to room
 		// that means we are online
@@ -269,11 +268,20 @@ export default class DApp {
 	PayChannel(){
 		if (this.PayChannelContract) return this.PayChannelContract
 
-		const pay_contract_abi     = _config.contracts.paychannel.abi
-		const pay_contract_address = _config.contracts.paychannel.address
+		let pay_contract_abi = ''
+		let pay_contract_address = ''
 
-		this.PayChannelContract    = new web3.eth.Contract( pay_contract_abi, pay_contract_address )
-		
+		if (this.contract_address && this.contract_abi) {
+			pay_contract_abi = this.contract_abi
+			pay_contract_address = this.contract_address
+		} else {
+			pay_contract_abi = _config.contracts.paychannel.abi
+			pay_contract_address = _config.contracts.paychannel.address
+		}
+
+		console.log(pay_contract_address)
+		this.PayChannelContract = new web3.eth.Contract(pay_contract_abi, pay_contract_address)
+
 		return this.PayChannelContract
 	}
 
@@ -282,21 +290,28 @@ export default class DApp {
 
 		console.log('_openChannel', params)
 		
+		if (typeof params.open_args.gamedata === 'undefined') {
+			console.error('Error! game data not found')
+		}
+
 		const channel_id         = params.open_args.channel_id
 		const player_address     = params.user_id
 		const bankroller_address = _openkey
 		const player_deposit     = params.open_args.player_deposit
 		const bankroller_deposit = params.open_args.player_deposit*2
 		const session            = params.open_args.session
+		const game_data          = params.open_args.gamedata
 		const ttl_blocks         = params.open_args.ttl_blocks
 		const signed_args        = params.open_args.signed_args
+		const paychannel         = new paychannelLogic(parseInt(bankroller_deposit))
+		const approve            = await ERC20approve(this.PayChannel().options.address, bankroller_deposit*1000)
 
+		let rec_openkey = ''
 
-		const approve = await ERC20approve(this.PayChannel().options.address, bankroller_deposit*1000)
+		game_data
+			? rec_openkey = web3.eth.accounts.recover( Utils.sha3(channel_id, player_address, bankroller_address, player_deposit, bankroller_deposit, session, ttl_blocks, game_data), signed_args )
+		    : rec_openkey = web3.eth.accounts.recover(Utils.sha3(channel_id, player_address, bankroller_address, player_deposit, bankroller_deposit, session, ttl_blocks), signed_args )
 
-		console.log(channel_id, player_address, bankroller_address, player_deposit, bankroller_deposit, session, ttl_blocks)
-
-		const rec_openkey = web3.eth.accounts.recover( Utils.sha3(channel_id, player_address, bankroller_address, player_deposit, bankroller_deposit, session, ttl_blocks), signed_args )
 		if (player_address!=rec_openkey) {
 			console.error('🚫 invalid sig on open channel', rec_openkey)
 			this.response(params, { error:'Invalid sig' }, response_room)
@@ -306,14 +321,14 @@ export default class DApp {
 		// возвращает лимит газа аж на целый блок
 		// из-за чего транзакцию никто не майнит, т.к. она одна на весь блок
 		// const gasLimit = await this.PayChannel().methods.open(channel_id,player_address,bankroller_address,player_deposit,bankroller_deposit,session,ttl_blocks, signed_args).estimateGas({from: _openkey})
-		
+				
 		const gasLimit = 900000
-		
+
 		console.log('Send open channel trancsaction')
 		console.log('⛽ gasLimit:', gasLimit)
 		
 		const receipt = await this.PayChannel().methods
-			.open(
+			.openChannel(
 				channel_id         , // random bytes32 id
 				player_address     ,
 				bankroller_address ,
@@ -321,7 +336,8 @@ export default class DApp {
 				bankroller_deposit ,
 				session            , // integer num/counter
 				ttl_blocks         , // channel ttl in blocks count
-				signed_args
+				game_data.value    ,
+				signed_args        
 			).send({
 				gas      : gasLimit,
 				gasPrice : 1.2 * _config.gasPrice,
@@ -332,10 +348,10 @@ export default class DApp {
 				console.log('https://ropsten.etherscan.io/tx/'+transactionHash)
 				console.log('⏳ wait receipt...')
 			})
-			.on('error', err=>{ 
-				console.warn('Open channel error', err)
-				this.response(params, { error:'cant open channel', more:err }, response_room)
-			})
+			// .on('error', err=>{ 
+			// 	console.warn('Open channel error', err)
+			// 	this.response(params, { error:'cant open channel', more:err }, response_room)
+			// })
 		
 		console.log('open channel result', receipt)
 
@@ -348,7 +364,7 @@ export default class DApp {
 
 		if (receipt.transactionHash) {
 			// Set deposit in logic
-			this.users[params.user_id].logic.payChannel.setDeposit( Utils.bet2dec(player_deposit) )
+			this.users[params.user_id].logic.payChannel.setDeposit( Utils.dec2bet(player_deposit) )
 		}
 
 		this.response(params, { receipt:receipt }, response_room)
@@ -358,14 +374,17 @@ export default class DApp {
 		const response_room = this.users[params.user_id].room
 		console.log('_closeChannel', params)
 
+
 		const channel_id         =  params.close_args.channel_id         // bytes32 id, 
 		const player_balance     =  params.close_args.player_balance     // uint playerBalance, 
 		const bankroller_balance =  params.close_args.bankroller_balance // uint bankrollBalance, 
-		const session            =  0 // uint session=0px 
+		const session            =  params.close_args.session            // uint session=0px 
 		const signed_args        =  params.close_args.signed_args 
+		const bool               =  params.close_args.bool
 
 		// Check Sig
-		const rec_openkey = web3.eth.accounts.recover( Utils.sha3(channel_id, player_balance, bankroller_balance, session), signed_args )
+		const rec_openkey = web3.eth.accounts.recover( Utils.sha3(channel_id, player_balance, bankroller_balance, session, bool), signed_args )
+		
 		if (params.user_id != rec_openkey) {
 			console.error('🚫 invalid sig on open channel', rec_openkey)
 			this.response(params, { error:'Invalid sig' }, response_room)
@@ -378,7 +397,7 @@ export default class DApp {
 
 		const l_player_balance     =  user_profit + channel.player_deposit
 		const l_bankroller_balance = -user_profit + channel.bankroller_deposit
-		
+
 		if (l_player_balance!=player_balance || l_bankroller_balance!=bankroller_balance) {
 			console.error('Invalid profit',{
 				l_player_balance     : l_player_balance,
@@ -391,7 +410,7 @@ export default class DApp {
 		}
 
 
-		const gasLimit = 900000
+		const gasLimit = 4600000
 		console.log('Send close channel trancsaction')
 		console.log('⛽ gasLimit:', gasLimit)
 
@@ -401,6 +420,7 @@ export default class DApp {
 				player_balance,
 				bankroller_balance,
 				session,
+				bool,
 				signed_args,
 			).send({
 				gas      : gasLimit,
@@ -412,10 +432,10 @@ export default class DApp {
 				console.log('https://ropsten.etherscan.io/tx/'+transactionHash)
 				console.log('⏳ wait receipt...')
 			})
-			.on('error', err=>{ 
-				console.warn('Close channel error', err)
-				this.response(params, { error:'cant close channel', more:err }, response_room)
-			})
+			// .on('error', err=>{ 
+			// 	console.warn('Close channel error', err)
+			// 	this.response(params, { error:'cant close channel', more:err }, response_room)
+			// })
 
 		console.log('Close channel receipt', receipt)
 		if (receipt.transactionHash) {
