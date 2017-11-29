@@ -1,7 +1,0 @@
-{
-  "name"  : "Bitcoiner",
-  "code"  : "bitcoiner",
-  "index" : "./index.html",
-  "logic" : "./dapp_logic.js",
-  "run"   : "./backend.js"
-}
