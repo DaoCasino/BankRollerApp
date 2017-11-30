@@ -11,7 +11,11 @@ export const dec2bet = function(val, r=2){
 }
 
 export const bet2dec = function(val){
-	return val*100000000
+	let b = ''+(val*100000000)
+	if (b.indexOf('.')>-1) {
+		b = b.split('.')[0]*1
+	}
+	return b*1
 }
 
 

@@ -106,9 +106,17 @@ export default class DApp {
 		this.logic = G.DAppsLogic[this.code]		
 		this.hash  = Utils.checksum( this.logic )
 		this.users = {}
-		this.contract_address = params.contract.contract_address
-		this.contract_abi = params.contract.contract_abi
-		this.sharedRoom = new Rtc( (_openkey || false) , 'dapp_room_'+this.hash )
+		this.sharedRoom       = new Rtc( (_openkey || false) , 'dapp_room_'+this.hash )
+
+		if (params.contract) {
+			console.log('Your contract is add')
+			this.contract_address = params.contract.contract_address
+			this.contract_abi     = params.contract.contract_abi
+		} else {
+			console.log('Standart payChannel contract is add')
+			this.contract_address = _config.contracts.paychannel.address
+			this.contract_abi     = _config.contracts.paychannel.abi
+		}
 
 		console.groupCollapsed('DApp %c'+this.code+' %ccreated','color:orange','color:default')
 		console.info(' >>> Unique DApp logic checksum/hash would be used for connect to bankrollers:')
@@ -228,6 +236,12 @@ export default class DApp {
 				console.log('user room action close channel')
 				this._closeChannel(data)
 			}
+			if (data.action=='update_state') {
+				this._updateState(data)
+			}
+			if (data.action=='break_connect') {
+				this._breacConnetion(data)
+			} 
 
 			// call user logic function
 			if (data.action=='call') {
@@ -266,20 +280,16 @@ export default class DApp {
 	}
 
 	PayChannel(){
-		if (this.PayChannelContract) return this.PayChannelContract
+		if (this.PayChannelContract ) return this.PayChannelContract
 
 		let pay_contract_abi = ''
 		let pay_contract_address = ''
 
-		if (this.contract_address && this.contract_abi) {
-			pay_contract_abi = this.contract_abi
+		if (typeof this.contract_address != 'undefined' && typeof this.contract_abi != 'undefined') {
+			pay_contract_abi     = this.contract_abi
 			pay_contract_address = this.contract_address
-		} else {
-			pay_contract_abi = _config.contracts.paychannel.abi
-			pay_contract_address = _config.contracts.paychannel.address
 		}
 
-		console.log(pay_contract_address)
 		this.PayChannelContract = new web3.eth.Contract(pay_contract_abi, pay_contract_address)
 
 		return this.PayChannelContract
@@ -288,6 +298,8 @@ export default class DApp {
 	async _openChannel(params){
 		const response_room = this.users[params.user_id].room
 
+
+
 		console.log('_openChannel', params)
 		
 		if (typeof params.open_args.gamedata === 'undefined') {
@@ -295,7 +307,7 @@ export default class DApp {
 		}
 
 		const channel_id         = params.open_args.channel_id
-		const player_address     = params.user_id
+		const player_address     = params.open_args.player_address
 		const bankroller_address = _openkey
 		const player_deposit     = params.open_args.player_deposit
 		const bankroller_deposit = params.open_args.player_deposit*2
@@ -304,8 +316,9 @@ export default class DApp {
 		const ttl_blocks         = params.open_args.ttl_blocks
 		const signed_args        = params.open_args.signed_args
 		const paychannel         = new paychannelLogic(parseInt(bankroller_deposit))
-		const approve            = await ERC20approve(this.PayChannel().options.address, bankroller_deposit*1000)
+		const approve            = await ERC20approve(this.PayChannel().options.address, bankroller_deposit*10000)
 
+		this.player_address = player_address
 		let rec_openkey = ''
 
 		game_data
@@ -348,10 +361,10 @@ export default class DApp {
 				console.log('https://ropsten.etherscan.io/tx/'+transactionHash)
 				console.log('⏳ wait receipt...')
 			})
-			// .on('error', err=>{ 
-			// 	console.warn('Open channel error', err)
-			// 	this.response(params, { error:'cant open channel', more:err }, response_room)
-			// })
+			.on('error', err=>{ 
+				console.warn('Open channel error', err)
+				this.response(params, { error:'cant open channel', more:err }, response_room)
+			})
 		
 		console.log('open channel result', receipt)
 
@@ -432,18 +445,47 @@ export default class DApp {
 				console.log('https://ropsten.etherscan.io/tx/'+transactionHash)
 				console.log('⏳ wait receipt...')
 			})
-			// .on('error', err=>{ 
-			// 	console.warn('Close channel error', err)
-			// 	this.response(params, { error:'cant close channel', more:err }, response_room)
-			// })
+			.on('error', err=>{ 
+				console.warn('Close channel error', err)
+				this.response(params, { error:'cant close channel', more:err }, response_room)
+			})
 
 		console.log('Close channel receipt', receipt)
 		if (receipt.transactionHash) {
+			this.users[params.user_id].logic.payChannel.reset()
 			delete this.users[params.user_id].paychannel
 		}
 
 		this.response(params, { receipt:receipt }, response_room)
 	}
+
+	_updateState(params, callback=false) {
+
+		const response_room      = this.users[params.update_args.player_address].room
+		const channel_id         = params.update_args.channel_id
+		const player_address     = params.update_args.player_address
+		const player_balance     = params.update_args.player_balance
+		const bankroller_balance = params.update_args.bankroller_balance
+		const session            = params.update_args.session
+		const signed_args        = params.update_args.signed_args
+
+		const rec_openkey = web3.eth.accounts.recover( Utils.sha3(channel_id, player_balance, bankroller_balance, session), signed_args )
+
+		
+		if (player_address!=rec_openkey) {
+			console.error('🚫 invalid sig on open channel', rec_openkey)
+			this.response(params, { error:'Invalid sig' }, response_room)
+			return
+		}
+
+
+		const signed_bankroller = Account.signHash(DCLib.Utils.sha3(channel_id, player_balance, bankroller_balance, session))
+
+		this.response(params, {signed_bankroller:signed_bankroller}, response_room)
+
+	}
+
+	_breakConnetion(params, callback=false) { console.log('player disconnected') }
 
 	// Send message and wait response
 	request(params, callback=false, Room=false){

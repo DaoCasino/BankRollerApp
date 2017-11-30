@@ -71,7 +71,7 @@ export default class PayChannel {
 	
 	
 	getProfit(){ 
-		console.log('PayChannel::getProfit')
+		console.log('PayChannel::getProfit _profit')
 		return Utils.dec2bet(_profit)  
 	}
 	
@@ -93,9 +93,6 @@ export default class PayChannel {
 		_profit += p*1
 		balance.player_balance = deposit.player_deposit + _profit
 		balance.bankroller_balance = deposit.bankroller_deposit - _profit
-		
-		console.log('@@@@@@@@@@@@@@@@@@@@@@', _profit, deposit.player_deposit, deposit.bankroller_deposit, balance.bankroller_balance)
-
 
 		_history.push({
 			profit    : p,
