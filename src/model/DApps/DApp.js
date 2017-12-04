@@ -103,7 +103,7 @@ export default class DApp {
 		this.hash         = Utils.checksum( this.logic )
 		this.users        = {}
 		this.sharedRoom   = new Rtc( (_openkey || false) , 'dapp_room_'+this.hash )
-		this.timer        = 300
+		this.timer        = 10
 		this.checkTimeout = 0
 
 		if (params.contract) {
@@ -166,9 +166,11 @@ export default class DApp {
 		const connection_id = Utils.makeSeed()
 		const user_id       = params.user_id
 
-		console.log('PrevCreate',this.users[user_id])
-
-		if(this.users[user_id]) return 
+		if(this.users[user_id]) {
+			if (this.users[user_id].channel) {
+				return
+			} else this.users[user_id].logic.payChannel.reset()
+		}
 
 		this.users[user_id] = {
 			id    : connection_id                  ,
@@ -176,8 +178,6 @@ export default class DApp {
 			logic : payChannelWrap(this.logic)     ,
 			room  : new Rtc( _openkey, this.hash+'_'+connection_id )
 		}
-
-		console.log('Create room', this.users[user_id])
 
 		const signMsg = async (rawMsg=false)=>{
 			if (!rawMsg) return ''
@@ -241,7 +241,7 @@ export default class DApp {
 				console.log('User reconnect')
 				this._reconnect(data)
 			}
-			if (data.action=='close_timeout') { this.timer = 300 }
+			if (data.action=='close_timeout') { this.timer = 10 }
 
 			// call user logic function
 			if (data.action=='call') {
@@ -264,6 +264,7 @@ export default class DApp {
 
 			if (data.action=='disconnect') {
 				console.log('User '+data.user_id+' disconnected')
+
 				User.room.off('all', listen_all)
 				delete(this.users[data.user_id])
 				this.response(data, {disconnected:true}, User.room)
@@ -364,9 +365,9 @@ export default class DApp {
 		
 		console.log('open channel result', receipt)
 
-		this.checkTimeout = setTimeout(run = () => {
+		const checkTimeout = setTimeout(run = () => {
 			
-			if (this.timer === 0) { this._closeByTimeout(this.checkTimeout) }
+			if (this.timer === 0) { this._closeByTimeout(checkTimeout) }
 			this.timer--
 			setTimeout(run, 1000)
 		}, 1000)
@@ -461,9 +462,9 @@ export default class DApp {
 		this.response(params, { receipt:receipt }, response_room)
 	}
 
-	_closeByTimeout() {
+	async _closeByTimeout(checkTimeout) {
 
-		clearTimeout(this.checkTimeout)
+		clearTimeout(checkTimeout)
 
 		const bankroller_balance = this.users.state_data.bankroller_balance
 		const player_address     = this.users.state_data.player_address    
@@ -472,8 +473,9 @@ export default class DApp {
 		const session            = this.users.state_data.session           
 		const bool               = this.users.state_data.bool              
 		const signed_args        = this.users.state_data.signed_args   
+		const response_room  	 = this.users[player_address].room
 
-		console.warn('Check player', signed_args)
+		const receipt = await this.request({action: 'timeout', data: {msg:'msg'}})
 
 		this._closeChannel({
 			user_id    : player_address                 ,
@@ -524,6 +526,8 @@ export default class DApp {
 
 	// Send message and wait response
 	request(params, callback=false, Room=false){
+		Room = Room || this.users[this.users.state_data.player_address].room
+
 		if (!Room) {
 			console.error('request room not set!')
 			return
