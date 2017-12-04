@@ -6,10 +6,10 @@ import Rtc      from 'rtc'
 import DApp     from './DApp'
 import {AsyncPriorityQueue, AsyncTask} from 'async-priority-queue'
 
-import printDocs from './docs'
-
+import printDocs  from './docs'
 // for dapps
-import Wallet from 'Eth/Wallet'
+import Wallet     from 'Eth/Wallet'
+
 const Account = new Wallet()
 
 import * as Utils from '../utils'
@@ -17,16 +17,12 @@ import * as Utils from '../utils'
 
 let loaded_dapps = []
 const injectDAppScript = function(key, url, callback){
-	if (typeof document === 'undefined') {
-		return
-	}
+	if (typeof document === 'undefined') { return }
 
 	const script_id = 'daap_script_'+key
 
-	let old_script = document.getElementById(script_id)
-	if (old_script) {
-		document.body.removeChild(old_script)
-	}
+	let old_script  = document.getElementById(script_id)
+	if (old_script) { document.body.removeChild(old_script) }
 
 	setTimeout(()=>{
 		var script  = document.createElement('script')
@@ -86,7 +82,7 @@ const EthHelpers = class EthHelpers {
 		return new Promise((resolve, reject) => {
 			
 			this.ERC20.methods.balanceOf(address).call().then( value => {
-				const balance = Utils.bet2dec(value) 
+				const balance = Utils.dec2bet(value) 
 				resolve( balance )
 				if(callback) callback( balance )
 			}).catch( err => {
@@ -96,7 +92,6 @@ const EthHelpers = class EthHelpers {
 		})
 	}
 }
-
 
 /*
  * Lib constructor
@@ -125,16 +120,11 @@ class _DCLib {
 	defineDAppLogic(dapp_code, logic_constructor){
 		let G = window || global
 
-		if (!G.DAppsLogic) {
-			G.DAppsLogic = {}
-		}
-
+		if (!G.DAppsLogic) { G.DAppsLogic = {} }
 		G.DAppsLogic[dapp_code] = logic_constructor
 	}
 
-	randomHash(){
-		return this.Account.sign( Utils.makeSeed() ).messageHash
-	}
+	randomHash() { return this.Account.sign( Utils.makeSeed() ).messageHash }
 
 	numFromHash(random_hash, min=0, max=100) {
 		if (min > max) { let c = min; min = max; max = c }
@@ -186,9 +176,7 @@ export default new class DAppsAPIInit {
 	}
 
 
-	start(){
-		this.loadAll()
-	}
+	start() { this.loadAll() }
 
 	remove(key, callback){
 		fetch(_config.server+'/DApps/remove/'+key).then( r => {
@@ -214,18 +202,14 @@ export default new class DAppsAPIInit {
 		if (!this.List[key]) return
 
 		let base = '/'
-		if (location && location.port*1 !== 9999) {
-			base = 'http://localhost:9999/'
-		}
+		if (location && location.port*1 !== 9999) { base = 'http://localhost:9999/' }
 
 		let logic_script_url  = base + 'DApps/' + key +'/'+ this.List[key].config.logic
 		let client_script_url = base + 'DApps/' + key +'/'+ this.List[key].config.run.client
 
 		this.List[key].frontend_url = base + 'DApps/' + key +'/'+ this.List[key].config.index
 
-		if (!reload && loaded_dapps.indexOf(client_script_url)>-1) {
-			return
-		}
+		if (!reload && loaded_dapps.indexOf(client_script_url)>-1) { return }
 
 		loaded_dapps.push(client_script_url)
 
@@ -256,9 +240,7 @@ export default new class DAppsAPIInit {
 
 
 		const findManifest = function(item, path) {
-			if (!item || manifest_finded) {
-				return
-			}
+			if (!item || manifest_finded) { return }
 
 			path = path || ''
 			if (item.isFile) {
@@ -267,7 +249,6 @@ export default new class DAppsAPIInit {
 						manifest_finded = true
 
 						uploadFolder(file, path)
-						
 						return
 					}
 				})
