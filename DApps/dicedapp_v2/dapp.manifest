@@ -1,6 +1,6 @@
 {
-	"name" : "DiceDAppExample2",
-	"code" : "dicedapp_v2",
+	"name" : "multyplayerExample",
+	"code" : "multy_v2",
 
 	"index" : "./index.html",
 	"logic" : "./dapp_logic.js",
