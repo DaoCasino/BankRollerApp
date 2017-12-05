@@ -2,6 +2,6 @@
   "github":{
     "release":true,
     "preRelease":true,
-    "assets":"dist/*.(zip|exe)"
+    "assets":"dist/BankRollerApp*.*"
   }
 }
