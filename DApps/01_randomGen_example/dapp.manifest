@@ -1,7 +1,0 @@
-{
-  "name"  : "01_randomGen_example",
-  "slug"  : "01_randomGen_example",
-  "index" : "./index.html",
-  "logic" : "./game_logic.js",
-  "run"   : "./backend.js"
-}
