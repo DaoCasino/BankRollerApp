@@ -88,7 +88,7 @@ import './dapps_list.less'
 		this.remove = e =>{
 			e.preventDefault()
 			let key = e.item.dapp.config.name
-			if (confirm(`You should want to remove ${key} dapp?`)) {
+			// if (confirm(`You should want to remove ${key} dapp?`)) {
 				DApps.remove(key, ()=>{
 					Object.keys(this.dapps).forEach(d=>{
 						if ( d.toLowerCase() === key.toLowerCase() ) {
@@ -97,7 +97,7 @@ import './dapps_list.less'
 					})
 					this.update()
 				})
-			}
+			// }
 		}
 
 		this.jsonPrint = d =>{
@@ -121,7 +121,7 @@ import './dapps_list.less'
 	</script>
 
 	<div class="links">
-		<a target="_blank" href="https://github.com/DaoCasino/BankRollerApp/raw/master/DApps/example.zip">Download DApp exmaple</a>
+		<a target="_blank" href="https://github.com/DaoCasino/BankRollerApp/raw/master/DApps/example.zip">Download DApp example</a>
 		<a target="_blank" href="https://github.com/DaoCasino/DCLib">Read docs</a>
 	</div>
 

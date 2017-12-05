@@ -6,12 +6,16 @@ const web3_sha3 = require('web3/packages/web3-utils').soliditySha3
 export const sha3 = web3_sha3
 
 
-export const bet2dec = function(val, r=2){
+export const dec2bet = function(val, r=2){
 	return +(val / 100000000).toFixed(r)
 }
 
-export const bet4dec = function(val){
-	return val*100000000
+export const bet2dec = function(val){
+	let b = ''+(val*100000000)
+	if (b.indexOf('.')>-1) {
+		b = b.split('.')[0]*1
+	}
+	return b*1
 }
 
 
