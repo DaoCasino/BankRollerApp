@@ -1,6 +1,6 @@
 {
-	"name" : "multyplayerExample",
-	"code" : "multy_v2",
+	"name" : "Dice Game v.2",
+	"slug" : "dicegame_v3",
 
 	"index" : "./index.html",
 	"logic" : "./dapp_logic.js",

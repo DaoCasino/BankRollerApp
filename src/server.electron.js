@@ -23,7 +23,7 @@ const filetypes = {
  */
 
 // Find DApps folder for current ENV
-let dapps_path = __dirname+_config.dapps_path
+let dapps_path = __dirname + _config.dapps_path
 if (typeof app != 'undefined') {
 	dapps_path = (app.getPath('userData') + _config.dapps_path).split('//').join('/')
 	
@@ -107,17 +107,21 @@ const DApps = {
 		})
 	},
 
-	readManifest: function(path){
-		try	{
-			let dapp_config = JSON.parse(fs.readFileSync(path))	
-			if (typeof dapp_config.run !== 'object') {
-				let str = ''+dapp_config.run 
-				dapp_config.run = {client:str}
+	readManifest: function(file_path){
+		const tryReadFile = (path)=>{	
+			try	{
+				let dapp_config = JSON.parse(fs.readFileSync(path))	
+				if (typeof dapp_config.run !== 'object') {
+					let str = ''+dapp_config.run 
+					dapp_config.run = {client:str}
+				}
+				return dapp_config
+			} catch(e){
+				return false
 			}
-			return dapp_config
-		} catch(e){
-			return false
 		}
+
+		return tryReadFile(file_path) || tryReadFile(file_path+'.json')
 	},
 
 	upload: function(data, callback){
@@ -153,10 +157,10 @@ const DApps = {
 
 		fse.copySync( 
 			cp_from,
-			dapps_path + dapp_config.code 
+			dapps_path + dapp_config.slug 
 		)
 
-		this.init([dapp_config.code], callback )
+		this.init([dapp_config.slug], callback )
 	},
 
 	remove: function(key, callback){

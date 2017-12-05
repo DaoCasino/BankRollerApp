@@ -23,7 +23,7 @@
 
 				// Create our DApp
 				DCLib.on('ready', function(){
-					window.MyDApp = new DCLib.DApp({code :'dicedapp_v2'})
+					window.MyDApp = new DCLib.DApp({slug : 'dicegame_v3'})
 				})
 				
 
@@ -43,15 +43,16 @@
 
 			function startGame(deposit){
 				MyDApp.connect({
-					bankroller : 'auto', 
-					paychannel : { deposit : deposit } 
+					bankroller : '0x146c5e3b9395738eb67feceb5e37cd5a56d63342', 
+					paychannel : { deposit : deposit } ,
+					gamedata   : {type:'uint', value: [0, 0, 0]}
 				},
 				function(connected, info){
 					console.log('connect result:', connected)
 					console.log('connect info:', info)
 					if (!connected) return 
 
-					let maxbet = DCLib.Utils.bet2dec( info.channel.player_deposit )
+					let maxbet = DCLib.Utils.dec2bet( info.channel.player_deposit )
 
 					$('#user_bet')[0].max = Math.ceil( maxbet )
 					$('#user_bet').val( (maxbet*0.1).toFixed(2) )
@@ -198,7 +199,7 @@
 				<form>
 					<label>
 						Set game deposit:
-						<input id="user_deposit" type="number" value="1.1" min="0" max="4" step="0.1">
+						<input id="user_deposit" type="number" value="1.1" min="0" max="4" step="0.001">
 					</label>
 					<input type="submit" value="Set">
 				</form>
@@ -212,7 +213,7 @@
 				<h3>2. Play</h3>
 				<label>
 					your bet:
-					<input id="user_bet" type="number" value="1" min="0" max="4" step="0.1">
+					<input id="user_bet" type="number" value="1" min="0" max="4" step="0.001">
 				</label>
 				<label>
 					your num:
