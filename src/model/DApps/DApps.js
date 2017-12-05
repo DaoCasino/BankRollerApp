@@ -114,14 +114,14 @@ class _DCLib {
 
 	/**
 	 * Define DApp logic constructor function
-	 * @param {string} dapp_code         unique code of your dapp
+	 * @param {string} dapp_slug         unique slug of your dapp
 	 * @param {function} logic_constructor constructor Dapp logic
 	 */
-	defineDAppLogic(dapp_code, logic_constructor){
+	defineDAppLogic(dapp_slug, logic_constructor){
 		let G = window || global
 
 		if (!G.DAppsLogic) { G.DAppsLogic = {} }
-		G.DAppsLogic[dapp_code] = logic_constructor
+		G.DAppsLogic[dapp_slug] = logic_constructor
 	}
 
 	randomHash() { return this.Account.sign( Utils.makeSeed() ).messageHash }

@@ -79,6 +79,9 @@ export default class PayChannel {
 		return _profit 
 	}
 	
+	updateBalance(p, convert=true){
+		return this.addTX
+	}
 	addTX(p, convert=true){
 		console.log('PayChannel::addTX')
 		if (convert) {

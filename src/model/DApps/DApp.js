@@ -84,22 +84,23 @@ const max_users = 9
  */
 export default class DApp {
 	constructor(params) {
-		if (!params.code) {
+		if (!params.slug) {
 			console.error('Create DApp error', params)
-			throw new Error('code option is required')
+			throw new Error('slug option is required')
 			return
 		}
 
 		let G = window || global
 
-		if (!G.DAppsLogic || !G.DAppsLogic[params.code]) {
+		if (!G.DAppsLogic || !G.DAppsLogic[params.slug]) {
 			console.log('First you need define your DApp logic')
-			console.log('Example DCLib.defineDAppLogic("'+params.code+'", function(){...})')
+			console.log('Example DCLib.defineDAppLogic("'+params.slug+'", function(){...})')
 			throw new Error('Cant find DApp logic')
 		}
 
-		this.code         = params.code
-		this.logic        = G.DAppsLogic[this.code]		
+		this.slug         = params.slug
+		this.code         = params.slug || params.code
+		this.logic        = G.DAppsLogic[this.slug]		
 		this.hash         = Utils.checksum( this.logic )
 		this.users        = {}
 		this.sharedRoom   = new Rtc( (_openkey || false) , 'dapp_room_'+this.hash )
@@ -116,7 +117,7 @@ export default class DApp {
 			this.contract_abi     = _config.contracts.paychannel.abi
 		}
 
-		console.groupCollapsed('DApp %c'+this.code+' %ccreated','color:orange','color:default')
+		console.groupCollapsed('DApp %c'+this.slug+' %ccreated','color:orange','color:default')
 		console.info(' >>> Unique DApp logic checksum/hash would be used for connect to bankrollers:')
 		console.info('%c SHA3: %c' + this.hash , 'background:#333; padding:3px 0px 3px 3px;', 'color:orange; background:#333; padding:3px 10px 3px 3px;')
 		console.groupCollapsed('Logic string')
@@ -140,7 +141,7 @@ export default class DApp {
 					action  : 'bankroller_active',
 					deposit : bets*100000000     ,
 					dapp    : {
-						code : this.code         ,
+						slug : this.slug         ,
 						hash : this.hash
 					}
 				})
@@ -156,7 +157,9 @@ export default class DApp {
 			if (!data || !data.action || data.action=='bankroller_active') { return }
 
 			// User want to connect
-			if (data.action=='connect') { this._newUser(data) }
+			if (data.action=='connect' && data.slug==this.slug) { 
+				this._newUser(data) 
+			}
 		})
 	}
 
@@ -276,7 +279,7 @@ export default class DApp {
 
 		setTimeout(()=>{
 			this.response(params, {id:connection_id}, this.sharedRoom)
-			console.log('User '+user_id+' connected to '+this.code)
+			console.log('User '+user_id+' connected to '+this.slug)
 		}, 999)
 	}
 
