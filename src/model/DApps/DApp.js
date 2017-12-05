@@ -103,7 +103,7 @@ export default class DApp {
 		this.hash         = Utils.checksum( this.logic )
 		this.users        = {}
 		this.sharedRoom   = new Rtc( (_openkey || false) , 'dapp_room_'+this.hash )
-		this.timer        = 10
+		this.timer        = 30
 		this.checkTimeout = 0
 
 		if (params.contract) {
@@ -169,7 +169,7 @@ export default class DApp {
 		if(this.users[user_id]) {
 			if (this.users[user_id].channel) {
 				return
-			} else this.users[user_id].logic.payChannel.reset()
+			}else this.users[user_id].logic.payChannel.reset()
 		}
 
 		this.users[user_id] = {
@@ -234,14 +234,16 @@ export default class DApp {
 				console.log('user room action close channel')
 				this._closeChannel(data)
 			}
+
 			if (data.action=='update_state') {
 				this._updateState(data)
 			}
-			if (data.action=='reconnect') {
-				console.log('User reconnect')
-				this._reconnect(data)
+
+			if (data.action=='check_channel') {
+				console.log('Check')
+				this.response(data, {state_channel:User.channel_state}, User.room)
 			}
-			if (data.action=='close_timeout') { this.timer = 10 }
+			if (data.action=='close_timeout') { this.timer = 30 }
 
 			// call user logic function
 			if (data.action=='call') {
@@ -264,7 +266,6 @@ export default class DApp {
 
 			if (data.action=='disconnect') {
 				console.log('User '+data.user_id+' disconnected')
-
 				User.room.off('all', listen_all)
 				delete(this.users[data.user_id])
 				this.response(data, {disconnected:true}, User.room)
@@ -384,12 +385,13 @@ export default class DApp {
 			this.users[params.user_id].logic.payChannel.setDeposit( Utils.dec2bet(player_deposit) )
 		}
 
+		this.users[params.user_id].channel_state = true
 		this.response(params, { receipt:receipt }, response_room)
 	}
 	
 	async _closeChannel(params){
 
-		const response_room      = this.users[params.user_id].room
+		const response_room      =  this.users[params.user_id].room
 		const channel_id         =  params.close_args.channel_id         // bytes32 id,
 		const player_balance     =  params.close_args.player_balance     // uint playerBalance,
 		const bankroller_balance =  params.close_args.bankroller_balance // uint bankrollBalance,
@@ -411,8 +413,8 @@ export default class DApp {
 		const channel     = this.users[params.user_id].paychannel
 		const user_profit = this.users[params.user_id].logic.payChannel._getProfit()
 
-		const l_player_balance     =  user_profit + channel.player_deposit
-		const l_bankroller_balance = -user_profit + channel.bankroller_deposit
+		const l_player_balance     = Utils.bet2dec(this.users[params.user_id].logic.payChannel.getBalance())
+		const l_bankroller_balance = Utils.bet2dec(this.users[params.user_id].logic.payChannel.getBankrollBalance())
 
 		if (l_player_balance!=player_balance || l_bankroller_balance!=bankroller_balance) {
 			console.error('Invalid profit',{
@@ -454,8 +456,8 @@ export default class DApp {
 			})
 
 		console.log('Close channel receipt', receipt)
+		this.users[params.user_id].logic.payChannel.reset()
 		if (receipt.transactionHash) {
-			this.users[params.user_id].logic.payChannel.reset()
 			delete this.users[params.user_id].paychannel
 		}
 
@@ -475,7 +477,9 @@ export default class DApp {
 		const signed_args        = this.users.state_data.signed_args   
 		const response_room  	 = this.users[player_address].room
 
-		const receipt = await this.request({action: 'timeout', data: {msg:'msg'}})
+		console.log('@@@@@@@@@@@@@@@',bankroller_balance)
+
+		this.users[player_address].channel_state = false
 
 		this._closeChannel({
 			user_id    : player_address                 ,
@@ -488,6 +492,7 @@ export default class DApp {
 				signed_args        : signed_args
 			}
 		})
+
 	}
 
 	_updateState(params, callback=false) {

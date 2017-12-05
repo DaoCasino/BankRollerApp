@@ -33,6 +33,7 @@
 		"run_electron": "npm run cp_electron; electron .",
 		"build_electron": "build -mwl --x64 --ia32",
 		"build_electron_windows": "build -w --x64",
+		"build_electron_windows_32": "build -w --ia32",
 		"build_electron_linux": "build -l --x64",
 		"build_electron_mac": "build -m --x64",
 		"favicons": "node scripts/favicons.js",
