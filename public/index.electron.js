@@ -20,7 +20,7 @@ const url  = require('url')
 require('electron-debug')({
 	enabled:      true  ,
 	showDevTools: false ,
-});
+})
 
 
 // Check updates
@@ -87,9 +87,9 @@ function createWindow () {
 	const trayIcon = new Tray(path.join(__dirname, 'static/icons/icon-38.png'))
 	trayIcon.setToolTip('Dao.Casino')
 	trayIcon.setContextMenu(Menu.buildFromTemplate([
-		// { label: 'Show App', click:() => {
-		// 	mainWindow.show()
-		// } },
+		{ label: 'Show Dev Tools', click:() => {
+			mainWindow.webContents.openDevTools()
+		} },
 		{ label: 'Quit', click:() => {
 			app.isQuiting = true
 			app.quit()
