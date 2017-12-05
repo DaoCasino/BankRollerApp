@@ -2,7 +2,7 @@
  * Define our DApp logic constructor, 
  * for use it in frontend and bankroller side
  */
-DCLib.defineDAppLogic('dicedapp_v2', function(){
+DCLib.defineDAppLogic('dicegame_v3', function(){
 	const _self = this
 
 	const MAX_RAND_NUM = 65536
