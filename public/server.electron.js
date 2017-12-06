@@ -5,7 +5,9 @@ const queryp  = require('querystring')
 const fs      = require('fs')
 const Gun     = require('gun')
 const fse     = require('fs-extra')
+const watch   = require('node-watch')
 const {app}   = require('electron')
+
 
 const filetypes = {
 	'.js':   'text/javascript',
@@ -83,6 +85,8 @@ const DApps = {
 		setInterval(()=>{
 			this.readDirs()
 		}, 5000)
+
+		this.watchChanges()
 	},
 
 	readDirs(){
@@ -173,6 +177,17 @@ const DApps = {
 			console.log('!!! Remove folder ', full_path)
 			fse.removeSync(full_path)
 			delete(this.list[d])
+		})
+	},
+
+	watchChanges: function(){
+		var io = require('socket.io')({origins:'http://localhost:*'})
+		io.on('connection', function(client){})
+		io.listen(9997)
+		console.log('watchChanges in', dapps_path)
+		watch(dapps_path, { recursive: true }, function(evt, name) {
+			console.log(evt+' '+name)
+			io.emit('reload_page', 'filechanged '+name+'')
 		})
 	},
 
@@ -320,7 +335,6 @@ const server = http.createServer(function (request, response) {
 })
 
 server.listen(_config.http_port)
-
 
 global.GunDB  = Gun({file: _config.database, web: server })
 global.fetch  = require('node-fetch')
