@@ -36,6 +36,11 @@ export default class PayChannel {
 		})
 		console.groupEnd()
 	}
+
+	setDepositBankroll(d) {
+		console.log('Set Deposit bankroll', d)
+		deposit.bankroller = d
+	}
 	
 	
 	setDeposit(d){

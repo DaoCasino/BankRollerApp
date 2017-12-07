@@ -105,7 +105,7 @@ export default class DApp {
 		this.users        = {}
 		this.sharedRoom   = new Rtc( (_openkey || false) , 'dapp_room_'+this.hash )
 		this.timer        = 30
-		this.checkTimeout = 0
+		this.state_close  = true
 
 		if (params.contract) {
 			console.log('Your contract is add')
@@ -242,11 +242,12 @@ export default class DApp {
 				this._updateState(data)
 			}
 
-			if (data.action=='check_channel') {
+			if (data.action=='close_timeout') { 
+				this.timer = 30
 				console.log('Check')
 				this.response(data, {state_channel:User.channel_state}, User.room)
+ 
 			}
-			if (data.action=='close_timeout') { this.timer = 30 }
 
 			// call user logic function
 			if (data.action=='call') {
@@ -303,22 +304,31 @@ export default class DApp {
 	async _openChannel(params){
 		const response_room = this.users[params.user_id].room
 
+		if (this.users[params.user_id].channel_state === true) return
+
+		this.users[params.user_id].channel_state = true
+		this.state_close = true
+
+		const bankroller_deposit = params.open_args.player_deposit*2
+		const paychannel = new paychannelLogic(parseInt(bankroller_deposit))
+		paychannel.reset()
+
+
 		if (typeof params.open_args.gamedata === 'undefined') { console.error('Error! game data not found') }
 
 		const channel_id         = params.open_args.channel_id
 		const player_address     = params.open_args.player_address
 		const bankroller_address = _openkey
 		const player_deposit     = params.open_args.player_deposit
-		const bankroller_deposit = params.open_args.player_deposit*2
 		const session            = params.open_args.session
 		const game_data          = params.open_args.gamedata
 		const ttl_blocks         = params.open_args.ttl_blocks
 		const signed_args        = params.open_args.signed_args
-		const paychannel         = new paychannelLogic(parseInt(bankroller_deposit))
 		const approve            = await ERC20approve(this.PayChannel().options.address, bankroller_deposit*10000)
 
+		paychannel.setDepositBankroll(parseInt(bankroller_deposit))
+
 		this.player_address = player_address
-		let run             = '' 
 		let rec_openkey     = ''
 
 		game_data
@@ -369,13 +379,6 @@ export default class DApp {
 		
 		console.log('open channel result', receipt)
 
-		const checkTimeout = setTimeout(run = () => {
-			
-			if (this.timer === 0) { this._closeByTimeout(checkTimeout) }
-			this.timer--
-			setTimeout(run, 1000)
-		}, 1000)
-
 		this.users[params.user_id].paychannel = {
 			channel_id         : channel_id         ,
 			player_deposit     : player_deposit     ,
@@ -386,13 +389,15 @@ export default class DApp {
 		if (receipt.transactionHash) {
 			// Set deposit in logic
 			this.users[params.user_id].logic.payChannel.setDeposit( Utils.dec2bet(player_deposit) )
+			this._closeByTimeout()
 		}
 
-		this.users[params.user_id].channel_state = true
 		this.response(params, { receipt:receipt }, response_room)
 	}
 	
 	async _closeChannel(params){
+
+		this.state_close         = false
 
 		const response_room      =  this.users[params.user_id].room
 		const channel_id         =  params.close_args.channel_id         // bytes32 id,
@@ -419,15 +424,17 @@ export default class DApp {
 		const l_player_balance     = Utils.bet2dec(this.users[params.user_id].logic.payChannel.getBalance())
 		const l_bankroller_balance = Utils.bet2dec(this.users[params.user_id].logic.payChannel.getBankrollBalance())
 
-		if (l_player_balance!=player_balance || l_bankroller_balance!=bankroller_balance) {
-			console.error('Invalid profit',{
-				l_player_balance     : l_player_balance     ,
-				player_balance       : player_balance       ,
-				l_bankroller_balance : l_bankroller_balance ,
-				bankroller_balance   : bankroller_balance
-			})
-			this.response(params, { error:'Invalid profit' }, response_room)
-			return
+		if (!params.close_args.timeout) {
+			if (l_player_balance!=player_balance || l_bankroller_balance!=bankroller_balance) {
+				console.error('Invalid profit',{
+					l_player_balance     : l_player_balance     ,
+					player_balance       : player_balance       ,
+					l_bankroller_balance : l_bankroller_balance ,
+					bankroller_balance   : bankroller_balance
+				})
+				this.response(params, { error:'Invalid profit' }, response_room)
+				return
+			}
 		}
 
 
@@ -459,7 +466,7 @@ export default class DApp {
 			})
 
 		console.log('Close channel receipt', receipt)
-		this.users[params.user_id].logic.payChannel.reset()
+		// this.users[params.user_id].logic.payChannel.reset()
 		if (receipt.transactionHash) {
 			delete this.users[params.user_id].paychannel
 		}
@@ -467,35 +474,42 @@ export default class DApp {
 		this.response(params, { receipt:receipt }, response_room)
 	}
 
-	async _closeByTimeout(checkTimeout) {
+	async _closeByTimeout() {
+		this.timer = 30
+		let run
+		const checkTimeout = setTimeout(run = () => {
+			if (this.timer < 5) {
+				if (this.state_close==false) { return }
 
-		clearTimeout(checkTimeout)
+				const bankroller_balance = this.users.state_data.bankroller_balance
+				const player_address     = this.users.state_data.player_address    
+				const channel_id         = this.users.state_data.channel_id        
+				const player_balance     = this.users.state_data.player_balance    
+				const session            = this.users.state_data.session           
+				const bool               = this.users.state_data.bool              
+				const signed_args        = this.users.state_data.signed_args   
+				const response_room  	 = this.users[player_address].room
 
-		const bankroller_balance = this.users.state_data.bankroller_balance
-		const player_address     = this.users.state_data.player_address    
-		const channel_id         = this.users.state_data.channel_id        
-		const player_balance     = this.users.state_data.player_balance    
-		const session            = this.users.state_data.session           
-		const bool               = this.users.state_data.bool              
-		const signed_args        = this.users.state_data.signed_args   
-		const response_room  	 = this.users[player_address].room
+				this.users[player_address].channel_state = false
 
-		console.log('@@@@@@@@@@@@@@@',bankroller_balance)
-
-		this.users[player_address].channel_state = false
-
-		this._closeChannel({
-			user_id    : player_address                 ,
-			close_args : {
-				channel_id         : channel_id         ,
-				player_balance     : player_balance     ,
-				bankroller_balance : bankroller_balance ,
-				session            : session            ,
-				bool               : bool               ,
-				signed_args        : signed_args
+				this._closeChannel({
+				    user_id    : player_address                 ,
+				    close_args : {
+				        channel_id         : channel_id         ,
+				        player_balance     : player_balance     ,
+				        bankroller_balance : bankroller_balance ,
+				        session            : session            ,
+				        bool               : bool               ,
+				        signed_args        : signed_args        ,
+				        timeout            : true
+				    }
+				})
+				return
 			}
-		})
-
+			this.timer--
+			console.log(this.timer)
+			setTimeout(run, 1000)
+		}, 1000)
 	}
 
 	_updateState(params, callback=false) {
