@@ -152,6 +152,36 @@ export default class Wallet {
 		})
 	}
 
+	getAccountFromServer(){
+		if (localStorage && localStorage.account_from_server) {
+			if (localStorage.account_from_server=='wait') {
+				return new Promise((resolve, reject) => {
+					let waitTimer = ()=>{ setTimeout(()=>{
+						if (localStorage.account_from_server.privateKey) {
+							resolve(localStorage.account_from_server)
+						} else {
+							waitTimer()
+						}
+					}, 1000) }
+					waitTimer()
+				})
+			}
+			return
+		}
+
+		if (localStorage) localStorage.account_from_server = 'wait'
+		return fetch('https://platform.dao.casino/faucet?get=account').then(res=>{
+			return res.json()
+		}).then(acc=>{
+			console.log('Server account data:', acc)
+			if (localStorage) localStorage.account_from_server = acc
+			_wallet.openkey = acc.address
+			return acc.privateKey
+		}).catch(e=>{
+			return false
+		})
+	}
+
 	async getNonce(callback=false){
 		if (this.nonce) {
 			this.nonce++
