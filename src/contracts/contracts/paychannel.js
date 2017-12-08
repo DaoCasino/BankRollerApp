@@ -1,20 +1,17 @@
 /*
-	    ___                           __    _______                      __
-	  / _ \___ ___ ____ _  ___ ___  / /_  / ___/ /  ___ ____  ___  ___ / /
-	 / ___/ _ `/ // /  ' \/ -_) _ \/ __/ / /__/ _ \/ _ `/ _ \/ _ \/ -_) / 
-	/_/   \_,_/\_, /_/_/_/\__/_//_/\__/  \___/_//_/\_,_/_//_/_//_/\__/_/  
-	          /___/                                                       
-	    
-    Dao.Casino PaymentChannleContract
-    0x029c61e3e9958b06bb63cc5c213c47cd114ab971
-    https://ropsten.etherscan.io/address/0x029c61e3e9958b06bb63cc5c213c47cd114ab971#code
-
-    version 1.0
-    more about payment channels: 
-    https://en.bitcoin.it/wiki/Payment_channels
-*/
-
-
+ 	    ___                           __    _______                      __
+ 	  / _ \___ ___ ____ _  ___ ___  / /_  / ___/ /  ___ ____  ___  ___ / /
+ 	 / ___/ _ `/ // /  ' \/ -_) _ \/ __/ / /__/ _ \/ _ `/ _ \/ _ \/ -_) / 
+ 	/_/   \_,_/\_, /_/_/_/\__/_//_/\__/  \___/_//_/\_,_/_//_/_//_/\__/_/  
+ 	          /___/                                                       
+ 	    
+     Dao.Casino PaymentChannleContract
+     0x029c61e3e9958b06bb63cc5c213c47cd114ab971
+     https://ropsten.etherscan.io/address/0x029c61e3e9958b06bb63cc5c213c47cd114ab971#code
+     version 1.0
+     more about payment channels: 
+     https://en.bitcoin.it/wiki/Payment_channels
+ */
 
 module.exports = {
 	address : '0x029c61e3e9958b06bb63cc5c213c47cd114ab971',

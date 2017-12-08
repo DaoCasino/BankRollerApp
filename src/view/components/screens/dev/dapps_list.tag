@@ -107,7 +107,6 @@ import './dapps_list.less'
 		this.toggleConfig = e =>{
 			e.preventDefault()
 			e.item.dapp.show_config = !e.item.dapp.show_config
-			console.info('e.item.show_config',e.item.dapp.show_config);
 			this.update()
 		}
 
@@ -116,7 +115,15 @@ import './dapps_list.less'
 			e.preventDefault()
 
 			alert('deploy SAM )')
+		}
 
+		this.copy = (e)=>{
+			e.preventDefault()
+			if (!e.target.innerText) {
+				return
+			}
+
+			App.view.copyToClipboard( e.target.innerText )
 		}
 	</script>
 
@@ -152,7 +159,7 @@ import './dapps_list.less'
 	<div class="upload-block">
 		<div class={other:true, show:!isMac}>
 			For add DApp to list, place folder width dapp.manifest file 
-			to <span>{dapps_path}</span>
+			to <span class="d-path" onclick={copy}>{dapps_path}</span>
 		</div>
 
 		<div class={macos:true, show:isMac}>

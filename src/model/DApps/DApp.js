@@ -169,10 +169,19 @@ export default class DApp {
 		const connection_id = Utils.makeSeed()
 		const user_id       = params.user_id
 
+
 		if(this.users[user_id]) {
-			if (this.users[user_id].channel) {
-				return
-			} else this.users[user_id].logic.payChannel.reset()
+			this.users[user_id].logic = payChannelWrap(this.logic)
+
+			setTimeout(()=>{
+				this.response(params, {id:this.users[user_id].id}, this.sharedRoom)
+				console.log('User '+user_id+' REconnected to '+this.slug)
+			}, 999)
+
+			return
+			// if (this.users[user_id].channel) {
+			// }
+			// this.users[user_id].logic.payChannel.reset()
 		}
 
 		this.users[user_id] = {
@@ -341,7 +350,7 @@ export default class DApp {
 		console.log('⛽ gasLimit:', gasLimit)
 		
 		const receipt = await this.PayChannel().methods
-			.openChannel(
+			.open(
 				channel_id         , // random bytes32 id
 				player_address     ,
 				bankroller_address ,
@@ -349,7 +358,7 @@ export default class DApp {
 				bankroller_deposit ,
 				session            , // integer num/counter
 				ttl_blocks         , // channel ttl in blocks count
-				game_data.value    ,
+				// game_data.value    ,
 				signed_args        
 			).send({
 				gas      : gasLimit               ,
@@ -368,11 +377,11 @@ export default class DApp {
 		
 		console.log('open channel result', receipt)
 
+		// TODO
 		const checkTimeout = setTimeout(run = () => {
-			
-			if (this.timer === 0) { this._closeByTimeout(checkTimeout) }
-			this.timer--
-			setTimeout(run, 1000)
+			// if (this.timer === 0) { this._closeByTimeout(checkTimeout) }
+			// this.timer--
+			// setTimeout(run, 1000)
 		}, 1000)
 
 		this.users[params.user_id].paychannel = {
@@ -401,7 +410,7 @@ export default class DApp {
 		const bool               =  params.close_args.bool
 
 		// Check Sig
-		const hash        = Utils.sha3(channel_id, player_balance, bankroller_balance, session, bool)
+		const hash        = Utils.sha3(channel_id, player_balance, bankroller_balance, session)
 		const rec_openkey = web3.eth.accounts.recover(hash, signed_args)
 		
 		if (params.user_id != rec_openkey) {
@@ -439,7 +448,6 @@ export default class DApp {
 				player_balance     ,
 				bankroller_balance ,
 				session            ,
-				bool               ,
 				signed_args
 			).send({
 				gas      : gasLimit               ,

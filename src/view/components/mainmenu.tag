@@ -23,7 +23,7 @@ import route from 'riot-route'
 		this.on('mount', ()=>{
 			route((screen, action, other)=>{
 				if (!screen) {
-					screen = 'wallet'
+					screen = 'dev'
 				}
 
 				if (!localStorage.keysSaved) {
