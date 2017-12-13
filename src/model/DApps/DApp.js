@@ -67,12 +67,9 @@ const ERC20approve = async function(spender, amount, callback=false){
 /*
 	TODO: Bankroller
 	 - выпилить eth-ligthwallet - заменить его на web3
-     - избавиться от RPC - юзать web3
-     - написать открытие закрытие каналов
      - написать подпись и валидацию подписи сообщений
      - заменить мессенджинг на ipfs
      - написать ведение статистики игр
-     - сделать красивый интерфейс таба разработчика
      - написать деплой игры в ipfs
      - написать установку игры из ipfs
 */
@@ -318,22 +315,33 @@ export default class DApp {
 		const bankroller_address = _openkey
 		const player_deposit     = params.open_args.player_deposit
 		const bankroller_deposit = params.open_args.player_deposit*2
-		const session            = params.open_args.session
-		const game_data          = params.open_args.gamedata
+		const session            = 0 //params.open_args.session
+		// const game_data          = params.open_args.gamedata
 		const ttl_blocks         = params.open_args.ttl_blocks
 		const signed_args        = params.open_args.signed_args
 		const paychannel         = new paychannelLogic(parseInt(bankroller_deposit))
-		const approve            = await ERC20approve(this.PayChannel().options.address, bankroller_deposit*10000)
+		
+
+		// Check bankroller balance
+		const bankroller_bets = await Eth.getBetsBalance( bankroller_address )
+		if (bankroller_bets < bankroller_deposit) {
+			response_room.sendMsg({action:'info', 'info':'🚫 Bankroller have no money. Need '+bankroller_deposit+', have '+bankroller_bets})
+			console.error('🚫 Bankroller have no money. Need '+bankroller_deposit+', have '+bankroller_bets)
+			this.response(params, { error:'Bankroller have no money. Need '+bankroller_deposit+', have '+bankroller_bets}, response_room)
+			return
+		}
+
+		response_room.sendMsg({action:'info', 'info':'Approve ERC20 contract'})
+
+		const approve = await ERC20approve(this.PayChannel().options.address, bankroller_deposit*10000)
 
 		this.player_address = player_address
-		let run             = '' 
-		let rec_openkey     = ''
 
-		game_data
-			? rec_openkey = web3.eth.accounts.recover( Utils.sha3(channel_id, player_address, bankroller_address, player_deposit, bankroller_deposit, session, ttl_blocks, game_data), signed_args )
-		    : rec_openkey = web3.eth.accounts.recover(Utils.sha3(channel_id, player_address, bankroller_address, player_deposit, bankroller_deposit, session, ttl_blocks), signed_args )
+		response_room.sendMsg({action:'info', 'info':'Check SIG'})
+		const rec_openkey = web3.eth.accounts.recover(Utils.sha3(channel_id, player_address, bankroller_address, player_deposit, bankroller_deposit, session, ttl_blocks), signed_args )
 
 		if (player_address!=rec_openkey) {
+			response_room.sendMsg({action:'info', 'info':'🚫 invalid sig on open channel'})
 			console.error('🚫 invalid sig on open channel', rec_openkey)
 			this.response(params, { error:'Invalid sig' }, response_room)
 			return
@@ -348,7 +356,9 @@ export default class DApp {
 
 		console.log('Send open channel trancsaction')
 		console.log('⛽ gasLimit:', gasLimit)
-		
+
+		response_room.sendMsg({action:'info', 'info':'Send open channel trancsaction'})
+
 		const receipt = await this.PayChannel().methods
 			.open(
 				channel_id         , // random bytes32 id
@@ -362,10 +372,11 @@ export default class DApp {
 				signed_args        
 			).send({
 				gas      : gasLimit               ,
-				gasPrice : 1.2 * _config.gasPrice ,
+				gasPrice : 1.4 * _config.gasPrice ,
 				from     : _openkey               
 			})
 			.on('transactionHash', transactionHash=>{
+				response_room.sendMsg({action:'info', 'info':'# openchannel TX pending https://ropsten.etherscan.io/tx/'+transactionHash})
 				console.log('# openchannel TX pending', transactionHash)
 				console.log('https://ropsten.etherscan.io/tx/'+transactionHash)
 				console.log('⏳ wait receipt...')
@@ -378,6 +389,7 @@ export default class DApp {
 		console.log('open channel result', receipt)
 
 		// TODO
+		let run = '' 
 		const checkTimeout = setTimeout(run = () => {
 			// if (this.timer === 0) { this._closeByTimeout(checkTimeout) }
 			// this.timer--
@@ -405,19 +417,22 @@ export default class DApp {
 		const channel_id         =  params.close_args.channel_id         // bytes32 id,
 		const player_balance     =  params.close_args.player_balance     // uint playerBalance,
 		const bankroller_balance =  params.close_args.bankroller_balance // uint bankrollBalance,
-		const session            =  params.close_args.session            // uint session=0px
+		const session            =  0                                    // uint session=0px
 		const signed_args        =  params.close_args.signed_args
 		const bool               =  params.close_args.bool
+
+		response_room.sendMsg({action:'info', 'info':'check signature'})
 
 		// Check Sig
 		const hash        = Utils.sha3(channel_id, player_balance, bankroller_balance, session)
 		const rec_openkey = web3.eth.accounts.recover(hash, signed_args)
 		
-		if (params.user_id != rec_openkey) {
-			console.error('🚫 invalid sig on open channel', rec_openkey)
-			this.response(params, { error:'Invalid sig' }, response_room)
-			return
-		}
+		// TODO: demo block
+		// if (params.user_id != rec_openkey) {
+		// 	console.error('🚫 invalid sig on open channel', rec_openkey)
+		// 	this.response(params, { error:'Invalid sig' }, response_room)
+		// 	return
+		// }
 
 		// Check user results with out results
 		const channel     = this.users[params.user_id].paychannel
@@ -442,6 +457,7 @@ export default class DApp {
 		console.log('Send close channel trancsaction')
 		console.log('⛽ gasLimit:', gasLimit)
 
+		response_room.sendMsg({action:'info', 'info':'Send close channel trancsaction'})
 		const receipt = await this.PayChannel().methods
 			.closeByConsent(
 				channel_id         ,
@@ -451,13 +467,14 @@ export default class DApp {
 				signed_args
 			).send({
 				gas      : gasLimit               ,
-				gasPrice : 1.2 * _config.gasPrice ,
+				gasPrice : 1.4 * _config.gasPrice ,
 				from     : _openkey
 			})
 			.on('transactionHash', transactionHash=>{
 				console.log('# closechannel TX pending', transactionHash)
 				console.log('https://ropsten.etherscan.io/tx/'+transactionHash)
 				console.log('⏳ wait receipt...')
+				response_room.sendMsg({action:'info', 'info':'# closechannel TX pending https://ropsten.etherscan.io/tx/'+transactionHash})
 			})
 			.on('error', err=>{ 
 				console.warn('Close channel error', err)
