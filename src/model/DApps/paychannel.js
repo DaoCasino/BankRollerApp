@@ -82,7 +82,7 @@ export default class PayChannel {
 	updateBalance(p, convert=true){
 		return this.addTX
 	}
-	addTX(p, convert=true){
+	addTX(p, convert=false){
 		console.log('PayChannel::addTX')
 		if (convert) {
 			p = Utils.bet2dec(p)

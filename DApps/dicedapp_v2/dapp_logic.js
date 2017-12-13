@@ -5,7 +5,7 @@
 DCLib.defineDAppLogic('dicegame_v3', function(){
 	const _self = this
 
-	const MAX_RAND_NUM = 65536
+	const MAX_RAND_NUM = 65535
 	const HOUSEEDGE    = 0.02 // 2%
 	
 	let history = []

@@ -6,6 +6,7 @@
 		<meta name="HandheldFriendly" content="True"/>
 		<title>Dice Game Channels</title>
 
+
 		<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/min/1.5/min.min.css">
 		<link rel="stylesheet" type="text/css" href="./styles.css">
 
@@ -43,9 +44,9 @@
 
 			function startGame(deposit){
 				MyDApp.connect({
-					bankroller : '0x146c5e3b9395738eb67feceb5e37cd5a56d63342', 
-					paychannel : { deposit : deposit } ,
-					gamedata   : {type:'uint', value: [0, 0, 0]}
+					bankroller : 'auto', 
+					paychannel : { deposit : deposit },
+					gamedata   : {type:'uint', value:[1, 2, 3]}
 				},
 				function(connected, info){
 					console.log('connect result:', connected)
@@ -146,6 +147,10 @@
 					var user_num = $('#user_num').val()
 
 					callbacks.onRoll(user_bet, user_num)
+
+					setTimeout(function(){
+						$('form.step-2').removeClass('disabled')
+					},1500)
 				})
 
 				$('form.step-3').on('submit', function(e){

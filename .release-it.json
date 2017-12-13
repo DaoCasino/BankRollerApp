@@ -1,0 +1,12 @@
+{
+  "verbose":true,
+  "github":{
+    "release":true,
+    "preRelease":true,
+    "assets":"dist/BankRollerApp*.*"
+  },
+
+  "npm":{
+  	"publish":false
+  }
+}
