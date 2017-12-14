@@ -49,7 +49,7 @@ Example:
 ```js
 {
   "name"  : "Dice DApp Example",
-  "code"  : "dicedapp_v2",
+  "slug"  : "dicedapp_v2",
   "index" : "./index.html",
   "logic" : "./dapp_logic.js",
   "run"   : "./bankroller.js"
@@ -82,7 +82,7 @@ Example:
 <script src="https://platform.dao.casino/api/lib/v2/DC.js?v=2"></script> <!-- connect library DC.js -->
 <script src="dapp_logic.js"></script> <!-- connect logic file -->
 <script>
-    window.App = new DCLib.DApp({code :'dicedapp_v2'})
+    window.App = new DCLib.DApp({slug :'dicedapp_v2'})
     App.connect({bankroller : "auto"}, function(connected){
       if (connected) {
         var randomHash = DCLib.Utils.makeSeed();
@@ -100,7 +100,7 @@ Example:
 
 ```js
 window.MyDApp_debug = (function(){
-  var myDApp = new DCLib.DApp({code : 'dicedapp_v2'})
+  var myDApp = new DCLib.DApp({slug : 'dicedapp_v2'})
 
   // Banroller side code
   // console.log(myDApp)
