@@ -1,12 +1,12 @@
 
-
 # 🌐 Decentralized applications
 
-Децетрализованные приложения основанные на протоколе **dao.casino** состоят из распределенной сети серверных приложений (**bankroller app**), смарт-контрактов и клиентской части. Библиотека `DC.js` упрощает взаимодействие всех сторон и предоставляет инструментарий для построения децентрализованных приложений на базе протокола **dao.casino**.
+DApps based on protocol **dao.casino** consist of a distributed network of backend-applications called "[bankroller app](https://github.com/DaoCasino/BankRollerApp)", [smart contracts](https://github.com/DaoCasino/Protocol/tree/master/contracts) and frontend part. The [DC.js](https://github.com/DaoCasino/DCLib) library needs to connect all this parts and provide tools for create p2p games.
 
 ## Table of Contents
 
-- [Offchain](#-offchain)
+- [General Workflow](#-general-workflow)
+- [Offchain](#️-offchain)
 - [File structure](#-file-structure)
   - [dapp.manifest](#dappmanifest)
   - [dapp_logic.js](#dapp_logicjs)
@@ -14,42 +14,67 @@
   - [bankroller.js](#bankrollerjs)
 - [Launch examples](#-launch-examples)
 
+## :construction: General Workflow
+
+1. At the beginning the player performs the function `approve` to the `ERC20` contract which allows the contract of the game to deposit funds from the player's account in the amount of the selected deposit [read more about ERC20 approve](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-20-token-standard.md#approve)
+2. The library [DC.js](https://github.com/DaoCasino/DCLib) which is launched in the player's browser finds a suitable bankroller (filter by bankrollers balance and keccak256(logic.js)) and connect to him. We use WebRTC as transport.
+3. The player's frontend sends a request that includes [the data (more details here) and the signature by its private key](https://github.com/DaoCasino/Protocol/tree/master/contracts#openchannel) to the bankroller.
+4. Bankroll checks the data and opens the channel [открытие канала](https://github.com/DaoCasino/Protocol/tree/master/contracts#openchannel).
+5. The contract of the game freezes the player and the bankroller's funds (the bankroller is freezing much more funds to cover the player's winnings).
+6. A player and a bankroll play [in offchain](#️-offchain).
+7. The player ends the game session.
+8. The bankroller checks the data and calls [close channel](https://github.com/DaoCasino/Protocol/tree/master/contracts#openchannel).
+9. A smart game contract unfreezes and distributes funds between the player, the bankroll, the operator, the referrer and the game developer in accordance with the set parameters.
+
+![scheme](./scheme.jpg "main scheme")
+
+### multisig
+
+The contract of the channels is the realization of the multi-sig contract. The player signs the obligation and passes it to the bankroller. Participant can send to the contract only the data signed by another participant. 
+
+![multisig](./multisig_scheme.png "multisig scheme")
+
+### Disputes
+
+We have implemented a mechanism for solving controversial situations(disputes) for our games smart contracts. In case of fraud, cheated party can send a request to [open a dispute](https://github.com/DaoCasino/Protocol/tree/master/contracts#opendispute). After dispute is opened, other side has a temporary window, to [provide evidence of fair play](https://github.com/DaoCasino/Protocol/tree/master/contracts#closedispute). In case of failure to provide proof, the game ends in favor of the deceived party.
+
 ## ⚡️ Offchain
 
-Для масштабирования децентрализованных приложений, увеличения скорости и снижения стоимости транзакций, протокол **dao.casino** использует технологию [game channels](https://medium.com/@dao.casino/dao-casino-charges-up-dice-game-with-gc-technology-46f6a4bb5df9). В основе *игровых каналов* лежит концепция *off-chain* транзакций, известная как [payment channels](https://en.bitcoin.it/wiki/Payment_channels). Библиотека `DC.js` содержит все необходимые методы для работы с *игровыми* и *платежными каналами*.
-> ### *Payment channels*
+To scale decentralized applications, increase the speed and reduce the cost of transactions, **dao.casino** uses [game channels technology](https://medium.com/@dao.casino/dao-casino-charges-up-dice-game-with-gc-technology-46f6a4bb5df9). It is based on [payment channels](https://en.bitcoin.it/wiki/Payment_channels).[DC.js library](https://github.com/DaoCasino/DCLib) has all the necessary methods  for working with *game channels* and *payment channels*.
+> ### *Game channels*
 
- *Технология платежных каналов позволяет безопасно обмениваться транзакциями, не транслируя их в основную сеть. Стороны инициируют открытие платежного канала и замораживают средства на смарт-контракте. После чего начинают обмен транзакциями(обещаниями) между друг другом, но не отправляют транзакции в блокчейн. После завершения взаимодействий стороны подводят итог и отправляют транзакцию закрытия канала с актуальным состоянием распределения средств, замороженных на смарт-контракте. Это позволяет привести неограниченное колличество транзакций к двум, тем самым многократно уменьшая комиисии и увеличивая скорость.*
+ *Player and bankroller deciding to start game. Player sends signed hash, bankroller check it and creates transaction to open a channel. When game begins, player sends game state with seed (which is needed for Signidice algorithm) to bankroller. Bankroller signs seed and sends it back — that’s a game process. Depending on game results, participants refresh channel state.
+Channel can be closed at any time. To do this, player sends the last state of the channel to the bankroller with a request for closure, after which the bankroller closes the channel.*
 
 ## 📁 File structure
 
 |name|description|
 |---|---|
-|`dapp.mainfest`|Файл конфигурации для **bankroller app**|
-|`dapp_logic.js`|Файл содержит основную логику и являтся общим файлом для **bankroller app** и клиента|
-|`index.html`|Клиентская часть приложения где подключена библиотека `DC.js`|
-|`bankroller.js`|Часть исполняемая внутри **bankroller app**|
+|`manifest.json`|Configuration file **bankroller app**|
+|`dapp_logic.js`|Basic logic of the aaplication. Must have for both sides (clients and bankroller [bankroller app](https://github.com/DaoCasino/BankRollerApp))|
+|`index.html`|Frontend of the game where [DC.js](https://github.com/DaoCasino/DCLib) is connected |
+|`bankroller.js`|The part executed inside the [bankroller app](https://github.com/DaoCasino/BankRollerApp)|
 
-### dapp.manifest
+### manifest.json
 
-Манифест приложения содержит основную информацию о приложении и пути к файлам.
+The root folder for each application must contain the manifest.json file
 
-Обязательные поля манифеста:
+Required fields:
 
 |name|description|
 |---|---|
-|`name`|Название приложения|
-|`code`|Код приложения|
-|`index`|путь к клиентскому файлу приложения|
-|`logic`|путь к файлу основной логики приложения|
-|`run`|путь к файлу для **bankroller app**|
+|`name`|title of application|
+|`slug`|unique namespace|
+|`index`|path to the frontend file (ex. index.html)|
+|`logic`|path to the logic.js|
+|`run`|path to the backend.js (witch runs on the [bankroller app](https://github.com/DaoCasino/BankRollerApp))|
 
 Example:
 
 ```js
 {
   "name"  : "Dice DApp Example",
-  "slug"  : "dicedapp_v2",
+  "code"  : "dicedapp_v2",
   "index" : "./index.html",
   "logic" : "./dapp_logic.js",
   "run"   : "./bankroller.js"
@@ -58,7 +83,7 @@ Example:
 
 ### dapp_logic.js
 
-Logic содержит основную логику приложения. Файл являтся общим для клиентской и серверной части.
+Basic logic of the aaplication. Must have for both sides (clients and bankroller)
 
 Example:
 
@@ -74,7 +99,7 @@ DCLib.defineDAppLogic('dicedapp_v2', function(){
 
 ### index.html
 
-Файл исполняемый на стороне клиента.
+This code executed on the gamer's side (in a browser)
 
 Example:
 
@@ -82,7 +107,7 @@ Example:
 <script src="https://platform.dao.casino/api/lib/v2/DC.js?v=2"></script> <!-- connect library DC.js -->
 <script src="dapp_logic.js"></script> <!-- connect logic file -->
 <script>
-    window.App = new DCLib.DApp({slug :'dicedapp_v2'})
+    window.App = new DCLib.DApp({code :'pinpong'})
     App.connect({bankroller : "auto"}, function(connected){
       if (connected) {
         var randomHash = DCLib.Utils.makeSeed();
@@ -94,13 +119,13 @@ Example:
 
 ### bankroller.js
 
-Файл содержит код исполняемый на стороне **bankroller app**
+This code executed in the [bankroller app](https://github.com/DaoCasino/BankRollerApp).
 
 Example:
 
 ```js
 window.MyDApp_debug = (function(){
-  var myDApp = new DCLib.DApp({slug : 'dicedapp_v2'})
+  var myDApp = new DCLib.DApp({code : 'dicedapp_v2'})
 
   // Banroller side code
   // console.log(myDApp)
@@ -116,3 +141,10 @@ window.MyDApp_debug = (function(){
 3. Click **Open in browser**.
 
 [Watch video](https://www.youtube.com/watch?v=vD2kI_4IEFA)
+
+## ⛓ Links
+
+* [Minimum viable game](https://daocasino.readme.io/docs)
+* [DC Library](https://github.com/DaoCasino/DClib)
+* [Bankroller application](https://github.com/DaoCasino/BankRollerApp/releases)
+* [Contracts](https://github.com/DaoCasino/Protocol/tree/master/contracts)
