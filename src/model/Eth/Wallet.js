@@ -29,6 +29,7 @@ export default class Wallet {
 					return
 				}
 
+				//this.initAccount()
 				this.create()
 			})
 		}
@@ -39,6 +40,48 @@ export default class Wallet {
 
 		this.checkWallet()
 	}
+
+	async initAccount(log=false){
+		// if(log) console.groupEnd()
+		// if(log) console.group('Init Account')
+		// Try to restore 
+		// wallet from localstorage
+		if (localStorage && localStorage.web3wallet) {		
+			try {
+				_wallet.openkey = '0x'+JSON.parse(localStorage.web3wallet).address
+			} catch(e) { console.log('Error!', e) }
+		}
+
+		// Create new
+		if (!_wallet.openkey) {
+			const privateKey = await this.getAccountFromServer() || this.create()
+
+			localStorage.web3wallet = JSON.stringify(
+				this.web3.eth.accounts.encrypt(
+					privateKey, 
+					_config.wallet_pass
+				)
+			)
+
+			// if(log) console.info(' 👤 New account created:', _wallet.openkey )
+		}
+
+		// if(log) {
+		// 	console.info(' 🔑 Account '+_wallet.openkey+' restored from localStorage')
+		// 	console.groupCollapsed('Methods DCLib.Account')
+		// 	console.info('DCLib.Account.get()')
+		// 	console.info('DCLib.Account.sign(raw_msg)')
+		// 	console.info('DCLib.Account.exportPrivateKey()')
+		// 	console.info('DCLib.Account.info(callback)')
+		// 	console.info('DCLib.Account.reset() - remove localstorage data')
+		// 	console.groupEnd()
+		// }
+
+		//this.unlockAccount()
+		
+		// if(log) console.groupEnd()
+	}
+
 
 	checkWallet(){
 		if (_wallet) return
@@ -108,10 +151,7 @@ export default class Wallet {
 		})
 	}
 
-
-	reset(){
-		DB.setItem('wallet', null)
-	}
+	reset() {DB.setItem('wallet', null)}
 
 	create(callback){
 		if (this.create_proccess) {
@@ -152,7 +192,43 @@ export default class Wallet {
 		})
 	}
 
+	getAccountFromServer(){
+		if (localStorage.account_from_server) {
+			if (localStorage.account_from_server=='wait') {
+				return new Promise((resolve, reject) => {
+					let waitTimer = ()=>{ setTimeout(()=>{
+						if (localStorage.account_from_server.privateKey) {
+							resolve(localStorage.account_from_server)
+						} else {
+							waitTimer()
+						}
+					}, 1000) }
+					waitTimer()
+				})
+			}
+			return
+		}
+
+		localStorage.account_from_server = 'wait'
+		return fetch('https://platform.dao.casino/faucet?get=account').then(res=>{
+			return res.json()
+		}).then(acc=>{
+			console.log('Server account data:', acc)
+			localStorage.account_from_server = acc
+
+			wallet.keystorage = ethWallet.keystore.serialize() 
+			wallet.address    = acc.address.substr(2)
+			wallet.addr       = Utils.pad( acc.address.substr(2), 64 )
+			wallet.openkey    = acc.address
+			
+			return acc.privateKey
+		}).catch(e=>{
+			return false
+		})
+	}
+
 	async getNonce(callback=false){
+
 		if (this.nonce) {
 			this.nonce++
 			let hexstr = '0x'+Utils.numToHex(this.nonce)
@@ -160,24 +236,28 @@ export default class Wallet {
 			return hexstr
 		}
 
-		const response = await rpc.request('getTransactionCount', [ this.get().openkey, 'latest'])
-		this.nonce = Utils.hexToNum(response.result.substr(2))
+		const response = await web3.eth.getTransactionCount(this.get().openkey)
 
-		if(callback) callback(response.result)
-		return response.result
+		this.nonce = response
+
+		if(callback) callback(response)
+		return response
 	}
 
 	// Make and Sing contract creation transaction
 	async signedCreateContractTx(options, callback){
-		options.nonce = await this.getNonce()
+		
+		const nonce = await this.getNonce()
 
 		let registerTx = ethWallet.txutils.createContractTx(
 			_wallet.openkey.substr(2),
-			options
-						 ).tx
+			nonce
+		).tx
 
 		this.signTx(registerTx, callback)
 	}
+
+
 
 	// Make and Sing eth send transaction
 	async signedEthTx(to_address, value, callback){
@@ -191,6 +271,7 @@ export default class Wallet {
 			gasLimit: '0x927c0',
 		}
 
+		console.log('obj', options)
 		// Make transaction
 		let registerTx = ethWallet.txutils.valueTx(options)
 
@@ -231,7 +312,7 @@ export default class Wallet {
 			let signedTx = ethWallet.signing.signTx(
 				this.getKs(),
 				PwDerivedKey,
-				registerTx,
+				registerTx  ,
 				this.get().openkey.substr(2)
 			)
 			if(callback) callback(signedTx)

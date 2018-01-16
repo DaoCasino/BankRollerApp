@@ -155,9 +155,9 @@ class Eth {
 
 
 		this.RPC.request('call', [{
-			'from': this.Wallet.get().openkey,
-			'to':   _config.erc20_address,
-			'data': data
+			'from' : this.Wallet.get().openkey,
+			'to'   : _config.erc20_address,
+			'data' : data
 		}, 'latest']
 		).then( response => {
 			if (!balances_cache[address]) {
@@ -172,7 +172,7 @@ class Eth {
 		})
 	}
 
-	sendBets(to, amount, callback){
+	sendBets(to, amount, callback=false){
 		// Create contract function transaction
 		this.Wallet.signedContractFuncTx(
 			// contract with bets
@@ -187,7 +187,7 @@ class Eth {
 				// send transacriont to RPC
 				this.RPC.request('sendRawTransaction', ['0x'+signedTx], 0).then( response => {
 					if (!response || !response.result) { return }
-					callback( response.result )
+					if (callback) callback( response.result )
 				})
 			}
 		)

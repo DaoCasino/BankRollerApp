@@ -4,6 +4,7 @@ import DApps from 'DApps/DApps'
 
 if (window) {
 	window.App = {}
+	window.App.DApps = DApps
 }
 
 document.addEventListener('DOMContentLoaded',()=>{
@@ -19,6 +20,5 @@ document.addEventListener('DOMContentLoaded',()=>{
 
 	if (window.App) {
 		window.App.view  = view
-		window.App.DApps = DApps
 	}
 })

@@ -13,11 +13,12 @@ const payChannelWrap = function(logic){
 	return modifiedLogic
 }
 
-
-
-const Account  = Eth.Wallet
-const _openkey = Account.get().openkey
-const web3     = Account.web3
+const Account       = Eth.Wallet
+const _openkey      = Account.get().openkey
+const web3          = Account.web3
+const all_wallet    = []
+const timer_val     = 30
+let   approve_state = false
 
 const ERC20 = new web3.eth.Contract(
 	_config.contracts.erc20.abi, 
@@ -26,33 +27,40 @@ const ERC20 = new web3.eth.Contract(
 
 const ERC20approve = async function(spender, amount, callback=false){
 	return new Promise(async (resolve, reject) => {
+
 		console.log('Check how many tokens user '+_openkey+' is still allowed to withdraw from contract '+spender+' . . . ')
 		
-		let allowance = await ERC20.methods.allowance( _openkey, spender).call()
+		let allowance = await ERC20.methods.allowance( _openkey, spender ).call()
 
 		console.log('💸 allowance:', allowance)
 
-		if (allowance < amount) {
+		if (allowance < amount*3 && approve_state==false) {
+			
+			approve_state = true
 			console.log('allowance lower than need deposit')
-
 			console.group('Call .approve on ERC20')
 			console.log('Allow paychannle to withdraw from your account, multiple times, up to the '+amount+' amount.')
 
 			const receipt = await ERC20.methods.approve( 
 				spender,
-				amount * 9
+				amount * 20
 			).send({
 				from     : _openkey         ,
 				gasPrice : _config.gasPrice ,
 				gas      : (await ERC20.methods.approve(spender, amount * 9).estimateGas({from : _openkey})),
-			}).on('error', err=>{ 
+			})
+			.on('error', err=>{ 
 				console.error(err)
 				reject(false, err)
 			})
 			
 			console.log('📌 ERC20.approve receipt:', receipt)
 			
-			allowance = await ERC20.methods.allowance( _openkey, spender).call()
+			allowance = await ERC20.methods.allowance( _openkey, spender ).call()
+
+			if (allowance > amount*3) {
+				approve_state = false
+			}
 
 			console.log('💸💸💸 allowance:', allowance)
 
@@ -98,14 +106,12 @@ export default class DApp {
 			throw new Error('Cant find DApp logic')
 		}
 
-		this.slug         = params.slug
-		this.code         = params.slug || params.code
-		this.logic        = G.DAppsLogic[this.slug]		
-		this.hash         = Utils.checksum( this.logic )
-		this.users        = {}
-		this.sharedRoom   = new Rtc( (_openkey || false) , 'dapp_room_'+this.hash )
-		this.timer        = 30
-		this.state_close  = true
+		this.slug          = params.slug
+		this.code          = params.slug || params.code
+		this.logic         = G.DAppsLogic[this.slug]		
+		this.hash          = Utils.checksum( this.logic )
+		this.users         = {}
+		this.sharedRoom    = new Rtc( (_openkey || false) , 'dapp_room_'+this.hash )
 
 		if (params.contract) {
 			console.log('Your contract is add')
@@ -165,14 +171,16 @@ export default class DApp {
 
 
 	// User connect
-	_newUser(params){
-		const connection_id = Utils.makeSeed()
-		const user_id       = params.user_id
+	async _newUser(params){
+
+		const connection_id      = Utils.makeSeed()
+		const user_id            = params.user_id
 
 		if(this.users[user_id]) {
+
 			if (this.users[user_id].channel) {
-				return
-			}else this.users[user_id].logic.payChannel.reset()
+			    return
+			} else this.users[user_id].logic.payChannel.reset()
 		}
 
 		this.users[user_id] = {
@@ -194,7 +202,7 @@ export default class DApp {
 					await Account.getPwDerivedKey() ,
 					rawMsg                          ,
 					_openkey
-				) )
+				))
 
 				console.log('sig:',sig)
 				resolve(sig)
@@ -222,7 +230,6 @@ export default class DApp {
 			})
 		}
 
-
 		// Listen personal user room messages
 		const listen_all = async data => {
 			if (!data || !data.action || !data.user_id || !this.users[data.user_id]) return
@@ -242,11 +249,20 @@ export default class DApp {
 				this._updateState(data)
 			}
 
+			if (data.action=='timeout_start') {
+				console.log('timeout start for '+timer_val+' sec')
+				this.response(data, {timeout_start : true}, User.room)
+				this._closeByTimeout(data)
+			}
+
 			if (data.action=='close_timeout') { 
-				this.timer = 30
-				console.log('Check')
+				User.timer = timer_val
 				this.response(data, {state_channel:User.channel_state}, User.room)
- 
+			}
+
+			if (data.action=='close_dispute') {
+				console.log('close dispute')
+				this._closeDispute(data)
 			}
 
 			// call user logic function
@@ -278,7 +294,6 @@ export default class DApp {
 		}
 		this.users[user_id].room.on('all', listen_all)
 
-
 		setTimeout(()=>{
 			this.response(params, {id:connection_id}, this.sharedRoom)
 			console.log('User '+user_id+' connected to '+this.slug)
@@ -303,37 +318,43 @@ export default class DApp {
 
 	async _openChannel(params){
 		const response_room = this.users[params.user_id].room
-
+		console.log('OPEN')
 		if (this.users[params.user_id].channel_state === true) return
 
 		this.users[params.user_id].channel_state = true
-		this.state_close = true
+		this.users[params.user_id].state_close                         = true
 
-		const bankroller_deposit = params.open_args.player_deposit*2
-		const paychannel = new paychannelLogic(parseInt(bankroller_deposit))
-		paychannel.reset()
+		const bankroller_deposit = params.open_args.player_deposit*10
+		const paychannel         = new paychannelLogic(parseInt(bankroller_deposit))
 
+		this.users[params.user_id].logic.payChannel = paychannel
+		this.users[params.user_id].logic.payChannel.reset()
 
-		if (typeof params.open_args.gamedata === 'undefined') { console.error('Error! game data not found') }
+		if (typeof params.open_args.gamedata === 'undefined') { 
+			console.error('Error! game data not found') 
+			return
+		}
 
 		const channel_id         = params.open_args.channel_id
 		const player_address     = params.open_args.player_address
-		const bankroller_address = _openkey
+		const bankroller_address = params.open_args.bankroller_address
 		const player_deposit     = params.open_args.player_deposit
 		const session            = params.open_args.session
 		const game_data          = params.open_args.gamedata
 		const ttl_blocks         = params.open_args.ttl_blocks
 		const signed_args        = params.open_args.signed_args
-		const approve            = await ERC20approve(this.PayChannel().options.address, bankroller_deposit*10000)
 
-		paychannel.setDepositBankroll(parseInt(bankroller_deposit))
+		console.log(params)
+		const approve = await ERC20approve(this.PayChannel().options.address, bankroller_deposit*10000)
+			
 
+		this.users[params.user_id].logic.payChannel.setDepositBankroll(parseInt(bankroller_deposit))
 		this.player_address = player_address
 		let rec_openkey     = ''
 
 		game_data
 			? rec_openkey = web3.eth.accounts.recover( Utils.sha3(channel_id, player_address, bankroller_address, player_deposit, bankroller_deposit, session, ttl_blocks, game_data), signed_args )
-		    : rec_openkey = web3.eth.accounts.recover(Utils.sha3(channel_id, player_address, bankroller_address, player_deposit, bankroller_deposit, session, ttl_blocks), signed_args )
+		    : rec_openkey = web3.eth.accounts.recover( Utils.sha3(channel_id, player_address, bankroller_address, player_deposit, bankroller_deposit, session, ttl_blocks), signed_args )
 
 		if (player_address!=rec_openkey) {
 			console.error('🚫 invalid sig on open channel', rec_openkey)
@@ -341,71 +362,25 @@ export default class DApp {
 			return
 		}
 
-		// estimateGas - в данном случае работает неккоректно и 
-		// возвращает лимит газа аж на целый блок
-		// из-за чего транзакцию никто не майнит, т.к. она одна на весь блок
-		// const gasLimit = await this.PayChannel().methods.open(channel_id,player_address,bankroller_address,player_deposit,bankroller_deposit,session,ttl_blocks, signed_args).estimateGas({from: _openkey})
-				
-		const gasLimit = 900000
+		const sign_bankroller = Account.signHash(Utils.sha3(channel_id, player_address, bankroller_address, player_deposit, bankroller_deposit, session, ttl_blocks, game_data))
 
-		console.log('Send open channel trancsaction')
-		console.log('⛽ gasLimit:', gasLimit)
-		
-		const receipt = await this.PayChannel().methods
-			.openChannel(
-				channel_id         , // random bytes32 id
-				player_address     ,
-				bankroller_address ,
-				player_deposit     ,
-				bankroller_deposit ,
-				session            , // integer num/counter
-				ttl_blocks         , // channel ttl in blocks count
-				game_data.value    ,
-				signed_args        
-			).send({
-				gas      : gasLimit               ,
-				gasPrice : 1.2 * _config.gasPrice ,
-				from     : _openkey               
-			})
-			.on('transactionHash', transactionHash=>{
-				console.log('# openchannel TX pending', transactionHash)
-				console.log('https://ropsten.etherscan.io/tx/'+transactionHash)
-				console.log('⏳ wait receipt...')
-			})
-			.on('error', err=>{ 
-				console.warn('Open channel error', err)
-				this.response(params, { error:'cant open channel', more:err }, response_room)
-			})
-		
-		console.log('open channel result', receipt)
-
-		this.users[params.user_id].paychannel = {
-			channel_id         : channel_id         ,
-			player_deposit     : player_deposit     ,
-			bankroller_deposit : bankroller_deposit ,
-			session            : session            
-		}
-
-		if (receipt.transactionHash) {
-			// Set deposit in logic
+		if (approve) {
 			this.users[params.user_id].logic.payChannel.setDeposit( Utils.dec2bet(player_deposit) )
-			this._closeByTimeout()
+			this.response(params, { sign_bankroller:sign_bankroller }, response_room)
 		}
-
-		this.response(params, { receipt:receipt }, response_room)
 	}
+
 	
 	async _closeChannel(params){
-
-		this.state_close         = false
-
+		this.users[params.user_id].state_close = false
 		const response_room      =  this.users[params.user_id].room
+		const bankroller_address =  this.users[params.user_id].game_address
 		const channel_id         =  params.close_args.channel_id         // bytes32 id,
 		const player_balance     =  params.close_args.player_balance     // uint playerBalance,
 		const bankroller_balance =  params.close_args.bankroller_balance // uint bankrollBalance,
-		const session            =  params.close_args.session            // uint session=0px
+		const session            =  params.close_args.session || 0         // uint session=0px
 		const signed_args        =  params.close_args.signed_args
-		const bool               =  params.close_args.bool
+		const bool               =  params.close_args.bool    || true
 
 		// Check Sig
 		const hash        = Utils.sha3(channel_id, player_balance, bankroller_balance, session, bool)
@@ -418,9 +393,8 @@ export default class DApp {
 		}
 
 		// Check user results with out results
-		const channel     = this.users[params.user_id].paychannel
-		const user_profit = this.users[params.user_id].logic.payChannel._getProfit()
-
+		const channel              = this.users[params.user_id].paychannel
+		const user_profit          = this.users[params.user_id].logic.payChannel._getProfit()
 		const l_player_balance     = Utils.bet2dec(this.users[params.user_id].logic.payChannel.getBalance())
 		const l_bankroller_balance = Utils.bet2dec(this.users[params.user_id].logic.payChannel.getBankrollBalance())
 
@@ -437,26 +411,83 @@ export default class DApp {
 			}
 		}
 
+		delete this.users[params.user_id].timer
+		const signed_bankroller = Account.signHash(hash)
+		this.response(params, { signed_bankroller:signed_bankroller }, response_room)
+	}
 
-		const gasLimit = 4600000
-		console.log('Send close channel trancsaction')
-		console.log('⛽ gasLimit:', gasLimit)
+	_closeByTimeout(params) {
 
+		this.users[params.time_args.player_address].timer = timer_val
+		
+		const run = ()=> {
+			if (this.users[params.time_args.player_address].timer < 5) {
+				if (this.users[params.time_args.player_address].state_close==false)    { return }
+
+				const bankroller_balance = this.users[params.time_args.player_address].room.state_data.bankroller_balance
+				const player_address     = this.users[params.time_args.player_address].room.state_data.player_address    
+				const channel_id         = this.users[params.time_args.player_address].room.state_data.channel_id        
+				const player_balance     = this.users[params.time_args.player_address].room.state_data.player_balance    
+				const session            = this.users[params.time_args.player_address].room.state_data.session           
+				const bool               = this.users[params.time_args.player_address].room.state_data.bool              
+				const signed_args        = this.users[params.time_args.player_address].room.state_data.signed_args   
+				const response_room  	 = this.users[params.time_args.player_address].room
+
+				this.users[player_address].channel_state = false
+
+				const gasLimit = 900000
+			
+				console.log('Send close channel trancsaction')
+				console.log('⛽ gasLimit:', gasLimit)
+
+				const close = this.PayChannel().methods
+					.closeByConsent(
+						channel_id         ,
+						player_balance     ,
+						bankroller_balance ,
+						session            ,
+						bool               ,
+						signed_args
+					).send({
+						gas      : gasLimit               ,
+						gasPrice : 1.2 * _config.gasPrice ,
+						from     : _openkey
+					})
+					.on('transactionHash', transactionHash=>{
+						console.log('# closechannel TX pending', transactionHash)
+						console.log('https://ropsten.etherscan.io/tx/'+transactionHash)
+						console.log('⏳ wait receipt...')
+					})
+					.on('error', err=>{ 
+						console.warn('Close channel error', err)
+					})
+					clearInterval(checkTimeout)
+			}
+			this.users[params.time_args.player_address].timer--
+		}
+		const checkTimeout = setInterval(run, 1000)
+	}
+
+	async _closeDispute(params) {
+
+		const response_room      = this.users[params.close_args.player_address].room
+		const player_address     = response_room.state_data.player_address
+		const channel_id         = params.close_args.channel_id
+		const dispute_seed       = params.close_args.dispute_seed
+		const bankroller_sign    = Account.signHash(dispute_seed)
+		
+		const gasLimit = 900000
 		const receipt = await this.PayChannel().methods
-			.closeByConsent(
-				channel_id         ,
-				player_balance     ,
-				bankroller_balance ,
-				session            ,
-				bool               ,
-				signed_args
+			.closeDispute(
+				channel_id      ,
+				bankroller_sign
 			).send({
 				gas      : gasLimit               ,
 				gasPrice : 1.2 * _config.gasPrice ,
 				from     : _openkey
 			})
 			.on('transactionHash', transactionHash=>{
-				console.log('# closechannel TX pending', transactionHash)
+				console.log('# close dispute TX pending', transactionHash)
 				console.log('https://ropsten.etherscan.io/tx/'+transactionHash)
 				console.log('⏳ wait receipt...')
 			})
@@ -465,52 +496,13 @@ export default class DApp {
 				this.response(params, { error:'cant close channel', more:err }, response_room)
 			})
 
-		console.log('Close channel receipt', receipt)
-		// this.users[params.user_id].logic.payChannel.reset()
+
 		if (receipt.transactionHash) {
-			delete this.users[params.user_id].paychannel
+			this.response(params, { receipt:receipt }, response_room)
 		}
-
-		this.response(params, { receipt:receipt }, response_room)
 	}
 
-	async _closeByTimeout() {
-		this.timer = 30
-		let run
-		const checkTimeout = setTimeout(run = () => {
-			if (this.timer < 5) {
-				if (this.state_close==false) { return }
 
-				const bankroller_balance = this.users.state_data.bankroller_balance
-				const player_address     = this.users.state_data.player_address    
-				const channel_id         = this.users.state_data.channel_id        
-				const player_balance     = this.users.state_data.player_balance    
-				const session            = this.users.state_data.session           
-				const bool               = this.users.state_data.bool              
-				const signed_args        = this.users.state_data.signed_args   
-				const response_room  	 = this.users[player_address].room
-
-				this.users[player_address].channel_state = false
-
-				this._closeChannel({
-				    user_id    : player_address                 ,
-				    close_args : {
-				        channel_id         : channel_id         ,
-				        player_balance     : player_balance     ,
-				        bankroller_balance : bankroller_balance ,
-				        session            : session            ,
-				        bool               : bool               ,
-				        signed_args        : signed_args        ,
-				        timeout            : true
-				    }
-				})
-				return
-			}
-			this.timer--
-			console.log(this.timer)
-			setTimeout(run, 1000)
-		}, 1000)
-	}
 
 	_updateState(params, callback=false) {
 
@@ -523,7 +515,7 @@ export default class DApp {
 		const signed_args        = params.update_args.signed_args
 		const bool               = params.update_args.bool
 
-		this.users['state_data'] = {
+		this.users[player_address].room.state_data = {
 			channel_id         : channel_id         ,
 			player_address     : player_address     ,
 			player_balance     : player_balance     ,
@@ -543,6 +535,7 @@ export default class DApp {
 
 		const signed_bankroller = Account.signHash(DCLib.Utils.sha3(channel_id, player_balance, bankroller_balance, session))
 
+		console.clear()
 		this.response(params, {signed_bankroller:signed_bankroller}, response_room)
 	}
 

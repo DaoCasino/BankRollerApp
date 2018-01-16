@@ -13,10 +13,10 @@
 		
 
 		<!-- DCLib https://github.com/DaoCasino/DCLib -->
-<!-- 		<script src="./lib/DC.js"></script>
- -->		
+		<script src="./lib/DC.js"></script>
+		
 		<!-- our Dapp core logic -->
-		<script src="./dapp_logic.js"></script>
+		<script src="./dapp_logic.js" defer></script>
 
 		<script>
 			$(document).ready( function(){
@@ -43,16 +43,16 @@
 
 			function startGame(deposit){
 				MyDApp.connect({
-					bankroller : '0x146c5e3b9395738eb67feceb5e37cd5a56d63342', 
-					paychannel : { deposit : deposit } ,
-					gamedata   : {type:'uint', value: [0, 0, 0]}
+					bankroller : 'auto', 
+					paychannel : { deposit : deposit },
+					gamedata   : {type:'uint', value:[1, 2, 3]}
 				},
 				function(connected, info){
 					console.log('connect result:', connected)
 					console.log('connect info:', info)
 					if (!connected) return 
 
-					let maxbet = DCLib.Utils.dec2bet( info.channel.player_deposit )
+					let maxbet = DCLib.Utils.bet2dec( info.channel.player_deposit )
 
 					$('#user_bet')[0].max = Math.ceil( maxbet )
 					$('#user_bet').val( (maxbet*0.1).toFixed(2) )
@@ -146,6 +146,10 @@
 					var user_num = $('#user_num').val()
 
 					callbacks.onRoll(user_bet, user_num)
+
+					setTimeout(function(){
+						$('form.step-2').removeClass('disabled')
+					},1500)
 				})
 
 				$('form.step-3').on('submit', function(e){

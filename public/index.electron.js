@@ -22,7 +22,6 @@ require('electron-debug')({
 	showDevTools: false ,
 })
 
-
 // Check updates
 // require('electron-simple-updater').init({
 // 	checkUpdateOnStart: true,

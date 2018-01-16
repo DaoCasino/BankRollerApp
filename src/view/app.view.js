@@ -6,7 +6,6 @@ import route from 'riot-route'
 
 import toastr from 'toastr'
 
-
 export default class View {
 	constructor() {
 		this.importTags()

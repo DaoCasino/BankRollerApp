@@ -1,6 +1,6 @@
 {
-	"name": "BankRollerApp",
-	"version": "0.2.6",
+	"name": "BankRollerApp2",
+	"version": "0.2.836",
 	"description": "Dao.Casino app for bankroller",
 	"author": "Dao Casino <team@dao.casino>",
 	"repository": {
@@ -48,7 +48,7 @@
 	},
 	"__icons_creator": "https://iconverticons.com/online/",
 	"build": {
-		"appId": "com.daocasino.bankroller",
+		"appId": "com.daocasino.bankroller2",
 		"files": [
 			"build/**/*",
 			"node_modules/**/*",
@@ -122,6 +122,7 @@
 		"electron-debug": "^1.4.0",
 		"eth-lightwallet": "^2.5.6",
 		"ethereumjs-abi": "^0.6.4",
+		"ethereumjs-tx": "^1.3.3",
 		"event-emitter": "^0.3.5",
 		"freeice": "^2.2.0",
 		"fs-extra": "^3.0.1",
@@ -168,6 +169,7 @@
 		"file-loader": "^0.11.2",
 		"html-webpack-plugin": "^2.30.1",
 		"jest": "20.0.4",
+		"lerna": "^2.5.1",
 		"less": "^2.7.2",
 		"less-loader": "^4.0.5",
 		"lint-staged": "^4.0.0",

@@ -14,7 +14,6 @@ const Account = new Wallet()
 
 import * as Utils from '../utils'
 
-
 let loaded_dapps = []
 const injectDAppScript = function(key, url, callback){
 	if (typeof document === 'undefined') { return }
@@ -202,7 +201,7 @@ export default new class DAppsAPIInit {
 		if (!this.List[key]) return
 
 		let base = '/'
-		if (location && location.port*1 !== 9999) { base = 'http://localhost:9999/' }
+		if (location && location.port*1 !== 7779) { base = 'http://localhost:7779/' }
 
 		let logic_script_url  = base + 'DApps/' + key +'/'+ this.List[key].config.logic
 		let client_script_url = base + 'DApps/' + key +'/'+ this.List[key].config.run.client

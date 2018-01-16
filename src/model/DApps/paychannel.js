@@ -3,25 +3,32 @@ import * as Utils from '../utils'
 /** max items in history */
 const h_max = 100 
 
-/**@ignore */
-const deposit = {
- 	player     : false ,
-	bankroller : false
-}
-/**@ignore */
-const balance = {
-	player     : 0 ,
-	bankroller : 0
-}
-/**@ignore */
-let _profit  = 0
-/** Game history  */
-let _history = []
+// /**@ignore */
+// const deposit = {
+//  	player     : false ,
+// 	bankroller : false
+// }
+// /**@ignore */
+// const balance = {
+// 	player     : 0 ,
+// 	bankroller : 0
+// }
+// /**@ignore */
+// let _profit  = 0
+// /** Game history  */
+// let _history = []
 
 
 export default class PayChannel {
 	constructor(bankroller_deposit) {
-		deposit.bankroller = bankroller_deposit
+
+		this.bankroller_deposit = bankroller_deposit
+		this.player_deposit     = false
+		this.bankroller_balance = 0
+		this.player_balance     = 0
+		this.profit             = 0
+		this.history            = []
+		this.h_max              = 100
 
 		console.groupCollapsed('payChannel injected in DApp logic')
 		console.log('Now your logic has methods for work with payment channel')
@@ -39,56 +46,57 @@ export default class PayChannel {
 
 	setDepositBankroll(d) {
 		console.log('Set Deposit bankroll', d)
-		deposit.bankroller = d
+		this.bankroller_deposit = d
 	}
 	
 	
 	setDeposit(d){
-
-		if (deposit.player!==false) {
+		console.log('@DEPOSIT', this.player_deposit)
+		if (this.player_deposit!==false) {
 			console.error('Deposit allready set')
 			return
 		}
 
-		deposit.player     = Utils.bet2dec(d)
-		balance.player     = (1*deposit.player)
-		balance.bankroller = (1*deposit.bankroller)
+		this.player_deposit     = Utils.bet2dec(d)
+		this.player_balance     = (1*this.player_deposit)
+		this.bankroller_balance = (1*this.bankroller_deposit)
 		
-		console.log('PayChannel::User deposit set '+deposit.player+' bankroller deposit set' +deposit.bankroller+', now user balance:', deposit.player)
-		return balance
+		console.log('PayChannel::User deposit set '+this.player_deposit+' bankroller deposit set ' +this.bankroller_deposit+', now user balance:', this.player_deposit)
+		return this.player_deposit
 	}
 
 	getDeposit(){ 
-		console.log('PayChannel::getDeposit', deposit.player)
-		return Utils.dec2bet(deposit.player) 
+		console.log('PayChannel::getDeposit', this.player_deposit)
+		return Utils.dec2bet(this.player_deposit) 
 	}
 
 	getBalance(){ 
-		console.log('PayChannel::getBalance', balance.player)
-		return Utils.dec2bet(balance.player) 
+		console.log('PayChannel::getBalance', this.player_balance)
+		return Utils.dec2bet(this.player_balance) 
 	}
 
 	getBankrollBalance() {
-		console.log('PayChannel::getBankrollBalance', balance.bankroller)
-		return Utils.dec2bet(balance.bankroller)
+		console.log('PayChannel::getBankrollBalance', this.bankroller_balance)
+		return Utils.dec2bet(this.bankroller_balance)
 	}
 	
 	
 	getProfit(){ 
-		console.log('PayChannel::getProfit', _profit)
-		return Utils.dec2bet(_profit)  
+		console.log('PayChannel::getProfit', this.profit)
+		return Utils.dec2bet(this.profit)  
 	}
 	
 	_getProfit(){ 
-		console.log('PayChannel::_getProfit', _profit)
-		return _profit 
+		console.log('PayChannel::_getProfit', this.profit)
+		return this.profit 
 	}
 	
 	updateBalance(p, convert=true){
 		return this.addTX
 	}
+
 	addTX(p, convert=true){
-		console.log('PayChannel::addTX')
+		console.log('PayChannel::addTX', p)
 		if (convert) {
 			p = Utils.bet2dec(p)
 			console.log('PayChannel::addTX - convert BET to minibet', p)
@@ -97,18 +105,23 @@ export default class PayChannel {
 			throw new Error('addTX '+p+' invalid value, set convert param to true')
 		}
 
-		_profit += p*1
-		balance.player     = deposit.player     + _profit
-		balance.bankroller = deposit.bankroller - _profit
+		this.profit += p*1
+		this.player_balance     = this.player_deposit     + this.profit
+		this.bankroller_balance = this.bankroller_deposit - this.profit
 
-		_history.push({
+		this.history.push({
 			profit    : p                    ,
-			balance   : balance.player       ,
+			balance   : this.player_balance  ,
 			timestamp : new Date().getTime()
 		})
 
-		_history = _history.splice(-h_max)
-		return Utils.dec2bet(_profit)  
+		this.history = this.history.splice(-this.h_max)
+		return Utils.dec2bet(this.profit)  
+	}
+
+	getHistory() {
+		console.log('Get history', this.history)
+		return this.history
 	}
 
 	printLog(){
@@ -119,21 +132,21 @@ export default class PayChannel {
 			Bankroll_balance : this.getBankrollBalance() ,
 			Profit           : this.getProfit()
 		})
-		console.groupCollapsed('TX History, last '+h_max+' items '+_history.length)
-		console.log(_history)
+		console.groupCollapsed('TX History, last '+this.h_max+' items '+this.history.length)
+		console.log(this.history)
 		console.groupEnd()
 		console.groupEnd()
 
-		return _history
+		return this.history
 	}
 
 	reset(){
 		console.log('PayChannel::reset, set deposit balance profit to 0')
-		deposit.player     = false
-		deposit.bankroller = false
-		balance.player     = 0
-		balance.bankroller = 0
-		_profit            = 0
-		_history.push({reset:true, timestamp:new Date().getTime()})
+		this.player_deposit     = false
+		this.bankroller_deposit = false
+		this.player_balance     = 0
+		this.bankroller_balance = 0
+		this.profit             = 0
+		this.history.push({reset:true, timestamp:new Date().getTime()})
 	}
 }

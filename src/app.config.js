@@ -2,7 +2,7 @@
  * App settings
  */
 
-let bankroller_server = 'http://localhost:9999'
+let bankroller_server = 'http://localhost:7779'
 
 // Contract with referral stat
 let stat_contract = '0xe195eed0e77b48146aa246dadf987d2504ac88cb'

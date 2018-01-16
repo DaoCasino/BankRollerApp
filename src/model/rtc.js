@@ -237,25 +237,26 @@ export default class RTC {
 
 	// Отправка сообщения с ожидание подтверждения получения
 	send(data, callback=false, repeat=5){
-		if (!this.channel) {
-			setTimeout(()=>{ this.send(data, callback) }, 1000)
-			return
-		}
-
-		data = this.sendMsg(data)
-
-		if (!data.address) {
-			return
-		}
-
-		this.CheckReceipt(data, delivered=>{
-			if (!delivered && repeat > 0) {
-				repeat--
-				this.send(data, callback, repeat)
+		return new Promise( (resolve, reject)=>{
+			if (!this.channel) {
+				setTimeout(()=>{ this.send(data, callback) }, 1000)
 				return
 			}
 
-			if (callback) callback(delivered)
+			data = this.sendMsg(data)
+
+			if (!data.address) { resolve(); return }
+
+			const check = this.CheckReceipt(data, delivered=>{
+				if (!delivered && repeat > 0) {
+					repeat--
+					this.send(data, callback, repeat)
+					return
+				}
+
+				resolve(delivered)
+				if (callback) callback(delivered)
+			})
 		})
 	}
 
