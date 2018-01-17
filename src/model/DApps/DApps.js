@@ -202,7 +202,7 @@ export default new class DAppsAPIInit {
 		if (!this.List[key]) return
 
 		let base = '/'
-		if (location && location.port*1 !== 9999) { base = 'http://localhost:9999/' }
+		if (typeof location!=='undefined' && location.port*1 !== 9999) { base = 'http://localhost:9999/' }
 
 		let logic_script_url  = base + 'DApps/' + key +'/'+ this.List[key].config.logic
 		let client_script_url = base + 'DApps/' + key +'/'+ this.List[key].config.run.client

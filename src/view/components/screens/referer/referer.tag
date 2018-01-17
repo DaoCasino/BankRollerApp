@@ -2,7 +2,7 @@ import _config from 'app.config'
 import Eth     from 'Eth/Eth'
 import Stat    from 'stat'
 import GA      from './ga'
-import Charts  from './charts'
+//import Charts  from './charts'
 
 import './referer.less'
 

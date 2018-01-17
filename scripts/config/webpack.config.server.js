@@ -40,16 +40,25 @@ if (env.stringified['process.env'].NODE_ENV !== '"server"') {
 	throw new Error('server builds must have NODE_ENV=server.')
 }
 
+// console.log(rootdir)
+// console.log(path.resolve(rootdir, 
+// 				'../node_modules/web3/packages/web3-eth-accounts/node_modules/scrypt.js/js.js'
+// 			))
+// process.exit()
+
 // This is the production configuration.
 // It compiles slowly and is focused on producing a fast and minimal bundle.
 // The development configuration is different and lives in a separate file.
 let webpack_server_config = {
+	target:'node',
+
 	// Don't attempt to continue if there are any errors.
 	bail: true,
+	// bail: false,
 
 	// We generate sourcemaps in production. This is slow but gives good results.
 	// You can exclude the *.map files from the build during deployment.
-	devtool: 'source-map',
+	// devtool: 'source-map',
 
 	// In production, we only want to load the polyfills and the app code.
 	entry: ['babel-polyfill', require.resolve('./polyfills'), paths.appBackground],
@@ -73,19 +82,24 @@ let webpack_server_config = {
 		// https://github.com/facebookincubator/create-react-app/issues/253
 		modules: [ rootdir+'/src/model', 'node_modules', paths.appNodeModules].concat(
 	  		// It is guaranteed to exist because we tweak it in `env.js`
-	  		process.env.NODE_PATH.split(path.delimiter).filter(Boolean)
+	  		// process.env.NODE_PATH.split(path.delimiter).filter(Boolean)
 		),
 
 		// These are the reasonable defaults supported by the Node ecosystem.
 		// We also include .tag as a common component filename extension to support
 		// some tools, although we do not recommend using it, see:
 		// https://github.com/facebookincubator/create-react-app/issues/290
-		extensions: ['.js', '.json', '.tag'],
+		extensions: ['.node', '.js', '.json'],
 		alias: {
 			'app.config': rootdir+'/src/app.config.js',
 			model:        rootdir+'/src/model',
 			view:         rootdir+'/src/view',
 			components:   rootdir+'/src/components',
+
+			// https://github.com/ethereum/web3.js/issues/1105
+			// 'fs-ext': path.resolve(rootdir, 'node_modules/fs-ext/node.js'),
+			// 'scrypt.js': path.resolve(rootdir, 'node_modules/scrypt.js/node.js'),
+			// 'scrypt': path.resolve(rootdir, 'node_modules/scrypt.js/node_modules/scrypt/index.js'),
 		},
 
 		plugins: [
@@ -108,7 +122,7 @@ let webpack_server_config = {
 			// First, run the linter.
 			// It's important to do this before Babel processes the JS.
 			{
-				test: /\.(js|tag)$/,
+				test: /\.js$/,
 				enforce: 'pre',
 				use: [
 					{
@@ -150,68 +164,25 @@ let webpack_server_config = {
 			},
 
 
-			// SVG loader
-			// https://github.com/webpack-contrib/svg-inline-loader
-			// load svg as plain/html
-			// example usage:
-			//  import myiconhtml from '../icons/myicon.svg'
-			//  this.root.innerHTML = require('../../icons/' + this.opts.src)
-			{
-				test: /\.svg$/,
-				loader: 'svg-inline-loader'
-			},
-
-			// "url" loader works just like "file" loader but it also embeds
-			// assets smaller than specified size as data URLs to avoid requests.
-			{
-				test: [/\.bmp$/, /\.gif$/, /\.jpe?g$/, /\.png$/],
-				loader: require.resolve('url-loader'),
-				options: {
-					limit: 10000,
-					name: 'static/media/[name].[hash:8].[ext]',
-				},
-			},
-
-			// Riot tag compiler
-			{
-			   test: /\.tag$/,
-			   enforce: 'pre',
-			   include: paths.appSrc,
-			   exclude: /node_modules/,
-			   use: [
-				  {
-					 loader: require.resolve('riot-tag-loader'),
-					 options: {
-						type: 'es6',
-						debug: false,
-						// add here all the other riot-compiler options
-						// http://riotjs.com/guide/compiler/
-						// template: 'pug' for example
-					 }
-				  }
-			   ]
-			},
-
 			// Process JS with Babel.
 			{
-				test:    /\.(js|tag)$/,
+				test:    /\.js$/,
 				include: paths.appSrc,
 				loader:  require.resolve('babel-loader'),
 				options: {
-					presets: ['es2015-riot', ['env', {
-					      'targets': {
-					        'browsers': ['last 2 versions', 'safari >= 7']
-					      }
-					    }]
-    				]
+					presets: [['env', {
+						'targets': {
+							'node': '8'
+						}
+					}]]
 				}
 			},
 
-			{
-				test: /\/ethereumjs-tx\/index.js$/,
-				loader: 'babel-loader',
-				options: { presets: ['es2015', 'stage-2'] }
-			},
+			// {
+			// 	test: /\/ethereumjs-tx\/index.js$/,
+			// 	loader: 'babel-loader',
+			// 	options: { presets: ['es2015', 'stage-2'] }
+			// },
 			{
 				test: /\/bufferutil\/fallback.js$/,
 				loader: 'babel-loader',
@@ -235,22 +206,6 @@ let webpack_server_config = {
 		// It is absolutely essential that NODE_ENV was set to production here.
 		// Otherwise React will be compiled in the very slow development mode.
 		new webpack.DefinePlugin(env.stringified),
-
-		// Minify the code.
-		// new webpack.optimize.UglifyJsPlugin({
-		// 	compress: {
-		// 		warnings: false,
-		// 		// Disabled because of an issue with Uglify breaking seemingly valid code:
-		// 		// https://github.com/facebookincubator/create-react-app/issues/2376
-		// 		// Pending further investigation:
-		// 		// https://github.com/mishoo/UglifyJS2/issues/2011
-		// 		comparisons: false,
-		// 	},
-		// 	output: {
-		// 		comments: false,
-		// 	},
-		// 	sourceMap: true,
-		// }),
 	],
 
 	// Some libraries import Node modules but don't use them in the browser.

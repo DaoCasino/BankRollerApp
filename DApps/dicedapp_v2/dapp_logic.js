@@ -15,7 +15,7 @@ DCLib.defineDAppLogic('dicegame_v3', function(){
 		user_bet = DCLib.Utils.bet2dec(user_bet)
 
 		// generate random number
-		const random_num = DCLib.numFromHash(random_hash, 0, 65536)
+		const random_num = DCLib.numFromHash(random_hash, 0, MAX_RAND_NUM)
 		
 		let profit = -user_bet
 		// if user win

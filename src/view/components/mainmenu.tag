@@ -13,11 +13,11 @@ import route from 'riot-route'
 				name:'DEV',
 				active:false,
 			},
-			referer:{
-				link:'#referer',
-				name:'Referer',
-				active:false,
-			},
+			// referer:{
+			// 	link:'#referer',
+			// 	name:'Referer',
+			// 	active:false,
+			// },
 		}
 
 		this.on('mount', ()=>{

@@ -124,12 +124,11 @@ export default class DApp {
 
 		// Sending beacon messages to room
 		// that means we are online
-		const beacon = (t)=>{
-			
+		const beacon = (t=3000)=>{
 			// max users connected
 			// dont send beacon
 			if(Object.keys(this.users).length >= max_users){
-				setTimeout(()=>{ beacon() }, t)
+				setTimeout(()=>{ beacon(t) }, t)
 				return
 			}
 			
@@ -142,10 +141,10 @@ export default class DApp {
 						hash : this.hash
 					}
 				})
-				setTimeout(()=>{ beacon() }, t)
+				setTimeout(()=>{ beacon(t) }, t)
 			})
 		}
-		beacon( 3000 )
+		beacon(3000)
 
 
 
@@ -316,7 +315,7 @@ export default class DApp {
 		const player_deposit     = params.open_args.player_deposit
 		const bankroller_deposit = params.open_args.player_deposit*2
 		const session            = 0 //params.open_args.session
-		// const game_data          = params.open_args.gamedata
+		const game_data          = params.open_args.gamedata
 		const ttl_blocks         = params.open_args.ttl_blocks
 		const signed_args        = params.open_args.signed_args
 		const paychannel         = new paychannelLogic(parseInt(bankroller_deposit))
@@ -342,7 +341,7 @@ export default class DApp {
 
 		if (player_address!=rec_openkey) {
 			response_room.sendMsg({action:'info', 'info':'🚫 invalid sig on open channel'})
-			console.error('🚫 invalid sig on open channel', rec_openkey)
+			console.error('🚫 invalid sig on open channel', rec_openkey+'!='+player_address)
 			this.response(params, { error:'Invalid sig' }, response_room)
 			return
 		}

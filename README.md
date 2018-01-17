@@ -15,7 +15,7 @@ Download app from the release section https://github.com/DaoCasino/BankRollerApp
 
 # Develop
 ## run
-You need nodejs 6.9+
+You need nodejs 8.9+
 Xcode for MacOS
 ```
 git clone --depth=1 https://github.com/DaoCasino/BankRollerApp && cd BankRollerApp

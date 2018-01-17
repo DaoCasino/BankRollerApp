@@ -1,4 +1,4 @@
-import Highcharts from 'highcharts'
+// import Highcharts from 'highcharts'
 
 
 export default new class Charts  {
@@ -7,6 +7,8 @@ export default new class Charts  {
 	}
 
 	render(stat){
+		return 
+		
 		let data = []
 
 		for(let d in stat){

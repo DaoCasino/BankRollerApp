@@ -55,10 +55,11 @@ if (process.env.NODE_ENV !== 'server' && window && window.localStorage.current_n
 	}
 }
 
-if (process.env.NODE_ENV === 'server' && global.network ) {
-	networks.custom.rpc_url       = global.network.url
-	networks.custom.erc20_address = global.network.erc20
-}
+// if (process.env.NODE_ENV === 'server' && global.network ) {
+// 	console.log(global.network)
+// 	networks.custom.rpc_url       = global.custom_network.url
+// 	networks.custom.erc20_address = global.custom_network.erc20
+// }
 
 
 
