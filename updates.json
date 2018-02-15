@@ -1,8 +1,0 @@
-{
-  "win32-x64-prod": {
-    "readme":  "0.0.7 release",
-    "update":  "https://github.com/DaoCasino/BankRollerApp/releases/download/0.0.7/BankRollerApp.Setup.0.0.7.exe",
-    "install": "https://github.com/DaoCasino/BankRollerApp/releases/download/0.0.7/BankRollerApp.Setup.0.0.7.exe",
-    "version": "0.0.7"
-  }
-}

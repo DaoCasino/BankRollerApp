@@ -1,0 +1,16 @@
+#editor settings
+.idea
+
+#folders
+build
+public
+scripts
+
+#file
+size-report.txt
+ipscend.json
+.editorconfig
+
+#linters
+.eslintignore
+.eslintrc.js

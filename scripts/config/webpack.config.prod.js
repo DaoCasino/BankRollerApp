@@ -225,12 +225,14 @@ let webpack_prod_config = {
 				include: paths.appSrc,
 				loader:  require.resolve('babel-loader'),
 				options: {
-					presets: ['es2015-riot', ['env', {
-					      'targets': {
-					        'browsers': ['last 2 versions', 'safari >= 7']
-					      }
-					    }]
-    				]
+					presets: [
+						'es2015-riot', 
+						['env', {
+							'targets': {
+								'browsers': ['last 2 versions']
+							}
+						}]
+					]
 				}
 			},
 
