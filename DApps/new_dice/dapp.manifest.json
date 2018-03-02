@@ -1,9 +1,0 @@
-{
-	"name" : "new_dicegame",
-	"slug" : "new_dicegame",
-
-	"index" : "./index.html",
-	"logic" : "./logic.js",
-
-	"run"   : "./bankroller.js"
-}

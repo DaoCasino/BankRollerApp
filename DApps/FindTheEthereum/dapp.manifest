@@ -1,9 +1,0 @@
-{
-	"name" : "Find The Ethereum",
-	"slug" : "DC_FindTheEthereum_v2017",
-	
-	"index" : "./index.html",
-	"logic" : "./javascript/GameLogic.js",
-	
-	"run"   : "./bankroll.js"
-}
