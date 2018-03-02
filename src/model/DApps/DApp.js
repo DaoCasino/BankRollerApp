@@ -98,7 +98,7 @@ export default class DApp {
 		this.slug         = params.slug
 		this.code         = params.slug || params.code
 		this.logic        = G.DAppsLogic[this.slug]		
-		this.hash         = Utils.checksum( this.logic )
+		this.hash         = Utils.checksum( this.slug )
 		this.users        = {}
 		this.sharedRoom   = new Rtc( (_openkey || false) , 'dapp_room_'+this.hash )
 		this.timer        = 10
@@ -337,7 +337,7 @@ export default class DApp {
 		this.player_address = player_address
 
 		response_room.sendMsg({action:'info', 'info':'Check SIG'})
-		const rec_openkey = web3.eth.accounts.recover(Utils.sha3(channel_id, player_address, bankroller_address, player_deposit, bankroller_deposit, session, ttl_blocks), signed_args )
+		const rec_openkey = web3.eth.accounts.recover(Utils.sha3(channel_id, player_address, bankroller_address, player_deposit, bankroller_deposit, session, ttl_blocks, game_data), signed_args )
 
 		if (player_address!=rec_openkey) {
 			response_room.sendMsg({action:'info', 'info':'🚫 invalid sig on open channel'})
@@ -359,7 +359,7 @@ export default class DApp {
 		response_room.sendMsg({action:'info', 'info':'Send open channel trancsaction'})
 
 		const receipt = await this.PayChannel().methods
-			.open(
+			.openChannel(
 				channel_id         , // random bytes32 id
 				player_address     ,
 				bankroller_address ,
@@ -367,7 +367,7 @@ export default class DApp {
 				bankroller_deposit ,
 				session            , // integer num/counter
 				ttl_blocks         , // channel ttl in blocks count
-				// game_data.value    ,
+				game_data.value    ,
 				signed_args        
 			).send({
 				gas      : gasLimit               ,
@@ -416,7 +416,7 @@ export default class DApp {
 		const channel_id         =  params.close_args.channel_id         // bytes32 id,
 		const player_balance     =  params.close_args.player_balance     // uint playerBalance,
 		const bankroller_balance =  params.close_args.bankroller_balance // uint bankrollBalance,
-		const session            =  0                                    // uint session=0px
+		const session            =  params.close_args.session            // uint session=0px
 		const signed_args        =  params.close_args.signed_args
 		const bool               =  params.close_args.bool
 
@@ -463,6 +463,7 @@ export default class DApp {
 				player_balance     ,
 				bankroller_balance ,
 				session            ,
+				bool               ,
 				signed_args
 			).send({
 				gas      : gasLimit               ,
