@@ -412,7 +412,7 @@ export default class DApp {
 	
 	async _closeChannel(params){
 
-		const response_room      = this.users[params.user_id].room
+		const response_room      =  this.users[params.user_id].room
 		const channel_id         =  params.close_args.channel_id         // bytes32 id,
 		const player_balance     =  params.close_args.player_balance     // uint playerBalance,
 		const bankroller_balance =  params.close_args.bankroller_balance // uint bankrollBalance,

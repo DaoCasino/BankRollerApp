@@ -20,6 +20,7 @@ export default class Wallet {
 	constructor() {
 		this.lib  = ethWallet
 		this.web3 = web3
+		this.private_key = false
 
 		if ( process.env.NODE_ENV !== 'server' ) {
 			DB.getItem('wallet', (err, wallet)=>{
@@ -80,6 +81,7 @@ export default class Wallet {
 			this.getPwDerivedKey( PwDerivedKey => {
 				let private_key = this.getKs().exportPrivateKey(_wallet.addr, PwDerivedKey)
 				_privkey = private_key
+				this.private_key = private_key
 				if(callback) callback(private_key)
 				resolve(private_key)
 			})
@@ -285,19 +287,6 @@ export default class Wallet {
 		raw = Utils.remove0x(raw)
 		return _web3acc.sign(raw)
 	}
-
-	signHash(hash){
-		if (!_privkey) return false
-
-		hash = Utils.add0x(hash)
-		if (this.web3.utils.isHexStrict(hash)) {
-			console.log(hash+' is incorrect hex')
-			console.log('Use DCLib.Utils.makeSeed or Utils.soliditySHA3(your_args) to create valid hash')
-		}
-
-		return signHash(hash, Utils.add0x(_privkey))
-	}
-
 }
 
 
