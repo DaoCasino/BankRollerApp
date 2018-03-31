@@ -20,6 +20,8 @@ publisher.json
 /dist
 /build
 /builds
+/DApps/new_dice
+/DApps/FindTheEthereum
 
 # misc
 npm-debug.log

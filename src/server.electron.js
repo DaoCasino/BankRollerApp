@@ -3,8 +3,8 @@ const http    = require('http')
 const path    = require('path')
 const queryp  = require('querystring')
 const fs      = require('fs')
-const Gun     = require('gun')
 const fse     = require('fs-extra')
+const Gun     = require('gun')
 const watch   = require('node-watch')
 const {app}   = require('electron')
 
@@ -42,7 +42,8 @@ const DApps = {
 		if (!dapps_dirs) {	
 			try {
 				console.log(dapps_path)
-				dapps_dirs = fse.readdirSync(dapps_path)
+				dapps_dirs = fs.readdirSync(dapps_path)
+				console.log('dapps_dirs',dapps_dirs)
 			} catch(e) {
 				return
 			}
@@ -358,22 +359,22 @@ setTimeout(()=>{
 	global.network = Object.assign({}, start_net)
 
 	// Subscribe to change network
-	// GunDB.get('network').on( n =>{
-	// 	if (!n || typeof n === 'undefined') { return }
+	GunDB.get('network').on( n =>{
+		if (!n || typeof n === 'undefined') { return }
 
-	// 	if (network.code != n.code || (n.code=='custom' && (n.url!=network.url || n.erc20!=network.erc20)) ) {
-	// 		clearTimeout(global.restartT)
-	// 		global.restartT = setTimeout(()=>{
-	// 			if (typeof app!=='undefined') {
-	// 				app.quit()
-	// 				return
-	// 			}
-	// 			process.exit()
-	// 		}, 5000)
-	// 	}
-	// })
+		if (network.code != n.code || (n.code=='custom' && (n.url!=network.url || n.erc20!=network.erc20)) ) {
+			clearTimeout(global.restartT)
+			global.restartT = setTimeout(()=>{
+				if (typeof app!=='undefined') {
+					app.quit()
+					return
+				}
+				process.exit()
+			}, 5000)
+		}
+	})
 
-	require('./app.background.js')
+	// require('./app.background.js')
 
 }, 1000)
 

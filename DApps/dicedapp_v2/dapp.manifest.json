@@ -1,6 +1,6 @@
 {
-	"name" : "Dice Game v.2",
-	"slug" : "dicegame_v3",
+	"name" : "Dice Test v11",
+	"slug" : "dicetest_v11",
 
 	"index" : "./index.html",
 	"logic" : "./dapp_logic.js",

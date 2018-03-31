@@ -144,7 +144,7 @@ class Eth {
 		})
 	}
 
-	getBetsBalance(address, callback, force=false){
+	getBetsBalance(address, callback=()=>{}, force=false){
 		if (!force && balances_cache[address] && balances_cache[address].bets_t > (new Date().getTime()-60*10000) ) {
 			callback( balances_cache[address].bets )
 			return
@@ -153,22 +153,24 @@ class Eth {
 		let data = '0x' + this.hashName('balanceOf(address)')
 				  		+ Utils.pad(Utils.numToHex(address.substr(2)), 64)
 
-
-		this.RPC.request('call', [{
-			'from': this.Wallet.get().openkey,
-			'to':   _config.erc20_address,
-			'data': data
-		}, 'latest']
-		).then( response => {
-			if (!balances_cache[address]) {
-				balances_cache[address] = {}
-			}
-			balances_cache[address].bets_t = new Date().getTime()
-			balances_cache[address].bets   = Utils.hexToNum(response.result) / 100000000
-
-			callback( balances_cache[address].bets )
-		}).catch( err => {
-			console.error(err)
+		return new Promise((resolve, reject) => {
+			this.RPC.request('call', [{
+				'from': this.Wallet.get().openkey,
+				'to':   _config.erc20_address,
+				'data': data
+			}, 'latest']
+			).then( response => {
+				if (!balances_cache[address]) {
+					balances_cache[address] = {}
+				}
+				balances_cache[address].bets_t = new Date().getTime()
+				balances_cache[address].bets   = Utils.hexToNum(response.result) / 100000000
+				resolve(balances_cache[address].bets)
+				callback( balances_cache[address].bets )
+			}).catch( err => {
+				reject(err)
+				console.error(err)
+			})
 		})
 	}
 

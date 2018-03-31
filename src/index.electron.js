@@ -6,6 +6,7 @@ const {
 	app,
 	BrowserWindow,
 	Menu,
+	MenuItem,
 	Tray,
 	shell
 } = require('electron')
@@ -48,6 +49,8 @@ if (shouldQuit) {
 
 function createWindow () {
 	mainWindow = new BrowserWindow({
+		title: 'Bankroller',
+
 		// resizable: false, 
 		width: 670, height: 530,
 
@@ -81,6 +84,31 @@ function createWindow () {
 		mainWindow.webContents.openDevTools()
 	}
 
+
+
+	const DEV_item = { 
+		label: 'DEV',
+		submenu: [{ 
+			label: 'Open DevTools',
+			accelerator: process.platform === 'darwin' ? 'Alt+Command+I' : 'Ctrl+Shift+I',
+			click:() => {
+				mainWindow.webContents.openDevTools()
+			} 
+		},{
+			label: 'Docs',
+			click:() => {
+				shell.openExternal('https://github.com/DaoCasino/DCLib')
+			} 
+		}]
+	}
+
+	const mainmenu = Menu.getApplicationMenu()
+	if (mainmenu) {
+		mainmenu.append(new MenuItem(DEV_item))
+		Menu.setApplicationMenu( mainmenu )
+	} else {
+		Menu.setApplicationMenu( Menu.buildFromTemplate([DEV_item]) )
+	}
 
 
 	// minimize to tray

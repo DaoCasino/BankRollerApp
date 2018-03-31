@@ -13,17 +13,17 @@ import route from 'riot-route'
 				name:'DEV',
 				active:false,
 			},
-			referer:{
-				link:'#referer',
-				name:'Referer',
-				active:false,
-			},
+			// referer:{
+			// 	link:'#referer',
+			// 	name:'Referer',
+			// 	active:false,
+			// },
 		}
 
 		this.on('mount', ()=>{
 			route((screen, action, other)=>{
 				if (!screen) {
-					screen = 'wallet'
+					screen = 'dev'
 				}
 
 				if (!localStorage.keysSaved) {

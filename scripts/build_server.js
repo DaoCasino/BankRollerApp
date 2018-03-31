@@ -16,7 +16,7 @@ require('./config/env')
 
 const path                     = require('path')
 const chalk                    = require('chalk')
-const fs                       = require('fs-extra')
+const fs                       = require('fs')
 const webpack                  = require('webpack')
 const config                   = require('./config/webpack.config.server')
 const paths                    = require('./config/paths')
@@ -120,8 +120,8 @@ function build(previousFileSizes) {
 }
 
 function copyPublicFolder() {
-	fs.copySync(paths.appPublic, paths.appBuild, {
-		dereference: true,
-		filter: file => file !== paths.appHtml,
-	})
+	// fs.copySync(paths.appPublic, paths.appBuild, {
+	// 	dereference: true,
+	// 	filter: file => file !== paths.appHtml,
+	// })
 }

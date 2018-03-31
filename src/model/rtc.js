@@ -2,6 +2,10 @@ import _config    from 'app.config'
 import EE         from 'event-emitter'
 import * as Utils from './utils'
 
+import IPFS from 'ipfs'
+import Channel from 'ipfs-pubsub-room'
+
+
 const delivery_timeout = 3000
 const msg_ttl = 10*60*1000
 
@@ -54,6 +58,28 @@ const seedsDB = (function(){
 	}
 })()
 
+
+let ipfs_connected = false
+const ipfs = new IPFS({
+	repo: '../database',
+	EXPERIMENTAL: {
+		pubsub: true
+	},
+	config: {
+		Addresses: {
+			Swarm: [
+				'/ip4/46.101.244.101/tcp/9090/ws/p2p-websocket-star/',
+				'/ip4/146.185.173.84/tcp/9090/ws/p2p-websocket-star/',
+				// '/dns4/ws-star.discovery.libp2p.io/tcp/443/wss/p2p-websocket-star'
+			]
+		}
+	}
+})
+ipfs.on('ready', () => {
+	ipfs_connected = true
+})
+
+
 export default class RTC {
 	constructor(user_id=false, room=false) {
 		room = room || _config.rtc_room
@@ -62,8 +88,13 @@ export default class RTC {
 		EE(EC.prototype)
 		this.Event = new EC()
 
+		if (!room) {
+			console.error('empty room name')
+			return
+		}
+
 		this.user_id = user_id || Utils.makeSeed()
-		this.room_id = room
+		this.room_id = ''+room
 		this.channel = false
 		this.connect(room)
 
@@ -71,26 +102,24 @@ export default class RTC {
 	}
 
 	connect(room){
-		const mesh = require('rtc-mesh')
-		const qc   = require('rtc-quickconnect')
-
-		this.channel = mesh( qc(_config.rtc_signalserver, {
-			// debug:      true,
-			room:       room,
-			iceServers: require('freeice')()
-		}))
-
-		this.channel.on('change', (key, value) => {
-			if (!key || !value) { return }
-
+		if (!ipfs_connected) {
+			setTimeout(()=>{
+				this.connect(room)
+			}, 999)
+			return
+		}
+		console.log('room:'+room)
+		this.channel = Channel(ipfs, room)
+		
+		this.channel.on('message', rawmsg => {
 			let data = {}
-
 			try {
-				data = JSON.parse(value)
+				data = JSON.parse(rawmsg.data.toString())
 			} catch(e) {
 				return
 			}
 
+			// return
 			if (data.user_id && data.user_id==this.user_id) {
 				return
 			}
@@ -121,8 +150,21 @@ export default class RTC {
 			if (data.user_id) {
 				this.Event.emit('user_id::'+data.user_id, data)
 			}
-
 		})
+
+		this.channel.on('peer joined', (peer) => {
+			console.log('Peer joined the room', peer)
+		})
+		
+		this.channel.on('peer left', (peer) => {
+			console.log('Peer left...', peer)
+		})
+		
+		// now started to listen to room
+		this.channel.on('subscribed', () => {
+			console.log('Now connected!')
+		})
+
 	}
 
 	async isAlreadyReceived(data){
@@ -260,11 +302,20 @@ export default class RTC {
 	}
 
 	sendMsg(data){
+		if (!this.channel) {
+			if (data.action!='bankroller_active') {
+				setTimeout(()=>{
+					this.sendMsg(data)
+				}, 999)
+			}
+			return
+		}
+
 		data.seed       = Utils.makeSeed()
 		data.user_id    = this.user_id
 		// data.room_id = this.room_id
 
-		this.channel.set(this.user_id, JSON.stringify(data))
+		this.channel.broadcast(JSON.stringify(data))
 
 		return data
 	}

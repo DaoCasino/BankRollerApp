@@ -5,6 +5,7 @@ import Eth      from 'Eth/Eth'
 import Rtc      from 'rtc'
 import DApp     from './DApp'
 import {AsyncPriorityQueue, AsyncTask} from 'async-priority-queue'
+import {sign as signHash} from 'web3/packages/web3-eth-accounts/node_modules/eth-lib/lib/account.js'
 
 import printDocs  from './docs'
 // for dapps
@@ -44,7 +45,20 @@ const EthHelpers = class EthHelpers {
 		this.web3    = web3
 		this.ERC20   = erc20
 	}
+	
+	signHash(hash){
+		this.Account.exportPrivateKey()
 
+		if (!this.Account.private_key) return false
+
+		hash = Utils.add0x(hash)
+		if (this.web3.utils.isHexStrict(hash)) {
+			console.log(hash+' is incorrect hex')
+			console.log('Use DCLib.Utils.makeSeed or Utils.soliditySHA3(your_args) to create valid hash')
+		}
+
+		return signHash(hash, Utils.add0x(this.Account.private_key))
+	}
 
 	async getBalances(address, callback=false){
 		const [bets, eth] = await Promise.all([
@@ -202,7 +216,7 @@ export default new class DAppsAPIInit {
 		if (!this.List[key]) return
 
 		let base = '/'
-		if (location && location.port*1 !== 9999) { base = 'http://localhost:9999/' }
+		if (typeof location!=='undefined' && location.port*1 !== 9999) { base = 'http://localhost:9999/' }
 
 		let logic_script_url  = base + 'DApps/' + key +'/'+ this.List[key].config.logic
 		let client_script_url = base + 'DApps/' + key +'/'+ this.List[key].config.run.client

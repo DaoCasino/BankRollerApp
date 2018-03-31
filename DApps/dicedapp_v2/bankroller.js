@@ -1,8 +1,11 @@
 
 //(function(){
-window.MultDApp = (function(){
-	let DApp = new DCLib.DApp({slug : 'dicegame_v3'})
-	
-	return DApp
+window.MyDApp_debug = (function(){
+	var myDApp = new DCLib.DApp({slug : 'dicetest_v11'})
+
+	// Banroller side code
+	// console.log(myDApp)
+
+	return myDApp
 })()
 
